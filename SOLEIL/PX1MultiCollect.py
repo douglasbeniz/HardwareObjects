@@ -4,7 +4,7 @@ from gevent.event import AsyncResult
 import logging
 import time
 import os, copy
-import httplib
+import http.client
 
 from PyTango import DeviceProxy
 
@@ -364,10 +364,10 @@ class PX1MultiCollect(AbstractMultiCollect, HardwareObject):
 
     @task
     def move_motors(self, motor_position_dict):
-        for motor in motor_position_dict.keys(): #iteritems():
+        for motor in list(motor_position_dict.keys()): #iteritems():
             position = motor_position_dict[motor]
             logging.getLogger().info("PX1 MultiCollect / move_motors: %s to %s " % (motor, position))
-            if isinstance(motor, str) or isinstance(motor, unicode):
+            if isinstance(motor, str) or isinstance(motor, str):
                 # find right motor object from motor role in diffractometer obj.
                 motor_role = motor
                 motor = self.bl_control.diffractometer.getDeviceByRole(motor_role)
@@ -379,7 +379,7 @@ class PX1MultiCollect(AbstractMultiCollect, HardwareObject):
             logging.getLogger("HWR").info("Moving motor '%s' to %f", motor.getMotorMnemonic(), position)
             motor.move(position)
 
-        while any([motor.motorIsMoving() for motor in motor_position_dict.iterkeys()]):
+        while any([motor.motorIsMoving() for motor in motor_position_dict.keys()]):
             logging.getLogger("HWR").info("Waiting for end of motors motion")
             time.sleep(0.5)  
 

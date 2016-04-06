@@ -38,7 +38,7 @@ class ID29EnergyScan(ESRFEnergyScan):
             eroi_min /= 1000
             eroi_max /= 1000
         self.mca.set_roi(eroi_min, eroi_max, channel=1, element=self.energy_scan_parameters["element"], atomic_nb=self.energy_scan_parameters["atomic_nb"])
-        print self.mca.get_roi()
+        print(self.mca.get_roi())
 
     @task
     def choose_attenuation(self):

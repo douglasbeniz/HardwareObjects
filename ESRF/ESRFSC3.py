@@ -3,6 +3,7 @@
 from HardwareRepository.TaskUtils import *
 from sample_changer import SC3
 import functools
+import collections
 
 class ESRFSC3(SC3.SC3):
     (FLAG_SC_IN_USE,FLAG_MINIDIFF_CAN_MOVE,FLAG_SC_CAN_LOAD,FLAG_SC_NEVER) = (1,2,4,8)
@@ -79,7 +80,7 @@ class ESRFSC3(SC3.SC3):
               
                 self.emit("statusChanged", "Ready")
  
-                if callable(sampleIsLoadedCallback):
+                if isinstance(sampleIsLoadedCallback, collections.Callable):
                     sampleIsLoadedCallback()
 
 
@@ -108,7 +109,7 @@ class ESRFSC3(SC3.SC3):
 
         try:
             SC3.SC3.load(self, sample, wait=True)
-        except Exception, err:
+        except Exception as err:
             self.emit("statusChanged", str(err))
             raise
 
@@ -133,7 +134,7 @@ class ESRFSC3(SC3.SC3):
 
                 self.emit("statusChanged", "Ready")
 
-                if callable(sampleIsUnloadedCallback):
+                if isinstance(sampleIsUnloadedCallback, collections.Callable):
                     sampleIsUnloadedCallback()
 
 

@@ -67,7 +67,7 @@ class EdnaWorkflow(Device):
     def set_values_map(self, params):
         # params is a dict and we want to send a [key,value, ...] flat list
         params_list = list()
-        for (k,v) in params.iteritems():
+        for (k,v) in params.items():
             params_list.append(k)
             params_list.append(v)
             
@@ -80,7 +80,7 @@ class EdnaWorkflow(Device):
         workflows = list()
         try:
             wfxml = self.get_available_workflows_command()
-            if type(wfxml) == types.ListType and len(wfxml) > 0:
+            if type(wfxml) == list and len(wfxml) > 0:
                 wfxml = wfxml[0]
             logging.debug('workflow list from the server:\n%r', wfxml)
         except:
@@ -98,7 +98,7 @@ class EdnaWorkflow(Device):
             for subtag in child.iterchildren():
                 wfdict[subtag.tag] = subtag.text.strip()
             # ensure we have all we need
-            if all([wfdict.has_key(x) for x in ['name', 'doc', 'path']]):
+            if all([x in wfdict for x in ['name', 'doc', 'path']]):
                 workflows.append(wfdict)
             else:
                 logging.warning('removed malformed wf entry %r (missing one of name, doc or path subtags)', child)

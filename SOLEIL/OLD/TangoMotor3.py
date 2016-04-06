@@ -36,7 +36,7 @@ class TangoMotor3(Device):
         self.device = DeviceProxy(self.getProperty("tangoname"))
         self.device.waitMoves = False
         self.setIsReady(True)
-        print "TangoMotor._init of device %s" % self.device.name
+        print("TangoMotor._init of device %s" % self.device.name)
 
         self.positionChan = self.getChannelObject("attributeName") # utile seulement si statechan n'est pas defini dans le code
         self.positionChan.connectSignal("update", self.positionChanged) 
@@ -85,7 +85,7 @@ class TangoMotor3(Device):
         logging.getLogger("HWR").info("%s: TangoMotor.motorStateChanged, %s", self.name(), state)
         #self.setIsReady(state == 'STANDBY')
         self.setIsReady(True)
-        print "motorStateChanged", str(state),self.motorState()
+        print("motorStateChanged", str(state),self.motorState())
         self.emit('stateChanged', (self.motorState(), ))
         
     def getState(self):
@@ -98,7 +98,7 @@ class TangoMotor3(Device):
         #limits = self.device.getLimits(str(self.positionChan.attributeName))
         try:
            atprops = self.device.attribute_query(str(self.positionChan.attributeName))
-           limits = map(float, [atprops.min_value, atprops.max_value])
+           limits = list(map(float, [atprops.min_value, atprops.max_value]))
            logging.getLogger("HWR").info("TangoMotor3 getLimits returning %.4f %.4f" % (limits[0], limits[1]))
            return limits
         except IndexError:
@@ -136,13 +136,13 @@ class TangoMotor3(Device):
         prev_position = self.getPosition()
         self.positionChan.value = position
 
-        print 'move started from %s to %s, state is %s' % (prev_position, position, self.getState())
+        print('move started from %s to %s, state is %s' % (prev_position, position, self.getState()))
         
         while self.getState() == "RUNNING" or self.getState() == "MOVING": # or str(self.device.State()) == SpecMotor.MOVESTARTED:
             #print 'processing events...', self.motorState
             qApp.processEvents(100)
 
-        print 'move done (%s s), state is %s' % (time.time()-t0,  str(self.device.State()))
+        print('move done (%s s), state is %s' % (time.time()-t0,  str(self.device.State())))
         
 
     def syncMoveRelative(self, position):
@@ -176,7 +176,7 @@ class TangoMotor3(Device):
         #c = self.connection.getChannel(self.chanNamePrefix % 'start_one')
         logging.getLogger("HWR").info("TangoMotor.move to absolute position: %.3f" % absolutePosition)
         self.positionChan.value = absolutePosition
-        print self.positionChan.value
+        print(self.positionChan.value)
         nom_attribut=self.positionChan.attributeName
         setattr(self.device,nom_attribut,absolutePosition)
         self.motorPositionChanged(absolutePosition)

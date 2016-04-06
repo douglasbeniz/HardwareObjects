@@ -41,7 +41,9 @@ class Xtal(Sample):
 
     def __init__(self,drop, index):
         #Sample.__init__(self, drop, Xtal._getXtalAddress(drop, index), False)
-        super(Xtal, self).__init__(drop, Xtal._getXtalAddress(drop, index), False)
+        # LNLS
+        #super(Xtal, self).__init__(drop, Xtal._getXtalAddress(drop, index), False)
+        super().__init__(drop, Xtal._getXtalAddress(drop, index), False)
         self._drop = drop
         self._index = index
         self._setImageX(None)
@@ -176,7 +178,9 @@ class PlateManipulator(SampleChanger):
     __TYPE__ = "PlateManipulator"    
 
     def __init__(self, *args, **kwargs):
-        super(PlateManipulator, self).__init__(self.__TYPE__,False, *args, **kwargs)
+        # LNLS
+        #super(PlateManipulator, self).__init__(self.__TYPE__,False, *args, **kwargs)
+        super().__init__(self.__TYPE__,False, *args, **kwargs)
 
         self.num_cols = None
         self.num_rows = None
@@ -185,9 +189,6 @@ class PlateManipulator(SampleChanger):
         self.reference_pos_x = None
         self.timeout = 3 #default timeout
         self.plate_location = None
-
-        self.cmd_move_to_drop = None
-        self.cmd_move_to_location = None
             
     def init(self):
         """
@@ -207,9 +208,12 @@ class PlateManipulator(SampleChanger):
             if not self.reference_pos_x:
                 self.reference_pos_x = 0.5
 
-        self.cmd_move_to_drop = self.getCommandObject("MoveToDrop")
-        if not self.cmd_move_to_drop: 
+        try:
+            self.cmd_move_to_drop = self.getCommandObject("MoveToDrop")
+            self.cmd_move_to_location = None
+        except:
             self.cmd_move_to_location = self.getCommandObject("startMovePlateToLocation")
+            self.cmd_move_to_drop = None
     
         self._initSCContents()
 
@@ -301,7 +305,7 @@ class PlateManipulator(SampleChanger):
             self.cmd_move_to_location(row, col - 1, self.reference_pos_x, pos_y)
             self._wait_ready(60)
         elif self.cmd_move_to_drop:
-	    self.cmd_move_to_drop(row, col - 1, drop-1)
+            self.cmd_move_to_drop(row, col - 1, drop-1)
             self._wait_ready(60)
         else:
             #No actual move cmd defined. Act like a mockup

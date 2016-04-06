@@ -17,7 +17,7 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ, b
     #phiSavedDialPosition = phi.getDialPosition()
     #logging.info("MiniDiff phi saved dial = %f " % phiSavedDialPosition)
   else:
-    raise RuntimeError, "motors not ready"
+    raise RuntimeError("motors not ready")
 
   try:  
     while True:

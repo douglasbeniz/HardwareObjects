@@ -19,7 +19,7 @@ class MicrodiffZoom(MD2Motor):
         self.sortPredefinedPositionsList()
 
     def sortPredefinedPositionsList(self):
-        self.predefinedPositionsNamesList = self.predefinedPositions.keys()
+        self.predefinedPositionsNamesList = list(self.predefinedPositions.keys())
         self.predefinedPositionsNamesList.sort(lambda x, y: int(round(self.predefinedPositions[x] - self.predefinedPositions[y])))
 
     def connectNotify(self, signal):
@@ -33,7 +33,7 @@ class MicrodiffZoom(MD2Motor):
             else:
                 self.emit(signal, (positionName, pos))
         else:
-            return MD2Motor.connectNotify.im_func(self, signal)
+            return MD2Motor.connectNotify.__func__(self, signal)
 
     def getLimits(self):
         return (1,10)
@@ -42,7 +42,7 @@ class MicrodiffZoom(MD2Motor):
         return self.predefinedPositionsNamesList
 
     def motorPositionChanged(self, absolutePosition, private={}):
-        MD2Motor.motorPositionChanged.im_func(self, absolutePosition, private)
+        MD2Motor.motorPositionChanged.__func__(self, absolutePosition, private)
 
         positionName = self.getCurrentPositionName(absolutePosition)
         if self._last_position_name != positionName:

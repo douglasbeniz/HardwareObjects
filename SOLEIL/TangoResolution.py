@@ -7,6 +7,7 @@ from PyTango import DeviceProxy
 
 from HardwareRepository import BaseHardwareObjects
 from HardwareRepository import HardwareRepository
+import collections
 #from SpecClient import SpecCommand
 # Changed for PILATUS 6M
 DETECTOR_DIAMETER = 424.
@@ -164,7 +165,7 @@ class TangoResolution(BaseHardwareObjects.Equipment):
 
         #logging.getLogger("HWR").debug("%s: DetectorDistance.getLimits: [%.2f - %.2f]" % (self.name(), low, high))
         
-        if callable(callback):
+        if isinstance(callback, collections.Callable):
             #logging.getLogger("HWR").debug("getLimits with callback: %s" % callback)
 
             self.__resLimitsCallback = callback
@@ -193,7 +194,7 @@ class TangoResolution(BaseHardwareObjects.Equipment):
         self.__resLimits["low"]=float(rlow)
 
         if len(self.__resLimits) == 2:
-            if callable(self.__resLimitsCallback):
+            if isinstance(self.__resLimitsCallback, collections.Callable):
               self.__resLimitsCallback((self.__resLimits["low"], self.__resLimits["high"]))
             self.__resLimitsCallback = None
             self.__dist2resA1 = None
@@ -204,7 +205,7 @@ class TangoResolution(BaseHardwareObjects.Equipment):
         self.__resLimits["high"]=float(rhigh)
 
         if len(self.__resLimits) == 2:
-            if callable(self.__resLimitsCallback):
+            if isinstance(self.__resLimitsCallback, collections.Callable):
               self.__resLimitsCallback((self.__resLimits["low"], self.__resLimits["high"]))
             self.__resLimitsCallback = None
             self.__dist2resA1 = None
@@ -212,7 +213,7 @@ class TangoResolution(BaseHardwareObjects.Equipment):
             
 
     def __resLimitsErrCallback(self):
-        if callable(self.__resLimitsErrCallback):
+        if isinstance(self.__resLimitsErrCallback, collections.Callable):
             self.__resLimitsErrCallback()
             self.__resLimitsErrCallback = None
             self.__dist2resA1 = None
@@ -243,11 +244,11 @@ class TangoResolution(BaseHardwareObjects.Equipment):
                 self.currentWavelength = self.blenergyHO.getCurrentWavelength()
             thetaangle2 = math.atan(DETECTOR_DIAMETER/2./Distance)
             Resolution = 0.5*self.currentWavelength /math.sin(thetaangle2/2.)
-            if callable(callback):
+            if isinstance(callback, collections.Callable):
                 callback(Resolution)
             return Resolution
         except:
-            if callable(error_callback):
+            if isinstance(error_callback, collections.Callable):
                 error_callback()
 
     

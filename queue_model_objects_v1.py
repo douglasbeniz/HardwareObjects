@@ -220,7 +220,7 @@ class Sample(TaskNode):
         return s
 
     def _print(self):
-        print "sample: %s" % self.loc_str
+        print("sample: %s" % self.loc_str)
 
     def has_lims_data(self):
         if self.lims_id > -1:
@@ -248,6 +248,7 @@ class Sample(TaskNode):
         self.location = (sc_sample[1], sc_sample[2])
         if sc_sample[3] != "":
             self.set_name(sc_sample[3])
+            self.location = (sc_sample[1], sc_sample[2], sc_sample[3])
         else:
             self.set_name(self.loc_str)
 
@@ -369,9 +370,8 @@ class Basket(TaskNode):
     def is_present(self):
         return self.get_is_present()
 
-    def init_from_sc_basket(self, sc_basket, name="Puck"):
+    def init_from_sc_basket(self, sc_basket, name="Basket"):
         self._basket_object = sc_basket[1] #self.is_present = sc_basket[2]
-
         if self._basket_object is None:
             self.location = sc_basket[0]
             if name == "Row":
@@ -379,11 +379,8 @@ class Basket(TaskNode):
             else:
                 self.name = "%s %d" % (name, self.location)
         else:
-            self.location = sc_basket[0]
-            if name == "Row":
-                self.name = "%s %s" % (name, chr(65 + self.location))
-            else:
-                self.name = "%s %d" % (name, self.location)
+            self.location = self._basket_object.getCoords()[0]
+            self.name = "%s %d" % (name, self.location)
             #if len(self.location) == 2:
             #    self.name = "Cell %d, puck %d" % self.location
 
@@ -1087,7 +1084,7 @@ class PathTemplate(object):
                 "num_files" : self.num_files}
 
     def set_from_dict(self, params_dict):
-        for key, value in params_dict.iteritems():
+        for key, value in params_dict.items():
             if hasattr(self, key):
                 setattr(self, key, value)
 
@@ -1264,7 +1261,7 @@ class AcquisitionParameters(object):
         self.in_interleave = False
 
     def set_from_dict(self, params_dict):
-        for key, value in params_dict.iteritems():
+        for key, value in params_dict.items():
             if hasattr(self, key):
                 if key == "centred_position": 
                     self.centred_position.set_from_dict(value)     
@@ -1311,15 +1308,15 @@ class CentredPosition(object):
            setattr(self, motor_name, None)
 
         if motor_dict is not None:
-          for motor_name, position in motor_dict.iteritems():
+          for motor_name, position in motor_dict.items():
             setattr(self, motor_name, position)
 
     def as_dict(self):
-        return dict(zip(CentredPosition.DIFFRACTOMETER_MOTOR_NAMES,
-                    [getattr(self, motor_name) for motor_name in CentredPosition.DIFFRACTOMETER_MOTOR_NAMES]))
+        return dict(list(zip(CentredPosition.DIFFRACTOMETER_MOTOR_NAMES,
+                    [getattr(self, motor_name) for motor_name in CentredPosition.DIFFRACTOMETER_MOTOR_NAMES])))
 
     def set_from_dict(self, params_dict):
-        for key, value in params_dict.iteritems():
+        for key, value in params_dict.items():
             if hasattr(self, key):
                 setattr(self, key, value)   
 

@@ -61,9 +61,8 @@ class MicrodiffMotor(AbstractMotor, Device):
           self.motors_state_attr = self.addChannel({"type":"exporter", "name":"motor_states"}, "MotorStates")
           self.motors_state_attr.connectSignal("update", self.updateMotorState)
           self._motor_abort = self.addCommand( {"type":"exporter", "name":"abort" }, "abort")
-          self.get_dynamic_limits_cmd = self.addCommand({"type": "exporter",
-                                                         "name": "get%sDynamicLimits" % self.motor_name},
-                                                         "getMotorDynamicLimits")
+          #TODO: dynamic limits
+          #self.motor_limits_attr = self.addChannel({"type":"exporter", "name":"limits"}, self.motor_name+"DynamicLimits" )
           self.get_limits_cmd = self.addCommand( { "type": "exporter", "name": "get_limits"}, "getMotorLimits")
           self.home_cmd = self.addCommand( {"type":"exporter", "name":"homing" }, "startHomingMotor")
 
@@ -113,7 +112,7 @@ class MicrodiffMotor(AbstractMotor, Device):
             return dynamic_limits
         else: 
             try:
-              low_lim,hi_lim = map(float, self.get_limits_cmd(self.motor_name))
+              low_lim,hi_lim = list(map(float, self.get_limits_cmd(self.motor_name)))
               if low_lim==float(1E999) or hi_lim==float(1E999):
                   raise ValueError
               return low_lim, hi_lim
@@ -122,7 +121,7 @@ class MicrodiffMotor(AbstractMotor, Device):
 
     def getDynamicLimits(self):
         try:
-          low_lim,hi_lim = map(float, self.get_dynamic_limits_cmd(self.motor_name))
+          low_lim,hi_lim = list(map(float, self.get_dynamic_limits_cmd(self.motor_name)))
           if low_lim==float(1E999) or hi_lim==float(1E999):
             raise ValueError
           return low_lim, hi_lim

@@ -6,7 +6,7 @@ import logging
 import time
 import os
 import math
-import httplib
+import http.client
 import PyTango
 import threading
 from collections import namedtuple
@@ -41,7 +41,7 @@ class TunableEnergy:
         except:
             import traceback
             logging.info("<SOLEIL MultiCollect TUNABLE ENERGY> exception %s" % traceback.print_exc())
-            print traceback.print_exc()
+            print(traceback.print_exc())
         while energy_obj.getState() != 'STANDBY':
             time.sleep(0.5)
 
@@ -736,9 +736,9 @@ class SOLEILMultiCollect(AbstractMultiCollect, HardwareObject):
     @task
     def move_motors(self, motor_position_dict):
         logging.info("<SOLEIL MultiCollect> move_motors ")
-        for motor in motor_position_dict.keys(): #iteritems():
+        for motor in list(motor_position_dict.keys()): #iteritems():
             position = motor_position_dict[motor]
-            if isinstance(motor, str) or isinstance(motor, unicode):
+            if isinstance(motor, str) or isinstance(motor, str):
                 # find right motor object from motor role in diffractometer obj.
                 motor_role = motor
                 motor = self.bl_control.diffractometer.getDeviceByRole(motor_role)
@@ -750,7 +750,7 @@ class SOLEILMultiCollect(AbstractMultiCollect, HardwareObject):
             logging.getLogger("HWR").info("Moving motor '%s' to %f", motor.getMotorMnemonic(), position)
             motor.move(position)
 
-        while any([motor.motorIsMoving() for motor in motor_position_dict.iterkeys()]):
+        while any([motor.motorIsMoving() for motor in motor_position_dict.keys()]):
             logging.getLogger("HWR").info("Waiting for end of motors motion")
             time.sleep(0.5)  
 

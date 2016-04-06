@@ -11,6 +11,7 @@ from HardwareRepository import HardwareRepository
 from HardwareRepository import EnhancedPopen
 import copy
 import PyTango
+import collections
 
 
 ### End of update of calibration data
@@ -30,7 +31,7 @@ cData = {
          }
 
 def getNewCalibration():
-    print 'Reading beam position calibration data'
+    print('Reading beam position calibration data')
     for zoom in cData:
         cData[zoom]['calibrationData']['beamPositionX'] = bp.read_attribute('Zoom' + zoom + '_X').value
         cData[zoom]['calibrationData']['beamPositionY'] = bp.read_attribute('Zoom' + zoom + '_Z').value
@@ -60,13 +61,13 @@ class ProcedureIterator:
     def __abortProcedure__(self):
         pass
     
-    def next(self):
+    def __next__(self):
         if self.__abortFlag:
             raise StopIteration
         else:
             if self.procedureIterator is None:
                self.procedureIterator = self.__procedure__()
-            return self.procedureIterator.next()
+            return next(self.procedureIterator)
             
     def abort(self):
         self.__abortProcedure__()
@@ -95,22 +96,22 @@ class ManualCentringProcedure(ProcedureIterator):
         #(self.pixelsPerMmY, self.pixelsPerMmZ, self.beamPositionX, self.beamPositionY)
         self.pixelsPerMmY, self.pixelsPerMmZ, self.beam_xc, self.beam_yc = minidiff.getCalibrationData3(minidiff.md2.ZoomLevel)
         self.PhiReference = 327.3
-        print 
-        print 'MS debug 13.11.2011 pixelsPerMmY', self.pixelsPerMmY
-        print 'MS debug 13.11.2011 pixelsPerMmZ', self.pixelsPerMmZ
-        print 'MS debug 13.11.2011 beamCenterX', self.beam_xc
-        print 'MS debug 13.11.2011 beamCenterY', self.beam_yc
+        print() 
+        print('MS debug 13.11.2011 pixelsPerMmY', self.pixelsPerMmY)
+        print('MS debug 13.11.2011 pixelsPerMmZ', self.pixelsPerMmZ)
+        print('MS debug 13.11.2011 beamCenterX', self.beam_xc)
+        print('MS debug 13.11.2011 beamCenterY', self.beam_yc)
         #self.imgWidth = imgWidth
         #self.imgHeight = imgHeight
         #print 'MS debug 13.11.2011 self.imgWidth', self.imgWidth
         #print 'MS debug 13.11.2011 self.imgHeight', self.imgHeight
-        print
+        print()
         
         self.X = []
         self.Y = []
         self.centredPosRel = {}
-        print
-        print 'M.S. 23.10.2012, ManualCentringProcedure __initProcedure__'
+        print()
+        print('M.S. 23.10.2012, ManualCentringProcedure __initProcedure__')
         if phi.isReady() and phiy.isReady() and phiz.isReady() and sampx.isReady() and sampy.isReady():
             self.phiSavedPosition = self.phi.getPosition()
             return True
@@ -122,13 +123,13 @@ class ManualCentringProcedure(ProcedureIterator):
         while len(self.X) < 3:
             self.phi.moveRelative(90) #MS 2013-07-06: 90 -> 1. for chip centering
             yield None
-        print 'Debug 15.11.2012  ManualCentringProcedure(ProcedureIterator)'
-        print self.X
-        print self.Y
-        print self.phiSavedPosition, type(self.phiSavedPosition)
-        print 'self.pixelsPerMmY', self.pixelsPerMmY, 1000./self.pixelsPerMmY
-        print 'self.pixelsPerMmZ', self.pixelsPerMmZ, 1000./self.pixelsPerMmZ
-        print
+        print('Debug 15.11.2012  ManualCentringProcedure(ProcedureIterator)')
+        print(self.X)
+        print(self.Y)
+        print(self.phiSavedPosition, type(self.phiSavedPosition))
+        print('self.pixelsPerMmY', self.pixelsPerMmY, 1000./self.pixelsPerMmY)
+        print('self.pixelsPerMmZ', self.pixelsPerMmZ, 1000./self.pixelsPerMmZ)
+        print()
         
         yc = (self.Y[0]+self.Y[2]) /2
         y =  self.Y[0] - yc
@@ -201,7 +202,7 @@ class MoveToBeamCentringProcedure(ProcedureIterator):
 
     def __stopProcedure__(self):
         self.shouldStop=True
-        return self.next()
+        return next(self)
 
     def getCentredPosition(self):
         return { self.sampx: self.sampx.getPosition(),
@@ -315,7 +316,7 @@ class AutoCentringProcedure:
             if kind=="ERROR":
                 logging.getLogger("HWR").error(msg)
                 self.__progressMessage(msg)
-                if callable(self.__centringFailed):
+                if isinstance(self.__centringFailed, collections.Callable):
                     self.__centringFailed()
                 return
             elif kind=="DEBUG":
@@ -326,11 +327,11 @@ class AutoCentringProcedure:
                 return
             elif kind=="SUCCESS":
                 self.success = True
-                if callable(self.__centringSuccessful):
+                if isinstance(self.__centringSuccessful, collections.Callable):
                     self.__centringSuccessful()
                 return
 
-        if callable(self.__progressMessage):
+        if isinstance(self.__progressMessage, collections.Callable):
            logging.getLogger("HWR").info(msg)
            self.__progressMessage(msg)
 
@@ -396,8 +397,8 @@ class MicrodiffPX2(Equipment):
         self.sampleYMotor = self.getDeviceByRole('sampy')
         self.camera = self.getDeviceByRole('camera')
         self.md2 = PyTango.DeviceProxy('i11-ma-cx1/ex/md2') #MS 6.4.2012
-        print 'MS debug 15.11.2012 MicrodiffPX2(Equipment) self.phiMotor.tangoname'
-        print self.phiMotor.tangoname
+        print('MS debug 15.11.2012 MicrodiffPX2(Equipment) self.phiMotor.tangoname')
+        print(self.phiMotor.tangoname)
         
         self.x_calib = self.addChannel({ "type":"tango", "tangoname": self.phiMotor.tangoname, "name":"x_calib", "polling": 1000 }, "CoaxCamScaleX") #, "polling":"events" }, "CoaxCamScaleX")
         #self.x_calib = self.addChannel({ "type":"tango", "tangoname": 'i11-ma-cx1/ex/md2', "name":"x_calib" }, "CoaxCamScaleX")
@@ -480,7 +481,7 @@ class MicrodiffPX2(Equipment):
         # mxCuBE hutch version with no automatic centring brick...)
         continue_auto_centring = False
         for w in QApplication.allWidgets():
-          if callable(w.name) and str(w.name()) == 'autocentring':
+          if isinstance(w.name, collections.Callable) and str(w.name()) == 'autocentring':
             continue_auto_centring = w.isInstanceModeMaster()
             break
         if not continue_auto_centring:
@@ -508,11 +509,11 @@ class MicrodiffPX2(Equipment):
 
 
     def motorsReady(self):
-        print
-        print 'M.S. motorsReady()',
-        print 'self.sampleXMotor.getState(), self.sampleYMotor.getState(), self.zoomMotor.getState(), self.phiMotor.getState(), self.phizMotor.getState(), self.phiyMotor.getState()'
-        print self.sampleXMotor.getState(), self.sampleYMotor.getState(), self.zoomMotor.getState(), self.phiMotor.getState(), self.phizMotor.getState(), self.phiyMotor.getState()
-        print
+        print()
+        print('M.S. motorsReady()', end=' ')
+        print('self.sampleXMotor.getState(), self.sampleYMotor.getState(), self.zoomMotor.getState(), self.phiMotor.getState(), self.phizMotor.getState(), self.phiyMotor.getState()')
+        print(self.sampleXMotor.getState(), self.sampleYMotor.getState(), self.zoomMotor.getState(), self.phiMotor.getState(), self.phizMotor.getState(), self.phiyMotor.getState())
+        print()
         return self.sampleXMotor.getState() == self.sampleXMotor.READY and \
                self.sampleYMotor.getState() == self.sampleYMotor.READY and \
                self.zoomMotor.getState() == self.zoomMotor.READY and \
@@ -577,32 +578,32 @@ class MicrodiffPX2(Equipment):
         #return (1000.0/self.x_calib.getValue(), 1000.0/self.y_calib.getValue())
     
     def getCalibrationData(self, offset):
-        print
-        print "MS debug 6.2.2013 getCalibrationData(), offset, type(offset)", offset, type(offset)
+        print()
+        print("MS debug 6.2.2013 getCalibrationData(), offset, type(offset)", offset, type(offset))
         if self.zoomMotor is not None:
-            print "self.zoomMotor is not None"
+            print("self.zoomMotor is not None")
             if self.zoomMotor.hasObject('positions'):
-                print "self.zoomMotor.hasObject('positions')"
-                print "self.zoomMotor['positions']", self.zoomMotor['positions']
+                print("self.zoomMotor.hasObject('positions')")
+                print("self.zoomMotor['positions']", self.zoomMotor['positions'])
                 for position in self.zoomMotor['positions']: #['positions']:
-                    print "position, type(position), position.offset: ", position, type(position)
-                    print "position.getObjectByRole('offset') ", position.getObjectByRole('offset') 
+                    print("position, type(position), position.offset: ", position, type(position))
+                    print("position.getObjectByRole('offset') ", position.getObjectByRole('offset')) 
                     if position.getObjectByRole('offset') == offset:
-                        print "position.getObjectByRole('offset') == offset" 
-                        print "I am in!"
+                        print("position.getObjectByRole('offset') == offset") 
+                        print("I am in!")
                         calibrationData = position.getObjectByRole('calibrationData')
-                        print "MS debug 1.2.13 getCalibrationData()"
-                        print '(float(calibrationData.pixelsPerMmY) or 0, float(calibrationData.pixelsPerMmZ) or 0, float(calibrationData.beamPositionX) or 0, float(calibrationData.beamPositionY) or 0)'
-                        print (float(calibrationData.pixelsPerMmY) or 0, float(calibrationData.pixelsPerMmZ) or 0, float(calibrationData.beamPositionX) or 0, float(calibrationData.beamPositionY) or 0)
+                        print("MS debug 1.2.13 getCalibrationData()")
+                        print('(float(calibrationData.pixelsPerMmY) or 0, float(calibrationData.pixelsPerMmZ) or 0, float(calibrationData.beamPositionX) or 0, float(calibrationData.beamPositionY) or 0)')
+                        print((float(calibrationData.pixelsPerMmY) or 0, float(calibrationData.pixelsPerMmZ) or 0, float(calibrationData.beamPositionX) or 0, float(calibrationData.beamPositionY) or 0))
                         self.pixelsPerMmY = float(calibrationData.pixelsPerMmY)
                         self.pixelsPerMmZ = float(calibrationData.pixelsPerMmZ)
                         self.beamPositionX = float(calibrationData.beamPositionX)
                         self.beamPositionY = float(calibrationData.beamPositionY)
-                        print self.pixelsPerMmY, self.pixelsPerMmZ, self.beamPositionX, self.beamPositionY
-                        print
+                        print(self.pixelsPerMmY, self.pixelsPerMmZ, self.beamPositionX, self.beamPositionY)
+                        print()
                         return (float(calibrationData.pixelsPerMmY) or 0, float(calibrationData.pixelsPerMmZ) or 0, float(calibrationData.beamPositionX) or 0, float(calibrationData.beamPositionY) or 0)
-        print "I am not in "
-        print
+        print("I am not in ")
+        print()
         return (None, None, None, None)
         
     def _update_x_calib(self, value):
@@ -654,18 +655,18 @@ class MicrodiffPX2(Equipment):
         return (self.pixelsPerMmY, self.pixelsPerMmZ, self.beamPositionX, self.beamPositionY)
         
     def zoomMotorPredefinedPositionChanged(self, positionName, offset):
-        print 'self.md2.ZoomLevel', self.md2.ZoomLevel
+        print('self.md2.ZoomLevel', self.md2.ZoomLevel)
         self.pixelsPerMmY, self.pixelsPerMmZ, self.beamPositionX, self.beamPositionY = self.getCalibrationData3(str(self.md2.ZoomLevel))
         #self.pixelsPerMmY, self.pixelsPerMmZ = self.getCalibrationData2(offset) #MS 13.11.2012
         positionName = str(self.md2.ZoomLevel)
         offset = cData[positionName]['offset']
-        print
-        print 'MS debug 13.11.2012 zoomMotorPredefinedPositionChanged(self, positionName, offset):'
-        print 'positionName', positionName
-        print 'offset', offset
-        print 'pixelsPerMmZ', self.pixelsPerMmY
-        print 'pixelsPerMmY', self.pixelsPerMmZ
-        print 
+        print()
+        print('MS debug 13.11.2012 zoomMotorPredefinedPositionChanged(self, positionName, offset):')
+        print('positionName', positionName)
+        print('offset', offset)
+        print('pixelsPerMmZ', self.pixelsPerMmY)
+        print('pixelsPerMmY', self.pixelsPerMmZ)
+        print() 
         
         logging.getLogger().info("zoom motor pos. changed to %s, pixels by mm X=%f, Y=%f", positionName, self.pixelsPerMmY, self.pixelsPerMmZ)
         self.emit('zoomMotorPredefinedPositionChanged', (positionName, offset, ))
@@ -724,7 +725,7 @@ class MicrodiffPX2(Equipment):
 
 
     def getAvailableCentringMethods(self):
-        return self.centringMethods.keys()
+        return list(self.centringMethods.keys())
 
 
     def startCentringMethod(self,method,sample_info=None):
@@ -734,8 +735,8 @@ class MicrodiffPX2(Equipment):
         #self.snapshotsProcedure = None
         
         curr_time=time.strftime("%Y-%m-%d %H:%M:%S")
-        print
-        print 'M.S. 23.10.2012, startCenteringMethod, curr_time', curr_time
+        print()
+        print('M.S. 23.10.2012, startCenteringMethod, curr_time', curr_time)
         self.centringStatus={"valid":False, "startTime":curr_time}
 
         try:
@@ -744,23 +745,23 @@ class MicrodiffPX2(Equipment):
             flexible=False
             
         
-        print
-        print 'M.S. 23.10.2012, startCenteringMethod, method', method
+        print()
+        print('M.S. 23.10.2012, startCenteringMethod, method', method)
         self.emitCentringStarted(method,flexible)
 
         try:
             fun=self.centringMethods[method]
-            print
-            print 'M.S. 23.10.2012, startCenteringMethod, fun', fun
-        except KeyError,diag:
+            print()
+            print('M.S. 23.10.2012, startCenteringMethod, fun', fun)
+        except KeyError as diag:
             logging.getLogger("HWR").error("Microdiff: unknown centring method (%s)" % str(diag))
             self.emitCentringFailed()
         else:
             try:
                 fun(sample_info)
-                print
-                print 'M.S. 23.10.2012, startCenteringMethod, fun(sample_info)', fun(sample_info)
-                print
+                print()
+                print('M.S. 23.10.2012, startCenteringMethod, fun(sample_info)', fun(sample_info))
+                print()
             except:
                 logging.getLogger("HWR").exception("Microdiff: problem while centring")
                 self.emitCentringFailed()
@@ -774,7 +775,7 @@ class MicrodiffPX2(Equipment):
                 logging.getLogger("HWR").exception("Microdiff: problem aborting the centring method")
             try:
                 fun=self.cancelCentringMethods[self.currentCentringMethod]
-            except KeyError,diag:
+            except KeyError as diag:
                 self.emitCentringFailed()
             else:
                 try:
@@ -804,8 +805,8 @@ class MicrodiffPX2(Equipment):
                                                                 self.pixelsPerMmZ,
                                                                 self.imgWidth,
                                                                 self.imgHeight, self)
-        print 'M.S. 23.10.2012, self.currentCentringProcedure', self.currentCentringProcedure
-        print "Click on the sample..."
+        print('M.S. 23.10.2012, self.currentCentringProcedure', self.currentCentringProcedure)
+        print("Click on the sample...")
         self.emitProgressMessage("Click on the sample...")
 
 
@@ -843,10 +844,10 @@ class MicrodiffPX2(Equipment):
 
 
     def imageClicked(self, x, y, xi, yi):
-        print
-        print 'M.S. 23.10.2012 imageClicked, hello!'
-        print 'self.currentCentringMethod', self.currentCentringMethod
-        print
+        print()
+        print('M.S. 23.10.2012 imageClicked, hello!')
+        print('self.currentCentringMethod', self.currentCentringMethod)
+        print()
         if self.currentCentringMethod!=MicrodiffPX2.MANUAL3CLICK_MODE:
             return
         #if self.moveToCentredProcedure is not None or self.snapshotsProcedure is not None:
@@ -857,13 +858,13 @@ class MicrodiffPX2(Equipment):
         added=self.currentCentringProcedure.addPoint(x, y)
 
         try:
-            ach = self.currentCentringProcedure.next()
+            ach = next(self.currentCentringProcedure)
         except StopIteration:
             self.emitProgressMessage("Moving sample to centred position...")
             self.emitCentringMoving()
             motor_pos=self.currentCentringProcedure.getCentredPosition()
-            motor_names = [x.motor_name+x.motor_pos_attr_suffix for x in motor_pos.keys()]
-            motor_pos = list(motor_pos.itervalues())
+            motor_names = [x.motor_name+x.motor_pos_attr_suffix for x in list(motor_pos.keys())]
+            motor_pos = list(motor_pos.values())
             #logging.getLogger().info("moving multiple:%s", [motor_pos,motor_names])
             self.moveMultipleMotors([motor_pos,motor_names])
             self.phiMotor.move(self.phiMotor.getPosition()-180)
@@ -871,10 +872,10 @@ class MicrodiffPX2(Equipment):
             self.emitCentringSuccessful()
         else:
             if added==2:
-                print "Click on the sample one last time..."
+                print("Click on the sample one last time...")
                 self.emitProgressMessage("Click on the sample one last time...")
             else:
-                print "Click on the sample again..."
+                print("Click on the sample again...")
                 self.emitProgressMessage("Click on the sample again...")
 
 
@@ -902,7 +903,7 @@ class MicrodiffPX2(Equipment):
         self.centringStatus["valid"]=True
         self.centringStatus["accepted"]=True
         logging.getLogger("HWR").debug("Microdiff:acceptCentring")
-        print 'self.centringStatus', self.centringStatus
+        print('self.centringStatus', self.centringStatus)
         self.takeSnapshots()
         self.emitProgressMessage("Sample is centered!")
         self.emit('centringAccepted', (True, self.getCentringStatus()))
@@ -987,7 +988,7 @@ class MicrodiffPX2(Equipment):
     def takeSnapshots(self):
         try:
             centring_valid=self.centringStatus["valid"]
-            print 'MS 17.02.2013 takeSnapshots(), centring_valid, self.centringStatus["valid"]', self.centringStatus["valid"]
+            print('MS 17.02.2013 takeSnapshots(), centring_valid, self.centringStatus["valid"]', self.centringStatus["valid"])
         except:
             centring_valid=False
         done=False
@@ -1006,7 +1007,7 @@ class MicrodiffPX2(Equipment):
               self.phiMotor.syncMoveRelative(-90)
               logging.getLogger().info("phi took %g ms to move", (time.time()-t0)*1000)
             snapshots.reverse() # snapshot order must be according to positive rotation direction
-            print 'len(snapshots)', len(snapshots)
+            print('len(snapshots)', len(snapshots))
             done=True
             """ 
             while 1:

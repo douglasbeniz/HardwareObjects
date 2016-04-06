@@ -4,8 +4,8 @@ from gevent.event import AsyncResult
 import logging
 import time
 import os
-import httplib
-import urllib
+import http.client
+import urllib.request, urllib.parse, urllib.error
 import math
 from queue_model_objects_v1 import PathTemplate
 
@@ -385,9 +385,9 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
         
     @task
     def move_motors(self, motor_position_dict):
-        for motor in motor_position_dict.keys(): #iteritems():
+        for motor in list(motor_position_dict.keys()): #iteritems():
             position = motor_position_dict[motor]
-            if isinstance(motor, str) or isinstance(motor, unicode):
+            if isinstance(motor, str) or isinstance(motor, str):
                 # find right motor object from motor role in diffractometer obj.
                 motor_role = motor
                 motor = self.bl_control.diffractometer.getDeviceByRole(motor_role)
@@ -399,7 +399,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
             logging.getLogger("HWR").info("Moving motor '%s' to %f", motor.getMotorMnemonic(), position)
             motor.move(position)
 
-        while any([motor.motorIsMoving() for motor in motor_position_dict.iterkeys()]):
+        while any([motor.motorIsMoving() for motor in motor_position_dict.keys()]):
             logging.getLogger("HWR").info("Waiting for end of motors motion")
             time.sleep(0.02)  
 
@@ -486,17 +486,17 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
         for dir in (self.raw_data_input_file_dir, xds_directory):
           self.create_directories(dir)
           logging.info("Creating XDS processing input file directory: %s", dir)
-          os.chmod(dir, 0777)
+          os.chmod(dir, 0o777)
 
         for dir in (self.mosflm_raw_data_input_file_dir, self.raw_hkl2000_dir):
             self.create_directories(dir)
             logging.info("Creating processing input file directory: %s", dir)
-            os.chmod(dir, 0777)
+            os.chmod(dir, 0o777)
  
         try: 
           try: 
               os.symlink(files_directory, os.path.join(process_directory, "links"))
-          except os.error, e:
+          except os.error as e:
               if e.errno != errno.EEXIST:
                   raise
         except:
@@ -508,7 +508,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
     @task
     def write_input_files(self, collection_id):
         # assumes self.xds_directory and self.mosflm_directory are valid
-        conn = httplib.HTTPConnection(self.bl_config.input_files_server)
+        conn = http.client.HTTPConnection(self.bl_config.input_files_server)
 
         # hkl input files 
         for input_file_dir, file_prefix in ((self.raw_hkl2000_dir, "../.."), (self.hkl2000_directory, "../links")): 
@@ -522,7 +522,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
             else:
                 hkl_file.write(r.read())
             hkl_file.close()
-            os.chmod(hkl_file_path, 0666)
+            os.chmod(hkl_file_path, 0o666)
 
         for input_file_dir, file_prefix in ((self.raw_data_input_file_dir, "../.."), (self.xds_directory, "../links")): 
 	  xds_input_file = os.path.join(input_file_dir, "XDS.INP")
@@ -534,7 +534,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
           else:
             xds_file.write(r.read())
           xds_file.close()
-          os.chmod(xds_input_file, 0666)
+          os.chmod(xds_input_file, 0o666)
 
         for input_file_dir, file_prefix in ((self.mosflm_raw_data_input_file_dir, "../.."), (self.mosflm_directory, "../links")): 
 	  mosflm_input_file = os.path.join(input_file_dir, "mosflm.inp")
@@ -542,7 +542,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
           mosflm_file = open(mosflm_input_file, "w")
           mosflm_file.write(conn.getresponse().read()) 
           mosflm_file.close()
-          os.chmod(mosflm_input_file, 0666)
+          os.chmod(mosflm_input_file, 0o666)
         
         # also write input file for STAC
         for stac_om_input_file_name, stac_om_dir in (("mosflm.descr", self.mosflm_directory), 
@@ -569,7 +569,7 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
                              sampy=self.bl_control.diffractometer.sampleYMotor.getPosition(), 
                              phiy=self.bl_control.diffractometer.phiyMotor.getPosition()))
           stac_om_file.close()
-          os.chmod(stac_om_input_file, 0666)
+          os.chmod(stac_om_input_file, 0o666)
 
 
     def get_wavelength(self):
@@ -736,9 +736,9 @@ class ESRFMultiCollect(AbstractMultiCollect, HardwareObject):
             beamline = "unknown"
             proposal = "unknown" 
         host, port = self.getProperty("bes_jpeg_hostport").split(":")
-        conn = httplib.HTTPConnection(host, int(port)) 
+        conn = http.client.HTTPConnection(host, int(port)) 
 
-        params = urllib.urlencode({"image_path":filename,
+        params = urllib.parse.urlencode({"image_path":filename,
                                    "jpeg_path":jpeg_path,
                                    "jpeg_thumbnail_path":jpeg_thumbnail_path,
                                    "initiator": beamline,

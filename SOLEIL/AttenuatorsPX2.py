@@ -49,7 +49,7 @@ class AttenuatorsPX2(Device):
             
             self.connected()
             self.chanAttState = self.getChannelObject('State')
-            print "self.chanAttState : ", self.chanAttState
+            print("self.chanAttState : ", self.chanAttState)
             self.chanAttState.connectSignal('update', self.attStateChanged)
             #self.chanAttFactor = self.getChannelObject('appliedTransmission')
             
@@ -81,7 +81,7 @@ class AttenuatorsPX2(Device):
         logging.getLogger().debug("Attenuator state read from the device %s",self.Attenuatordevice.State().name)
         try:
             #print "HEYO", self.Attenuatordevice.StatefiltersCombination
-            print self.Attenuatordevice.Status()
+            print(self.Attenuatordevice.Status())
             value= AttenuatorsPX2.stateAttenuator[self.Attenuatordevice.State().name]
         except:
             logging.getLogger("HWR").error('%s: received value on channel is not a integer value', str(self.name()))
@@ -90,12 +90,12 @@ class AttenuatorsPX2(Device):
 
     def getAttFactor(self):
         logging.getLogger().debug("HOS Attenuator: passe dans getAttFactor")
-        print 'self.Attenuatordevice.Status()', self.Attenuatordevice.Status() 
+        print('self.Attenuatordevice.Status()', self.Attenuatordevice.Status()) 
         try:
             #value = float(self.Attenuatordevice.appliedTransmission)
             status = self.Attenuatordevice.Status()
             status = status[:status.index(':')]
-            print 'status', status
+            print('status', status)
             value = status #self.Attenuatordevice.Status() #1. #float(self.Attenuatordevice.computedTransmission)
         except:
             logging.getLogger("HWR").error('%s: received value on channel is not a float value', str(self.name()))
@@ -113,12 +113,12 @@ class AttenuatorsPX2(Device):
         self.emit('attStateChanged', (AttenuatorsPX2.stateAttenuator[str(channelValue)], ))
 
     def attFactorChanged(self, channelValue):
-        print 'attFactorChanged', channelValue
-        print 'self.Attenuatordevice.Status()', self.Attenuatordevice.Status()
+        print('attFactorChanged', channelValue)
+        print('self.Attenuatordevice.Status()', self.Attenuatordevice.Status())
         try:
             status = self.Attenuatordevice.Status()
             status = status[:status.index(':')]
-            print 'status', status
+            print('status', status)
             value = status
             #value = float(channelValue)
         except:
@@ -139,7 +139,7 @@ class AttenuatorsPX2(Device):
             
     def setTransmission(self, value) :
         logging.getLogger("HWR").debug("%s: AttenuatorsPX2.setTransmission: %s", self.name(), value)
-        print value
+        print(value)
         self.Attenuatordevice.write_attribute(self.NumToLabel[value], True) #.computedAttenuation = 1.0/(value/100.0)
         #try:
             #self.Attenuatordevice.write_attribute(value, True) #.computedAttenuation = 1.0/(value/100.0)
@@ -149,7 +149,7 @@ class AttenuatorsPX2(Device):
         return value
         
     def toggle(self, value) :
-        print "Toggle value = %s" %value
+        print("Toggle value = %s" %value)
         logging.getLogger().debug("HOS Attenuator: passe dans toggle")
         self.Attenuatordevice.write_attribute(value, True)
         

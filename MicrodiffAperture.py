@@ -29,7 +29,7 @@ class MicrodiffAperture(MD2Motor):
         self.sortPredefinedPositionsList()
         
     def sortPredefinedPositionsList(self):
-        self.predefinedPositionsNamesList = self.predefinedPositions.keys()
+        self.predefinedPositionsNamesList = list(self.predefinedPositions.keys())
         self.predefinedPositionsNamesList.sort(lambda x, y: int(round(self.predefinedPositions[x] - self.predefinedPositions[y])))
         
     def connectNotify(self, signal):
@@ -44,7 +44,7 @@ class MicrodiffAperture(MD2Motor):
         elif signal == 'apertureChanged':
                 self.emit('apertureChanged', (self.getApertureSize(), ))
         else:
-            return MD2Motor.connectNotify.im_func(self, signal)
+            return MD2Motor.connectNotify.__func__(self, signal)
 
     def getLimits(self):
         return (1,self.nb)
@@ -53,7 +53,7 @@ class MicrodiffAperture(MD2Motor):
         return self.predefinedPositionsNamesList
 
     def motorPositionChanged(self, absolutePosition, private={}):
-        MD2Motor.motorPositionChanged.im_func(self, absolutePosition, private)
+        MD2Motor.motorPositionChanged.__func__(self, absolutePosition, private)
 
         positionName = self.getCurrentPositionName(absolutePosition)
         self.emit('predefinedPositionChanged', (positionName, positionName and absolutePosition or None, ))

@@ -6,7 +6,8 @@ class Container(Component):
     """
     
     def __init__(self,type,container, address, scannable):
-        super(Container, self).__init__(container, address, scannable)
+        #super(Container, self).__init__(container, address, scannable)
+        super().__init__(container, address, scannable)
         self.type = type
         self.components = []     
     

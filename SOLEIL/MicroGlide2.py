@@ -36,19 +36,19 @@ class MicroGlide2(TangoDCMotor):
                 if device.getPosition() != 55.:
                     device.move(55.)
             elif "obx" in device.tangoname.lower():
-                print "OBX STATE:", device.getShutterState()
+                print("OBX STATE:", device.getShutterState())
                 if device.getShutterState() == "opened":
                     device.closeShutter()
             elif "zoom" in device.tangoname.lower():
                 _zoom = device.getCurrentPositionName()
-                print "ZOOM POSITION:", _zoom
+                print("ZOOM POSITION:", _zoom)
                 if _zoom != "Zoom 1":
                     device.moveToPosition("Zoom 1")
             elif device.username == "Resolution":
-                print "Detector Distance", device.currentDistance
+                print("Detector Distance", device.currentDistance)
                 if device.currentDistance <= 350:
                     device.move(350.)
-            print device.tangoname, device.username #, device.getPosition()
+            print(device.tangoname, device.username) #, device.getPosition()
             #print device.getState()
         
     def Centring(self):
@@ -67,15 +67,15 @@ class MicroGlide2(TangoDCMotor):
         #self.ms.initAll()
         #state = self.ms.getState()
         while state == initState:
-            print 'waiting state change...', state
+            print('waiting state change...', state)
             qApp.processEvents(100)
             state = self.ms.getState()
         while state in ("MOVING", "DONE"):
-            print 'processing events...', state
+            print('processing events...', state)
             qApp.processEvents(100)
             state = self.ms.getState()
         if state == "READY":
-            print "-----> emit stateChanged..."
+            print("-----> emit stateChanged...")
             self.emit("stateChanged", ["Kappa", "READY"])
             self.emit("stateChanged", ["phi", "READY"])
             devices = self.getDevices()

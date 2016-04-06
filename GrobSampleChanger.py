@@ -3,6 +3,7 @@
 import logging
 from HardwareRepository.BaseHardwareObjects import Equipment
 import gevent
+import collections
 
 class GrobSampleChanger(Equipment):
     (FLAG_SC_IN_USE,FLAG_MINIDIFF_CAN_MOVE,FLAG_SC_CAN_LOAD,FLAG_SC_NEVER) = (1,2,4,8)
@@ -22,7 +23,7 @@ class GrobSampleChanger(Equipment):
         self._sample_id = None
         self._sample_location = (0,0)
         self.loaded_sample_dict = {}
-        self.samples_map = dict(zip(range(30), ["unknown"]*30))
+        self.samples_map = dict(list(zip(list(range(30)), ["unknown"]*30)))
         self.matrix_codes = []
         for i in range(30):
           sample_num = i+1
@@ -50,15 +51,15 @@ class GrobSampleChanger(Equipment):
       return self.grob.transfer_state()
 
     def ioBitsChanged(self, bits):
-      bits, output_bits=map(int, bits.split())
+      bits, output_bits=list(map(int, bits.split()))
       status = {}
-      for bit_number, name in { 1:"lid", 2:"puck1", 3:"puck2", 4:"puck3", 6:"ln2_alarm_low"}.iteritems():
+      for bit_number, name in { 1:"lid", 2:"puck1", 3:"puck2", 4:"puck3", 6:"ln2_alarm_low"}.items():
         status[name] = bits&(1<<(bit_number-1))!=0
       self.emit("ioStatusChanged", (status,))
 
     def samplesMapChanged(self, samples_map_dict):
       samples_map_int_keys = {}
-      for k, v in samples_map_dict.iteritems():
+      for k, v in samples_map_dict.items():
         samples_map_int_keys[int(k)]=v
       self.samples_map = samples_map_int_keys
       self.emit("samplesMapChanged", (self.samples_map,))
@@ -77,14 +78,14 @@ class GrobSampleChanger(Equipment):
       self.emit("stateChanged", (state,))
 
     def _callSuccessCallback(self):
-      if callable(self._successCallback):
+      if isinstance(self._successCallback, collections.Callable):
         try:
            self._successCallback()
         except:
            logging.exception("%s: exception while calling success callback", self.name())
  
     def _callFailureCallback(self):
-      if callable(self._failureCallback):
+      if isinstance(self._failureCallback, collections.Callable):
         try:
            self._failureCallback()
         except:

@@ -1,4 +1,4 @@
-from .GenericSampleChanger import *
+from GenericSampleChanger import *
 import time
 
 

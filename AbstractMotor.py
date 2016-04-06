@@ -21,11 +21,10 @@
 Descript. : AbstractMotor represent motor.
 """
 
-import abc
+from abc import ABCMeta, abstractmethod
 
-class AbstractMotor(object):
-    __metaclass__ = abc.ABCMeta
-
+class AbstractMotor():
+    __metaclass__ = ABCMeta
     (NOTINITIALIZED, UNUSABLE, READY, MOVESTARTED, MOVING, ONLIMIT) = (0,1,2,3,4,5)
     EXPORTER_TO_MOTOR_STATE = { "Invalid": NOTINITIALIZED,
                                 "Fault": UNUSABLE,
@@ -46,7 +45,7 @@ class AbstractMotor(object):
         self.static_limits = (-1E4, 1E4)
         self.limits = (None, None)
 
-        #generic method used by the beamline setup
+        # Generic method used by the beamline setup
         self.get_value = self.getPosition
 
     def getMotorMnemonic(self):
@@ -61,14 +60,14 @@ class AbstractMotor(object):
         """
         self.setIsReady(self.motor_state > AbstractMotor.UNUSABLE)
 
-    @abc.abstractmethod
+    @abstractmethod
     def getState(self):
         """
         Return motor state
         """
         return
 
-    @abc.abstractmethod
+    @abstractmethod
     def getLimits(self):
         """
         Returns motor limits. If no limits channel defined then
@@ -76,7 +75,7 @@ class AbstractMotor(object):
         """
         return
 
-    @abc.abstractmethod
+    @abstractmethod
     def getPosition(self):
         """
         Read the motor user position.
@@ -89,7 +88,7 @@ class AbstractMotor(object):
         """
         return self.getPosition()
 
-    @abc.abstractmethod
+    @abstractmethod
     def move(self, position, wait=False, timeout=None):
         """
         Move to absolute position. Wait the move to finish (True/False)
@@ -114,7 +113,7 @@ class AbstractMotor(object):
         """
         self.moveRelative(position, timeout=timeout, wait=True)
 
-    @abc.abstractmethod
+    @abstractmethod
     def stop(self):
         """
         Stop the motor

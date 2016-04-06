@@ -101,9 +101,6 @@ class DiffractometerMockup(Equipment):
         self.phase_list = None
         self.head_type = None
         self._drawing = None
-        self.use_sc = False
-        self.transfer_mode = None
-
 
         self.connect(self, 'equipmentReady', self.equipmentReady)
         self.connect(self, 'equipmentNotReady', self.equipmentNotReady)
@@ -119,13 +116,14 @@ class DiffractometerMockup(Equipment):
         self.start3ClickCentring = self.start_3Click_centring
         self.startAutoCentring = self.start_automatic_centring
      
+        self.centringStatus = self.centring_status
+
     def init(self):
         """
         Descript. :
         """
         self.x_calib = 0.000444
         self.y_calib = 0.000446
-        self.transfer_mode = "SAMPLE_CHANGER"# available mode is DIRECT, KAPPA, SAMPLE_CHANGER, CLEARED, UNKNOWN
          
         self.pixels_per_mm_x = 1.0 / self.x_calib
         self.pixels_per_mm_y = 1.0 / self.y_calib
@@ -159,14 +157,6 @@ class DiffractometerMockup(Equipment):
         self.beam_info_hwobj = self.getObjectByRole('beam_info')
         self.camera = self.camera_hwobj
         self.beam_info = self.beam_info_hwobj
-       
-        self.sample_changer = self.getObjectByRole('samplechanger')
-        self.front_light_motor = self.getObjectByRole('frontlight')
-        self.front_light_swtich = self.getObjectByRole('frontlightswitch')
-        self.back_light_motor = self.getObjectByRole('backlight')
-        self.back_light_swtich = self.getObjectByRole('backlightswitch')
-
-
 
         if self.phiMotor is not None:
             self.connect(self.phiMotor, 'stateChanged', self.phiMotorStateChanged)
@@ -202,12 +192,7 @@ class DiffractometerMockup(Equipment):
         except:
             self.grid_direction = {"fast": (0, 1), "slow": (1, 0)}
             logging.getLogger("HWR").warning('MiniDiff: Grid direction is not defined. Using default.')
-        
-        if self.sample_changer is not None and self.transfer_mode == "SAMPLE_CHANGER":
-            self.use_sc = True  # by default use sample changer if it's defined
-        else:
-            logging.getLogger("HWR").warning('Sample Changer is not defined.')
- 
+
         try:
             self.current_phase = "Transfer"
             self.phase_list = eval(self.getProperty("phaseList"))
@@ -215,28 +200,15 @@ class DiffractometerMockup(Equipment):
         except:
             self.phase_list = []
 
-    # to make it compatibile
-    def __getattr__(self, attr):
-        if attr.startswith("__"):
-            raise AttributeError(attr)
-        else:
-            if attr == "currentCentringProcedure":
-                return self.current_centring_procedure
-            if attr == "centringStatus" :
-                return self.centring_status
-
     def set_drawing(self, drawing):
 	self._drawing = drawing
 
     def use_sample_changer(self):
-        return self.use_sc
-   
-    def set_use_sc(self,state):
-        self.use_sc = state
-        return True
+        return False
 
     def in_plate_mode(self):
-        return self.head_type == "Plate"
+        #currently not used for mockup version
+	return False
 
     def toggle_fast_shutter(self):
         self.fast_shutter_is_open = not self.fast_shutter_is_open
@@ -244,9 +216,6 @@ class DiffractometerMockup(Equipment):
 
     def get_head_type(self):
         return self.head_type
-
-    def get_transfer_mode(self):
-        return self.transfer_mode
          
     def get_grid_direction(self):
         return self.grid_direction
@@ -372,7 +341,7 @@ class DiffractometerMockup(Equipment):
         """
         Descript. :
         """
-        return self.centring_methods.keys()
+        return list(self.centring_methods.keys())
 
     def get_calibration_data(self, offset):
         """
@@ -430,7 +399,7 @@ class DiffractometerMockup(Equipment):
         self.emit_centring_started(method)
         try:
             fun = self.centring_methods[method]
-        except KeyError, diag:
+        except KeyError as diag:
             logging.getLogger("HWR").error("unknown centring method (%s)" % \
                     str(diag))
             self.emit_centring_failed()
@@ -519,7 +488,7 @@ class DiffractometerMockup(Equipment):
         new_point = {}
         point_one = point_one.as_dict()
         point_two = point_two.as_dict()
-        for motor in point_one.keys():
+        for motor in list(point_one.keys()):
             new_motor_pos = frame_num / float(frame_total) * abs(point_one[motor] - \
                   point_two[motor]) + point_one[motor]
             new_motor_pos += 0.5 * (point_two[motor] - point_one[motor]) / \
@@ -657,9 +626,6 @@ class DiffractometerMockup(Equipment):
         """
         return self.current_phase
 
-    def set_phase(self, phase, timeout=None):
-	self.start_set_phase(phase)
-
     def start_set_phase(self, name):
         """
         Descript. :
@@ -671,7 +637,7 @@ class DiffractometerMockup(Equipment):
         """
         Descript. :
         """
-        print "refresh"
+        print("refresh")
         if self.beam_info_hwobj: 
             self.beam_info_hwobj.beam_pos_hor_changed(300) 
             self.beam_info_hwobj.beam_pos_ver_changed(200)
@@ -688,7 +654,7 @@ class DiffractometerMockup(Equipment):
         """
         Descript. :
         """
-        print "moving to coord: %d %d" %(x ,y) 
+        print("moving to coord: %d %d" %(x ,y)) 
         if self.current_phase != "BeamLocation":
             time.sleep(1)
         else:

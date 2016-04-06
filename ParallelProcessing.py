@@ -325,7 +325,7 @@ class ParallelProcessing(HardwareObject):
         gevent.sleep(10)
         #This is for test...
 
-        for key in processing_result.keys():
+        for key in list(processing_result.keys()):
             processing_result[key] = numpy.linspace(0, 
                  processing_params["images_num"], 
                  processing_params["images_num"]).astype('uint8')
@@ -463,7 +463,7 @@ class ParallelProcessing(HardwareObject):
         """
         #Each result array is realigned
         aligned_results = {}
-        for result_array_key in results_dict.iterkeys():
+        for result_array_key in results_dict.keys():
             aligned_results[result_array_key] = self.align_result_array(\
               results_dict[result_array_key], processing_params, grid_object)
         if processing_params['lines_num'] > 1:

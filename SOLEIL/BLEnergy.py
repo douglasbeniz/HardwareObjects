@@ -300,7 +300,7 @@ class BLEnergy (Device) :
     def moveEnergyCmdFinished(self):
         logging.getLogger("HWR").debug("%s: BLEnergy.moveEnergyCmdFinished", self.name())
         self.moving = False
-        print 'moveEnergyFinished'
+        print('moveEnergyFinished')
         #self.emit('moveEnergyFinished',(BLEnergy.stateEnergy[str(self.BLEnergydevice.State())]))
         self.emit('moveEnergyFinished',())
         
@@ -329,7 +329,7 @@ def test():
     egy = hwr.getHardwareObject("/BLEnergy")
 
     if str(egy.mono_mt_rx_statech.getValue()) == "OFF":
-        print "mono_mt_rx motor is off. putting it on"
+        print("mono_mt_rx motor is off. putting it on")
         egy.mono_mt_rx_oncmd()
  
 

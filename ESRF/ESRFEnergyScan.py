@@ -4,7 +4,7 @@ from gevent.event import AsyncResult
 import logging
 import time
 import os
-import httplib
+import http.client
 import math
 import PyChooch
 from matplotlib.figure import Figure
@@ -53,7 +53,7 @@ class GetStaticParameters:
             larr = []
             for k in range(len(array)):
                 if self.element == array[k][1] and self.edge[0] == array[k][2]:
-                    larr = map(float,array[k][3:13])
+                    larr = list(map(float,array[k][3:13]))
                     larr.append(float(array[k][17]))
                     static_pars["atomic_nb"] = int(array[k][0])
             if self.edge == "K":
@@ -304,7 +304,7 @@ class ESRFEnergyScan(AbstractEnergyScan, HardwareObject):
         self.energy_scan_parameters["inflectionFDoublePrime"]=fppInfl
         self.energy_scan_parameters["comments"] = comm
 
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         for i in range(len(chooch_graph_x)):
           chooch_graph_x[i]=chooch_graph_x[i]/1000.0
@@ -316,7 +316,7 @@ class ESRFEnergyScan(AbstractEnergyScan, HardwareObject):
         ax=fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scanFile, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color":'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color":'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2=fig.add_subplot(212)

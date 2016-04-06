@@ -14,6 +14,6 @@ class RobodiffController(HardwareObject):
 
   def __getattr__(self, attr):
      if attr.startswith("__"):
-       raise AttributeError,attr
+       raise AttributeError(attr)
      return getattr(self.__controller, attr)
 

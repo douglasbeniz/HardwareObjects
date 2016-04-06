@@ -17,7 +17,7 @@ class ID29MultiCollect(ESRFMultiCollect):
     def data_collection_cleanup(self):
         state = self.getObjectByRole("fastshut").getActuatorState(read=True)
         if state != "out":
-            print "-----------------------> Closing fast shutter"
+            print("-----------------------> Closing fast shutter")
             self.close_fast_shutter()
       
     @task

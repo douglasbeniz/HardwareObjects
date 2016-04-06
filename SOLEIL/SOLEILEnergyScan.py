@@ -56,7 +56,7 @@ class SOLEILEnergyScan(Equipment):
                 self.doEnergyScan.connectSignal('commandAborted', self.scanCommandAborted)
                 self.doEnergyScan.connectSignal('commandReady', self.scanCommandReady)
                 self.doEnergyScan.connectSignal('commandNotReady', self.scanCommandNotReady)
-            except AttributeError,diag:
+            except AttributeError as diag:
                 logging.getLogger("HWR").warning('EnergyScan: error initializing energy scan (%s)' % str(diag))
                 self.doEnergyScan = Xanes #.xanes(None, None) #None
             else:
@@ -96,7 +96,7 @@ class SOLEILEnergyScan(Equipment):
                 #self.moveEnergy.connectSignal('commandAborted', self.moveEnergyCmdAborted)
                 self.moveEnergy.connectSignal('commandReady', self.moveEnergyCmdReady)
                 self.moveEnergy.connectSignal('commandNotReady', self.moveEnergyCmdNotReady)
-            except AttributeError,diag:
+            except AttributeError as diag:
                 logging.getLogger("HWR").warning('EnergyScan: error initializing move energy (%s)' % str(diag))
                 self.moveEnergy=None
 
@@ -180,7 +180,7 @@ class SOLEILEnergyScan(Equipment):
             logging.getLogger("HWR").debug("EnergyScan: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError,diag:
+            except OSError as diag:
                 logging.getLogger("HWR").error("EnergyScan: error creating directory %s (%s)" % (directory,str(diag)))
                 self.emit('scanStatusChanged', ("Error creating directory",))
                 return False
@@ -446,7 +446,7 @@ class SOLEILEnergyScan(Equipment):
         logging.info('self.scanInfo %s' % self.scanInfo)
         
         logging.info('chooch_graph_data %s' % str(chooch_graph_data))
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         logging.info('chooch_graph_x %s' %  str(chooch_graph_x))
         for i in range(len(chooch_graph_x)):
@@ -459,7 +459,7 @@ class SOLEILEnergyScan(Equipment):
         ax=fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scanFile, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color":'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color":'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2=fig.add_subplot(212)
@@ -565,7 +565,7 @@ class SOLEILEnergyScan(Equipment):
         logging.getLogger("HWR").info("Moving energy to (%s)" % value)
         try:
             value=float(value)
-        except (TypeError,ValueError),diag:
+        except (TypeError,ValueError) as diag:
             logging.getLogger("HWR").error("EnergyScan: invalid energy (%s)" % value)
             return False
 

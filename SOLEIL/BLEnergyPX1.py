@@ -264,7 +264,7 @@ class BLEnergy (Device) :
     def moveEnergyCmdFinished(self):
         logging.getLogger("HWR").debug("%s: BLEnergy.moveEnergyCmdFinished", self.name())
         self.moving = False
-        print 'moveEnergyFinished'
+        print('moveEnergyFinished')
         self.emit('moveEnergyFinished',(BLEnergy.stateEnergy[str(self.BLEnergydevice.State())]))
 
     def getPreviousResolution(self):

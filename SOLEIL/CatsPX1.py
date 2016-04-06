@@ -302,7 +302,7 @@ class CatsPX1(SampleChanger):
         """
         self._waitDeviceReady(3.0)
         task_id = method(*args)
-        print "CatsPX1._executeServerTask", task_id
+        print("CatsPX1._executeServerTask", task_id)
         ret=None
         if task_id is None: #Reset
             while self._isDeviceBusy():

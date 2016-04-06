@@ -81,7 +81,7 @@ class PX2DataCollectionQueueEntry(DataCollectionQueueEntry):
                 list_item.setText(1, 'Stopped')
                 raise QueueAbortedException('queue stopped by user', self)
             except Exception as ex:
-                print traceback.print_exc()
+                print(traceback.print_exc())
                 raise QueueExecutionException(ex.message, self)
         else:
             log.error("Could not call the data collection routine," +\

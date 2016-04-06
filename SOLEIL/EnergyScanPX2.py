@@ -68,11 +68,11 @@ class EnergyScanPX2(Equipment):
         self.integrationtime = paramscan.integrationtime
       
       
-        print "self.roiwidth :", self.roiwidth
-        print "self.before :", self.before
-        print "self.after :", self.after
-        print "self.nbsteps :", self.nbsteps
-        print "self.integrationtime :", self.integrationtime
+        print("self.roiwidth :", self.roiwidth)
+        print("self.before :", self.before)
+        print("self.after :", self.after)
+        print("self.nbsteps :", self.nbsteps)
+        print("self.integrationtime :", self.integrationtime)
         
 
         self.dbConnection=self.getObjectByRole("dbserver")
@@ -207,10 +207,10 @@ class EnergyScanPX2(Equipment):
         self._scan_element = element
 
         logging.getLogger("HWR").debug('EnergyScan:startEnergyScan')
-        print 'edge', edge
-        print 'element', element
-        print 'directory', directory
-        print 'prefix', prefix
+        print('edge', edge)
+        print('element', element)
+        print('directory', directory)
+        print('prefix', prefix)
         #logging.getLogger("HWR").debug('EnergyScan:edge', edge)
         #logging.getLogger("HWR").debug('EnergyScan:element', element)
         #logging.getLogger("HWR").debug('EnergyScan:directory', directory)
@@ -226,7 +226,7 @@ class EnergyScanPX2(Equipment):
             logging.getLogger("HWR").debug("EnergyScan: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError,diag:
+            except OSError as diag:
                 logging.getLogger("HWR").error("EnergyScan: error creating directory %s (%s)" % (directory,str(diag)))
                 self.emit('scanStatusChanged', ("Error creating directory",))
                 return False
@@ -425,7 +425,7 @@ class EnergyScanPX2(Equipment):
         self.scanInfo["inflectionFDoublePrime"]=fppInfl
         self.scanInfo["comments"] = comm
 
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         for i in range(len(chooch_graph_x)):
           chooch_graph_x[i]=chooch_graph_x[i]/1000.0
@@ -437,7 +437,7 @@ class EnergyScanPX2(Equipment):
         ax=fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scanFile, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color":'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color":'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2=fig.add_subplot(212)
@@ -477,8 +477,8 @@ class EnergyScanPX2(Equipment):
                  #scanFilePrefix = 'scanFilePrefix'):
                      
         logging.getLogger().info("EnergyScan: doChooch")
-        print 'scanObject', scanObject
-        print 'scanDesc', scanDesc
+        print('scanObject', scanObject)
+        print('scanDesc', scanDesc)
         #archiveRawScanFile=os.path.extsep.join((scanArchiveFilePrefix, "raw"))
         #rawScanFile=os.path.extsep.join((scanFilePrefix, "raw"))
         #scanFile=os.path.extsep.join((scanFilePrefix, "efs"))
@@ -581,7 +581,7 @@ class EnergyScanPX2(Equipment):
         self.scanInfo["inflectionFDoublePrime"]=fppInfl
         self.scanInfo["comments"] = comm
 
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         for i in range(len(chooch_graph_x)):
           chooch_graph_x[i]=chooch_graph_x[i]/1000.0
@@ -593,7 +593,7 @@ class EnergyScanPX2(Equipment):
         ax=fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scanFile, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color":'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color":'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2=fig.add_subplot(212)
@@ -677,7 +677,7 @@ class EnergyScanPX2(Equipment):
         self.element = element
         self.edge = edge
         
-        print 'e_edge = %5.4f , roi_center = %5.4f' %(e_edge, roi_center) 
+        print('e_edge = %5.4f , roi_center = %5.4f' %(e_edge, roi_center)) 
         
         filenameIn = self.getFilename(directory, filename, element, edge) # filenameIn
         self.filenameIn = filenameIn
@@ -703,7 +703,7 @@ class EnergyScanPX2(Equipment):
         
     def newPoint(self, x, y):
         logging.getLogger("HWR").debug('EnergyScan:newPoint')
-        print 'newPoint', x, y
+        print('newPoint', x, y)
         self.emit('addNewPoint', (x, y))
     
     def newScan(self,scanParameters):
@@ -858,14 +858,14 @@ class EnergyScanThread(QThread):
         
         roi_debut = 1000.0*(self.roi_center - self.parent.roiwidth / 2.0) #values set in eV
         roi_fin   = 1000.0*(self.roi_center + self.parent.roiwidth / 2.0) #values set in eV
-        print 'roi_debut', roi_debut
-        print 'roi_fin', roi_fin
+        print('roi_debut', roi_debut)
+        print('roi_fin', roi_fin)
         
         
         channel_debut = int(roi_debut / channelToeV) + 7
         channel_fin   = int(roi_fin / channelToeV) + 7
-        print 'channel_debut', channel_debut
-        print 'channel_fin', channel_fin
+        print('channel_debut', channel_debut)
+        print('channel_fin', channel_fin)
         
         # just for testing MS 07.03.2013, has to be removed for production
         ##### remove for production ####
@@ -918,8 +918,8 @@ class EnergyScanThread(QThread):
              mono_mt_rx = None):
         
         logging.getLogger("HWR").debug('EnergyScanThread:scan')
-        print 'sSensors', sSensors
-        print 'sMotor', sMotor
+        print('sSensors', sSensors)
+        print('sMotor', sMotor)
         #self.mrtx.On()
         time.sleep(1)
         
@@ -930,16 +930,16 @@ class EnergyScanThread(QThread):
         sData = []
         sSensorDevices = []
         sMotorDevice = sMotor[0]
-        print "sStepSize:", sStepSize
+        print("sStepSize:", sStepSize)
  
         if not sStepSize:
             sStepSize = float(sEnd - sStart) / nbSteps
             nbSteps += 1
         else:
             nbSteps = int(1 + ((sEnd - sStart)/sStepionTime)) #__setattr__("integrationTime", integrationTime)Size))
-        print "nbsteps:", nbSteps
+        print("nbsteps:", nbSteps)
         
-        print "Starting new scan using:"
+        print("Starting new scan using:")
         sSensorDevices = sSensors
         nbSensors = len(sSensorDevices)
         doIntegrationTime = False
@@ -957,9 +957,9 @@ class EnergyScanThread(QThread):
                     sSennsor[0].Stop()
                 sSensor[0].write_attribute("integrationTime", integrationTime) #__setattr__("integrationTime", integrationTime)
                 sSensorCounters.append(sSensor[0])
-        print "sSensorDevices", sSensorDevices                
-        print "nbSensors = ", nbSensors
-        print "Motor  = %s" % sMotorDevice.name()
+        print("sSensorDevices", sSensorDevices)                
+        print("nbSensors = ", nbSensors)
+        print("Motor  = %s" % sMotorDevice.name())
         logging.debug( "Scanning %s from %f to %f by steps of %f (nsteps = %d)" % \
                     (sMotorDevice.name(),sStart, sEnd, sStepSize, nbSteps))
         
@@ -982,7 +982,7 @@ class EnergyScanThread(QThread):
                 time.sleep(1)            
             sMotorDevice.write_attribute(sMotor[1], sStart) 
         except :
-            print "probleme sMotor"
+            print("probleme sMotor")
             self.parent.scanCommandFailed()    
         # while (sMotorDevice.State == 'MOVING')
         
@@ -1012,7 +1012,7 @@ class EnergyScanThread(QThread):
         try :
             f = open(sFileName, "w")
         except :
-            print "probleme ouverture fichier"
+            print("probleme ouverture fichier")
             self.parent.scanCommandFailed()
             return
         
@@ -1022,7 +1022,7 @@ class EnergyScanThread(QThread):
         f.write("# Normalized value\n")
         
         for sSensor in sSensorDevices:
-            print "type(sSensor) = " ,type(sSensor)
+            print("type(sSensor) = " ,type(sSensor))
             f.write("# %s\n" % (sSensor[0].name()))
         
         f.write("# Counts on the fluorescence detector: all channels")
@@ -1039,7 +1039,7 @@ class EnergyScanThread(QThread):
         # Entering the Scan loop
         measurement = 0
         for sI in range(nbSteps): #range(nbSteps): MS. 11.03.2013 lower the number for quick tests
-            print 'Step sI', sI, 'of', nbSteps
+            print('Step sI', sI, 'of', nbSteps)
             # test sur l utilisateur n a pas demande un stop
             if  not self.parent.scanning :
                 break
@@ -1096,7 +1096,7 @@ class EnergyScanThread(QThread):
             
             # On laisse une place pour mettre la valeur normalisee (specifique au EScan)
             measures = [pos_readed, -1.0]
-            print "Position: %12.4e   Measures: " % pos_readed
+            print("Position: %12.4e   Measures: " % pos_readed)
             
             # Lecture des differents sensors           
             measures.append(roiCounts) #(self.parent.fluodetdevice.roi00_01) #eventsInRun00)
@@ -1115,9 +1115,9 @@ class EnergyScanThread(QThread):
             #(Oblige an mettre le sensor compteur en premier et le xbpm en deuxieme dans le liste des sensors)               
             try:
                 measures[1] = measures[2] / measures[5] #measures[3]  
-            except ZeroDivisionError, e:
-                print e
-                print 'Please verify that the safety shutter is open.'
+            except ZeroDivisionError as e:
+                print(e)
+                print('Please verify that the safety shutter is open.')
                 measures[1] = 0.0
             
             # Demande de mise a jour du SoleilPlotBrick
@@ -1152,7 +1152,7 @@ class EnergyScanThread(QThread):
             self.result = 1
 
         tScanTotal = time.time() - tDebut
-        print "Time taken for the scan = %.2f sec" % (tScanTotal)
+        print("Time taken for the scan = %.2f sec" % (tScanTotal))
         f.write("# Duration = %.2f sec\n" % (tScanTotal))
         f.close()
 

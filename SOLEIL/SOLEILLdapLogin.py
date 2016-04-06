@@ -54,7 +54,7 @@ class SOLEILLdapLogin(Procedure):
         if self.ldapConnection is not None:
             try:
                 self.ldapConnection.result(timeout=0)
-            except ldap.LDAPError,err:
+            except ldap.LDAPError as err:
                 ldaphost=self.getProperty('ldaphost')
                 ldapport=self.getProperty('ldapport')
                 if ldapport is None:
@@ -117,7 +117,7 @@ class SOLEILLdapLogin(Procedure):
             result=self.ldapConnection.result(handle)
         except ldap.INVALID_CREDENTIALS:
             return self.cleanup(msg="invalid password for %s" % username)
-        except ldap.LDAPError,err:
+        except ldap.LDAPError as err:
             if retry:
                 self.cleanup(ex=err)
                 return self.login(username,password,retry=False)
@@ -133,8 +133,8 @@ class SOLEILLdapLogin(Procedure):
 
         try:
             found=self.ldapConnection.search_s(self.dcparts, ldap.SCOPE_SUBTREE, "uid="+username)
-        except ldap.LDAPError,err:
-            print "error in LDAP search",err
+        except ldap.LDAPError as err:
+            print("error in LDAP search",err)
             return self.cleanup(ex=err)
         else:
             return found
@@ -158,7 +158,7 @@ class SOLEILLdapLogin(Procedure):
     def find_projectusers(self, username):
         groups = self.find_groups_for_username(username)
         projusers = []
-        for groupname, users in groups.iteritems():
+        for groupname, users in groups.items():
             for user in users:
                 if user == groupname[1:]:
                     projusers.append( user )
@@ -187,15 +187,15 @@ class SOLEILLdapLogin(Procedure):
             desc = self.find_description_for_user(projuser)  
             if desc is not None: 
                 sesslist.extend( self.decode_session_info(projuser, desc) )
-        print 'find_sessions_for_user'
-        print sesslist
+        print('find_sessions_for_user')
+        print(sesslist)
         return sesslist 
 
     def find_valid_sessions_for_user(self,username, beamline=None):
         sesslist = self.find_sessions_for_user(username)
-        print 'find_valid_sessions_for_user(self,username, beamline=\'proxima2a\')'
-        print 'sesslist'
-        print sesslist
+        print('find_valid_sessions_for_user(self,username, beamline=\'proxima2a\')')
+        print('sesslist')
+        print(sesslist)
         return sesslist.find_valid_sessions(beamline=beamline)
 
     def decode_session_info(self, projuser, session_info):
@@ -206,7 +206,7 @@ class SOLEILLdapLogin(Procedure):
         beamlinelist = session_info.split(";")
 
         if len(beamlinelist) <2:
-            print "Cannot parse session info in ldap", session_info
+            print("Cannot parse session info in ldap", session_info)
             return retlist
 
         usertype = beamlinelist[0]
@@ -220,19 +220,19 @@ class SOLEILLdapLogin(Procedure):
                     sessinfo = SessionInfo(projuser, usertype, beamline, int(sessbeg), int(sessend))
                     retlist.append(sessinfo)
         except:
-            print "Cannot parse session info in ldap", session_info
+            print("Cannot parse session info in ldap", session_info)
 
         return retlist
 
     def show_all(self):
         try:
             found=self.ldapConnection.search_s(self.dcparts, ldap.SCOPE_SUBTREE)
-        except ldap.LDAPError,err:
-            print "error in LDAP search",err
+        except ldap.LDAPError as err:
+            print("error in LDAP search",err)
             return self.cleanup(ex=err)
         else:
             for item in found:
-                print item
+                print(item)
 
 class SessionInfo:
     def __init__(self, username, usertype, beamline, sessbeg, sessend):
@@ -259,7 +259,7 @@ class SessionList(list):
         return retlist
 
     def find_valid_sessions(self, timestamp=None, beamline=None):
-        print 'find_valid_sessions'
+        print('find_valid_sessions')
         if timestamp == None:
             timestamp = time.time()
 
@@ -269,8 +269,8 @@ class SessionList(list):
             if timestamp >= session.begin and timestamp <= session.finish:
                 if beamline == None or beamline.lower() == session.beamline.lower():
                     retlist.append(session)
-        print 'valid session'
-        print retlist
+        print('valid session')
+        print(retlist)
         return retlist
    
        
@@ -278,7 +278,7 @@ class SessionList(list):
 def test():
     hwr_directory = os.environ["XML_FILES_PATH"] 
 
-    print hwr_directory
+    print(hwr_directory)
     hwr = HardwareRepository.HardwareRepository(os.path.abspath(hwr_directory))
     hwr.connect()
 
@@ -299,11 +299,11 @@ def test():
     user = '20140088' #'20100023'
     sess = conn.find_sessions_for_user("%s" % user)
     for onesess in sess:
-        print "Session for %s" % user, onesess
+        print("Session for %s" % user, onesess)
 
     validsess = conn.find_valid_sessions_for_user(user)
     for valid in validsess:
-        print "Valid session for today", valid
+        print("Valid session for today", valid)
 
     #if info:
     #     print "GID:", info.get('gidNumber','')[0]

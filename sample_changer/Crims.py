@@ -1,11 +1,11 @@
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 
 import xml.etree.cElementTree as et
 
 def getImage(url):
-    f = urllib.urlopen(url)           
+    f = urllib.request.urlopen(url)           
     img=f.read() 
     return img
 
@@ -31,15 +31,15 @@ class CrimsXtal:
         return "%s%02d-%d" % (self.Row,self.Column,self.Shelf)
 
     def getImage(self):
-        print self.IMG_URL
+        print(self.IMG_URL)
         if len(self.IMG_URL) > 0:
             try:
-               print 22
+               print(22)
                if self.IMG_URL.startswith("http://"):
                    self.IMG_URL = "https://" + self.IMG_URL[7]
-               image_string = urllib.urlopen(self.IMG_URL).read()           
-               print image_string
-               print 23
+               image_string = urllib.request.urlopen(self.IMG_URL).read()           
+               print(image_string)
+               print(23)
                return image_string
             except:
                return 
@@ -63,7 +63,7 @@ def getProcessingPlan(barcode, crims_url):
     try: 
         url = crims_url + "/htxlab/index.php?option=com_crimswebservices" + \
            "&format=raw&task=getbarcodextalinfos&barcode=%s&action=insitu" % barcode
-        f = urllib.urlopen(url)
+        f = urllib.request.urlopen(url)
         xml = f.read()
 
         import xml.etree.cElementTree as et

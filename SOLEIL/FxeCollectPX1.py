@@ -30,15 +30,15 @@ class XfeCollector(object):
         #self.counter = PyTango.DeviceProxy('i11-ma-c00/ca/cpt.2')
         self.obx     = PyTango.DeviceProxy('i10-c-c03/ex/obx.1')
 
-        print self.ketek.dynamicRange
-        print self.ketek.channel00
+        print(self.ketek.dynamicRange)
+        print(self.ketek.channel00)
         
         self.channelToeV = self.ketek.dynamicRange / len(self.ketek.channel00)
         
         try:
             os.mkdir(options.directory)
-        except OSError, e:
-            print e
+        except OSError as e:
+            print(e)
         
     def setIntegrationTime(self, integrationTime = 1.):
         #self.counter.integrationTime = integrationTime
@@ -112,8 +112,8 @@ if __name__ == '__main__':
     parser.add_option('-d', '--directory', default = '.', type = str, help = 'where to store spectrum collected (default: %default)')
 
     (options, args) = parser.parse_args()
-    print options
-    print args
+    print(options)
+    print(args)
     
     doCollect = XfeCollector(options.exposure, options.directory + '/' + options.prefix + '_fxe.png')
     doCollect.setROI(1, 2048)

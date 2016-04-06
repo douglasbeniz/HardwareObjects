@@ -56,15 +56,15 @@ from XSDataCommon import XSDataString
 
 # Compabiltity between Python 2 and 3:
 if sys.version.startswith('3'):
-    unicode = str
+    str = str
     from io import StringIO
 else:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 def showIndent(outfile, level):
     for idx in range(level):
-        outfile.write(unicode('    '))
+        outfile.write(str('    '))
 
 
 def warnEmptyAttribute(_strName, _strTypeName):
@@ -109,15 +109,15 @@ class MixedContainer(object):
             self.value.export(outfile, level, name)
     def exportSimple(self, outfile, level, name):
         if self.content_type == MixedContainer.TypeString:
-            outfile.write(unicode('<%s>%s</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%s</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeInteger or \
                 self.content_type == MixedContainer.TypeBoolean:
-            outfile.write(unicode('<%s>%d</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%d</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeFloat or \
                 self.content_type == MixedContainer.TypeDecimal:
-            outfile.write(unicode('<%s>%f</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%f</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeDouble:
-            outfile.write(unicode('<%s>%g</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%g</%s>' % (self.name, self.value, self.name)))
 
 #
 # Data representation classes.
@@ -338,10 +338,10 @@ class XSDataControlImageDozor(object):
     score = property(getScore, setScore, delScore, "Property for score")
     def export(self, outfile, level, name_='XSDataControlImageDozor'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataControlImageDozor'):
         pass
         if self._image is not None:
@@ -435,7 +435,7 @@ class XSDataControlImageDozor(object):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataControlImageDozor" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -443,7 +443,7 @@ class XSDataControlImageDozor(object):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataControlImageDozor' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -709,10 +709,10 @@ class XSDataInputControlDozor(XSDataInput):
     beamstopDistance = property(getBeamstopDistance, setBeamstopDistance, delBeamstopDistance, "Property for beamstopDistance")
     def export(self, outfile, level, name_='XSDataInputControlDozor'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputControlDozor'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._template is not None:
@@ -822,7 +822,7 @@ class XSDataInputControlDozor(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputControlDozor" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -830,7 +830,7 @@ class XSDataInputControlDozor(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputControlDozor' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -908,10 +908,10 @@ class XSDataResultControlDozor(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataResultControlDozor'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultControlDozor'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for imageDozor_ in self.getImageDozor():
@@ -930,7 +930,7 @@ class XSDataResultControlDozor(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultControlDozor" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -938,7 +938,7 @@ class XSDataResultControlDozor(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultControlDozor' )
         outfile.close()
     #Deprecated method, replaced by exportToFile

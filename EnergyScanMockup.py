@@ -12,7 +12,7 @@ from HardwareRepository.BaseHardwareObjects import Equipment
 try:
    import PyChooch
 except:
-   print "PyChooch not found"
+   print("PyChooch not found")
 
 scan_test_data = [(10841.0, 20.0), (10842.0, 20.0), (10843.0, 20.0), 
 (10844.0, 20.0), (10845.0, 20.0), (10846.0, 20.0), (10847.0, 20.0), 
@@ -150,7 +150,7 @@ class EnergyScanMockup(Equipment):
         self.scan_info["inflectionFDoublePrime"] = fppInfl
         self.scan_info["comments"] = comm
 
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         for i in range(len(chooch_graph_x)):
             chooch_graph_x[i] = chooch_graph_x[i] / 1000.0
@@ -163,7 +163,7 @@ class EnergyScanMockup(Equipment):
         ax = fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scanFile, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color": 'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color": 'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2 = fig.add_subplot(212)

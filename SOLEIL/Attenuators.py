@@ -54,7 +54,7 @@ class Attenuators(Device):
         #logging.getLogger().debug("HOS Attenuator: passe dans getAttState")
 #        logging.getLogger().debug("Attenuator state read from the device %s",self.Attenuatordevice.State)
         try:
-            print "HEYO", self.Attenuatordevice.State
+            print("HEYO", self.Attenuatordevice.State)
             value= Attenuators.stateAttenuator[str( self.Attenuatordevice.State() )]
         except:
             logging.getLogger("HWR").error('%s: received value on channel is not a integer value', str(self.name()))
@@ -67,7 +67,7 @@ class Attenuators(Device):
         
         try:
             #value = float(self.Attenuatordevice.appliedTransmission)
-            print "HEY:", self.Attenuatordevice.computedTransmission
+            print("HEY:", self.Attenuatordevice.computedTransmission)
             value = float(self.Attenuatordevice.computedTransmission)
         except:
             logging.getLogger("HWR").error('%s: received value on channel is not a float value', str(self.name()))

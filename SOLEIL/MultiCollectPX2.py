@@ -114,7 +114,7 @@ class MultiCollectPX2(Procedure):
             logging.getLogger("HWR").error('MultiCollect: you must specify the data collect hardware object')
         else:
             hobj=HardwareRepository.HardwareRepository().getHardwareObject(data_collect)
-            print "Debug MS 13.09.2012, MultiCollectPX2 hobj", hobj
+            print("Debug MS 13.09.2012, MultiCollectPX2 hobj", hobj)
             if hobj is None:
                 logging.getLogger("HWR").error('MultiCollect: invalid data collect hardware object')
             else:
@@ -250,7 +250,7 @@ class MultiCollectPX2(Procedure):
         self.emit('collectOscillationFailed', (owner,state,message,col_id,self.oscillationHistoryCounter-1))
 
     def collectEnded(self,owner,state,message):
-        print "MS 17.09.2012. collectEnded"
+        print("MS 17.09.2012. collectEnded")
         if self.isSkip:
             self.isSkip=False
         # Catching exception if self.currentCollectionIndex not int
@@ -258,7 +258,7 @@ class MultiCollectPX2(Procedure):
             self.currentCollectionIndex += 1
         except TypeError:
             self.currentCollectionIndex = 1
-        print 'MS 20.09.2012 debug, self.currentCollection', self.currentCollection
+        print('MS 20.09.2012 debug, self.currentCollection', self.currentCollection)
         try:
             collect_dict=self.currentCollection[self.currentCollectionIndex]
         except IndexError:
@@ -444,7 +444,7 @@ class CollectActions:
         self.params = params
         self.callback = callback
     def go(self):
-        print "Debug MS 13.09.2012, about to start collection from within MultiCollectPX2"
+        print("Debug MS 13.09.2012, about to start collection from within MultiCollectPX2")
         self.collectObj.collect(self.owner,self.params,callback=self.callback)
 
 

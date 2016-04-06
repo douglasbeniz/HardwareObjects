@@ -49,7 +49,7 @@ class Sample(Component):
         Returns true if a property is defined
         :rtype: bool
         """        
-        return self.properties.has_key(name)   
+        return name in self.properties   
     
     def getProperty(self, name):
         """
@@ -67,12 +67,12 @@ class Sample(Component):
                 img_url = self.getProperty(self.__IMAGE_URL_PROPERTY__)
                 if (len(img_url)==0):
                     return None
-                import urllib
-                f = urllib.urlopen(img_url)                           
+                import urllib.request, urllib.parse, urllib.error
+                f = urllib.request.urlopen(img_url)                           
                 img=f.read() 
                 return img                
         except:
-            print sys.exc_info()[1]
+            print(sys.exc_info()[1])
     
     def clearInfo(self):        
         Component.clearInfo(self)

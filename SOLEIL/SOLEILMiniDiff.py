@@ -92,7 +92,7 @@ class SOLEILMiniDiff(MiniDiff.MiniDiff):
                   #"kappa_phi": self.kappaPhiMotor,
                   "zoom": self.zoomMotor }
         
-        for role, pos in roles_positions_dict.iteritems():
+        for role, pos in roles_positions_dict.items():
            m = motor.get(role)
            if not None in (m, pos):
              m.move(pos)
@@ -102,7 +102,7 @@ class SOLEILMiniDiff(MiniDiff.MiniDiff):
         # already finished) 
         time.sleep(1)
         
-        while not all([m.getState() == m.READY for m in motor.itervalues() if m is not None]):
+        while not all([m.getState() == m.READY for m in motor.values() if m is not None]):
            time.sleep(0.1)
     
     def _md2_state_tuple_to_name_value_list(item):
@@ -191,8 +191,8 @@ class SOLEILMiniDiff(MiniDiff.MiniDiff):
                 self.chan_scan_start_angle.setValue(sangle)
                 #self.md2.write_attribute("ScanStartAngle", sangle )
                 executed = True
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 logging.info('Problem writing ScanStartAngle command')
                 logging.info('Exception ' + str(e))
     
@@ -211,9 +211,9 @@ class SOLEILMiniDiff(MiniDiff.MiniDiff):
                 #self.wait()
                 executed = True
                 logging.info('Successfully executing StartScan command')
-            except Exception, e:
+            except Exception as e:
                 executed = False
-                print e
+                print(e)
                 os.system('echo $(date) error executing StartScan command >> /927bis/ccd/collectErrors.log')
                 logging.info('Problem executing StartScan command')
                 logging.info('Exception ' + str(e))
@@ -282,14 +282,14 @@ def test():
     hwr.connect()
 
     minidiff = hwr.getHardwareObject("/soleil-minidiff")
-    print 'SOLEILMiniDiff self.sampleXMotor', minidiff.sampleXMotor, minidiff.sampleXMotor.getRealPosition()
-    print 'sendGonioToCollect', minidiff.sendGonioToCollect(0.5, 1, 0.5)
-    print 'current phase', minidiff.get_current_phase()
-    print "phi.getPosition", minidiff.phiMotor.getPosition(), minidiff.phiMotor.getRealPosition()
-    print "SampXMotor", minidiff.sampleXMotor.getPosition()
-    print "getCalibrationData", minidiff.getCalibrationData()
-    print "SOLEILMiniDiff phiDirection", minidiff.phiDirection
-    print "SOLEILMiniDiff getPositions", minidiff.getPositions()
+    print('SOLEILMiniDiff self.sampleXMotor', minidiff.sampleXMotor, minidiff.sampleXMotor.getRealPosition())
+    print('sendGonioToCollect', minidiff.sendGonioToCollect(0.5, 1, 0.5))
+    print('current phase', minidiff.get_current_phase())
+    print("phi.getPosition", minidiff.phiMotor.getPosition(), minidiff.phiMotor.getRealPosition())
+    print("SampXMotor", minidiff.sampleXMotor.getPosition())
+    print("getCalibrationData", minidiff.getCalibrationData())
+    print("SOLEILMiniDiff phiDirection", minidiff.phiDirection)
+    print("SOLEILMiniDiff getPositions", minidiff.getPositions())
 
 if __name__ == '__main__':
     test()

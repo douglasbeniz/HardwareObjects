@@ -31,7 +31,7 @@ class MicrodiffHutchTrigger(BaseHardwareObjects.HardwareObject):
     def init(self):
         try:
             self.device = PyTango.gevent.DeviceProxy(self.getProperty("tangoname"))
-        except PyTango.DevFailed, traceback:
+        except PyTango.DevFailed as traceback:
             last_error = traceback[-1]
             logging.getLogger('HWR').error("%s: %s", str(self.name()), last_error['desc'])
             self.device = None
@@ -44,7 +44,7 @@ class MicrodiffHutchTrigger(BaseHardwareObjects.HardwareObject):
 
         PSSinfo = self.getProperty("pss")
         try:
-            self.card, self.channel = map(int, PSSinfo.split("/"))
+            self.card, self.channel = list(map(int, PSSinfo.split("/")))
         except:
             logging.getLogger().error("%s: cannot find PSS number", self.name())
             return
@@ -79,7 +79,7 @@ class MicrodiffHutchTrigger(BaseHardwareObjects.HardwareObject):
         if not entering_hutch:
             ctrl_obj.detcover.set_out()
             if old["dtox"] is not None:
-                print "Moving %s to %g" % (dtox.name(), old["dtox"])
+                print("Moving %s to %g" % (dtox.name(), old["dtox"]))
                 dtox.move(old["dtox"])
             udiff_ctrl.moveToPhase(phase="Centring",wait=True)
         else:

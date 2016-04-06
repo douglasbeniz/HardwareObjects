@@ -74,15 +74,15 @@ from XSDataMXv1 import XSDataSampleCrystalMM
 
 # Compabiltity between Python 2 and 3:
 if sys.version.startswith('3'):
-	unicode = str
+	str = str
 	from io import StringIO
 else:
-	from StringIO import StringIO
+	from io import StringIO
 
 
 def showIndent(outfile, level):
 	for idx in range(level):
-		outfile.write(unicode('    '))
+		outfile.write(str('    '))
 
 
 def checkType(_strClassName, _strMethodName, _value, _strExpectedType):
@@ -100,7 +100,7 @@ def checkType(_strClassName, _strMethodName, _value, _strExpectedType):
 
 def warnEmptyAttribute(_strName, _strTypeName):
 	if not _strTypeName in ["float", "double", "string", "boolean", "integer"]:
-		print("Warning! Non-optional attribute %s of type %s is None!" % (_strName, _strTypeName))
+		print(("Warning! Non-optional attribute %s of type %s is None!" % (_strName, _strTypeName)))
 
 class MixedContainer(object):
 	# Constants for category:
@@ -139,15 +139,15 @@ class MixedContainer(object):
 			self.value.export(outfile, level, name)
 	def exportSimple(self, outfile, level, name):
 		if self.content_type == MixedContainer.TypeString:
-			outfile.write(unicode('<%s>%s</%s>' % (self.name, self.value, self.name)))
+			outfile.write(str('<%s>%s</%s>' % (self.name, self.value, self.name)))
 		elif self.content_type == MixedContainer.TypeInteger or \
 				self.content_type == MixedContainer.TypeBoolean:
-			outfile.write(unicode('<%s>%d</%s>' % (self.name, self.value, self.name)))
+			outfile.write(str('<%s>%d</%s>' % (self.name, self.value, self.name)))
 		elif self.content_type == MixedContainer.TypeFloat or \
 				self.content_type == MixedContainer.TypeDecimal:
-			outfile.write(unicode('<%s>%f</%s>' % (self.name, self.value, self.name)))
+			outfile.write(str('<%s>%f</%s>' % (self.name, self.value, self.name)))
 		elif self.content_type == MixedContainer.TypeDouble:
-			outfile.write(unicode('<%s>%g</%s>' % (self.name, self.value, self.name)))
+			outfile.write(str('<%s>%g</%s>' % (self.name, self.value, self.name)))
 
 #
 # Data representation classes.
@@ -178,10 +178,10 @@ class XSDataMXCuBEDataSet(object):
 		self._imageFile[index] = value
 	def export(self, outfile, level, name_='XSDataMXCuBEDataSet'):
 		showIndent(outfile, level)
-		outfile.write(unicode('<%s>\n' % name_))
+		outfile.write(str('<%s>\n' % name_))
 		self.exportChildren(outfile, level + 1, name_)
 		showIndent(outfile, level)
-		outfile.write(unicode('</%s>\n' % name_))
+		outfile.write(str('</%s>\n' % name_))
 	def exportChildren(self, outfile, level, name_='XSDataMXCuBEDataSet'):
 		pass
 		for imageFile_ in self.getImageFile():
@@ -201,7 +201,7 @@ class XSDataMXCuBEDataSet(object):
 	#Method for marshalling an object
 	def marshal( self ):
 		oStreamString = StringIO()
-		oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+		oStreamString.write(str('<?xml version="1.0" ?>\n'))
 		self.export( oStreamString, 0, name_="XSDataMXCuBEDataSet" )
 		oStringXML = oStreamString.getvalue()
 		oStreamString.close()
@@ -209,7 +209,7 @@ class XSDataMXCuBEDataSet(object):
 	#Only to export the entire XML tree to a file stream on disk
 	def exportToFile( self, _outfileName ):
 		outfile = open( _outfileName, "w" )
-		outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+		outfile.write(str('<?xml version=\"1.0\" ?>\n'))
 		self.export( outfile, 0, name_='XSDataMXCuBEDataSet' )
 		outfile.close()
 	#Deprecated method, replaced by exportToFile
@@ -608,216 +608,216 @@ class XSDataMXCuBEParameters(XSData):
 	transmission = property(getTransmission, setTransmission, delTransmission, "Property for transmission")
 	def export(self, outfile, level, name_='XSDataMXCuBEParameters'):
 		showIndent(outfile, level)
-		outfile.write(unicode('<%s>\n' % name_))
+		outfile.write(str('<%s>\n' % name_))
 		self.exportChildren(outfile, level + 1, name_)
 		showIndent(outfile, level)
-		outfile.write(unicode('</%s>\n' % name_))
+		outfile.write(str('</%s>\n' % name_))
 	def exportChildren(self, outfile, level, name_='XSDataMXCuBEParameters'):
 		XSData.exportChildren(self, outfile, level, name_)
 		if self._sessionId is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<sessionId>%d</sessionId>\n' % self._sessionId))
+			outfile.write(str('<sessionId>%d</sessionId>\n' % self._sessionId))
 		else:
 			warnEmptyAttribute("sessionId", "integer")
 		if self._blSampleId is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<blSampleId>%d</blSampleId>\n' % self._blSampleId))
+			outfile.write(str('<blSampleId>%d</blSampleId>\n' % self._blSampleId))
 		else:
 			warnEmptyAttribute("blSampleId", "integer")
 		if self._exposure_time is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<exposure_time>%e</exposure_time>\n' % self._exposure_time))
+			outfile.write(str('<exposure_time>%e</exposure_time>\n' % self._exposure_time))
 		else:
 			warnEmptyAttribute("exposure_time", "float")
 		if self._resolution is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<resolution>%e</resolution>\n' % self._resolution))
+			outfile.write(str('<resolution>%e</resolution>\n' % self._resolution))
 		else:
 			warnEmptyAttribute("resolution", "float")
 		if self._resolution_at_corner is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<resolution_at_corner>%e</resolution_at_corner>\n' % self._resolution_at_corner))
+			outfile.write(str('<resolution_at_corner>%e</resolution_at_corner>\n' % self._resolution_at_corner))
 		else:
 			warnEmptyAttribute("resolution_at_corner", "float")
 		if self._x_beam is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<x_beam>%e</x_beam>\n' % self._x_beam))
+			outfile.write(str('<x_beam>%e</x_beam>\n' % self._x_beam))
 		else:
 			warnEmptyAttribute("x_beam", "float")
 		if self._y_beam is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<y_beam>%e</y_beam>\n' % self._y_beam))
+			outfile.write(str('<y_beam>%e</y_beam>\n' % self._y_beam))
 		else:
 			warnEmptyAttribute("y_beam", "float")
 		if self._beam_size_x is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<beam_size_x>%e</beam_size_x>\n' % self._beam_size_x))
+			outfile.write(str('<beam_size_x>%e</beam_size_x>\n' % self._beam_size_x))
 		else:
 			warnEmptyAttribute("beam_size_x", "float")
 		if self._beam_size_y is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<beam_size_y>%e</beam_size_y>\n' % self._beam_size_y))
+			outfile.write(str('<beam_size_y>%e</beam_size_y>\n' % self._beam_size_y))
 		else:
 			warnEmptyAttribute("beam_size_y", "float")
 		if self._mad_1_energy is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<mad_1_energy>%e</mad_1_energy>\n' % self._mad_1_energy))
+			outfile.write(str('<mad_1_energy>%e</mad_1_energy>\n' % self._mad_1_energy))
 		else:
 			warnEmptyAttribute("mad_1_energy", "float")
 		if self._mad_2_energy is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<mad_2_energy>%e</mad_2_energy>\n' % self._mad_2_energy))
+			outfile.write(str('<mad_2_energy>%e</mad_2_energy>\n' % self._mad_2_energy))
 		else:
 			warnEmptyAttribute("mad_2_energy", "float")
 		if self._mad_3_energy is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<mad_3_energy>%e</mad_3_energy>\n' % self._mad_3_energy))
+			outfile.write(str('<mad_3_energy>%e</mad_3_energy>\n' % self._mad_3_energy))
 		else:
 			warnEmptyAttribute("mad_3_energy", "float")
 		if self._mad_4_energy is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<mad_4_energy>%e</mad_4_energy>\n' % self._mad_4_energy))
+			outfile.write(str('<mad_4_energy>%e</mad_4_energy>\n' % self._mad_4_energy))
 		else:
 			warnEmptyAttribute("mad_4_energy", "float")
 		if self._prefix is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<prefix>%s</prefix>\n' % self._prefix))
+			outfile.write(str('<prefix>%s</prefix>\n' % self._prefix))
 		else:
 			warnEmptyAttribute("prefix", "string")
 		if self._overlap is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<overlap>%e</overlap>\n' % self._overlap))
+			outfile.write(str('<overlap>%e</overlap>\n' % self._overlap))
 		else:
 			warnEmptyAttribute("overlap", "float")
 		if self._osc_start is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<osc_start>%e</osc_start>\n' % self._osc_start))
+			outfile.write(str('<osc_start>%e</osc_start>\n' % self._osc_start))
 		else:
 			warnEmptyAttribute("osc_start", "float")
 		if self._process_directory is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<process_directory>%s</process_directory>\n' % self._process_directory))
+			outfile.write(str('<process_directory>%s</process_directory>\n' % self._process_directory))
 		else:
 			warnEmptyAttribute("process_directory", "string")
 		if self._sum_images is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<sum_images>%e</sum_images>\n' % self._sum_images))
+			outfile.write(str('<sum_images>%e</sum_images>\n' % self._sum_images))
 		else:
 			warnEmptyAttribute("sum_images", "float")
 		if self._detector_mode is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<detector_mode>%s</detector_mode>\n' % self._detector_mode))
+			outfile.write(str('<detector_mode>%s</detector_mode>\n' % self._detector_mode))
 		else:
 			warnEmptyAttribute("detector_mode", "string")
 		if self._mad_energies is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<mad_energies>%s</mad_energies>\n' % self._mad_energies))
+			outfile.write(str('<mad_energies>%s</mad_energies>\n' % self._mad_energies))
 		else:
 			warnEmptyAttribute("mad_energies", "string")
 		if self._comments is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<comments>%s</comments>\n' % self._comments))
+			outfile.write(str('<comments>%s</comments>\n' % self._comments))
 		else:
 			warnEmptyAttribute("comments", "string")
 		if self._osc_range is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<osc_range>%e</osc_range>\n' % self._osc_range))
+			outfile.write(str('<osc_range>%e</osc_range>\n' % self._osc_range))
 		else:
 			warnEmptyAttribute("osc_range", "float")
 		if self._first_image is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<first_image>%d</first_image>\n' % self._first_image))
+			outfile.write(str('<first_image>%d</first_image>\n' % self._first_image))
 		else:
 			warnEmptyAttribute("first_image", "integer")
 		if self._template is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<template>%s</template>\n' % self._template))
+			outfile.write(str('<template>%s</template>\n' % self._template))
 		else:
 			warnEmptyAttribute("template", "string")
 		if self._kappaStart is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<kappaStart>%e</kappaStart>\n' % self._kappaStart))
+			outfile.write(str('<kappaStart>%e</kappaStart>\n' % self._kappaStart))
 		else:
 			warnEmptyAttribute("kappaStart", "float")
 		if self._processing is not None:
 			showIndent(outfile, level)
 			if self._processing:
-				outfile.write(unicode('<processing>true</processing>\n'))
+				outfile.write(str('<processing>true</processing>\n'))
 			else:
-				outfile.write(unicode('<processing>false</processing>\n'))
+				outfile.write(str('<processing>false</processing>\n'))
 		else:
 			warnEmptyAttribute("processing", "boolean")
 		if self._inverse_beam is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<inverse_beam>%e</inverse_beam>\n' % self._inverse_beam))
+			outfile.write(str('<inverse_beam>%e</inverse_beam>\n' % self._inverse_beam))
 		else:
 			warnEmptyAttribute("inverse_beam", "float")
 		if self._number_images is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<number_images>%d</number_images>\n' % self._number_images))
+			outfile.write(str('<number_images>%d</number_images>\n' % self._number_images))
 		else:
 			warnEmptyAttribute("number_images", "integer")
 		if self._current_detdistance is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<current_detdistance>%e</current_detdistance>\n' % self._current_detdistance))
+			outfile.write(str('<current_detdistance>%e</current_detdistance>\n' % self._current_detdistance))
 		else:
 			warnEmptyAttribute("current_detdistance", "float")
 		if self._residues is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<residues>%s</residues>\n' % self._residues))
+			outfile.write(str('<residues>%s</residues>\n' % self._residues))
 		else:
 			warnEmptyAttribute("residues", "string")
 		if self._run_number is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<run_number>%d</run_number>\n' % self._run_number))
+			outfile.write(str('<run_number>%d</run_number>\n' % self._run_number))
 		else:
 			warnEmptyAttribute("run_number", "integer")
 		if self._current_wavelength is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<current_wavelength>%e</current_wavelength>\n' % self._current_wavelength))
+			outfile.write(str('<current_wavelength>%e</current_wavelength>\n' % self._current_wavelength))
 		else:
 			warnEmptyAttribute("current_wavelength", "float")
 		if self._phiStart is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<phiStart>%e</phiStart>\n' % self._phiStart))
+			outfile.write(str('<phiStart>%e</phiStart>\n' % self._phiStart))
 		else:
 			warnEmptyAttribute("phiStart", "float")
 		if self._anomalous is not None:
 			showIndent(outfile, level)
 			if self._anomalous:
-				outfile.write(unicode('<anomalous>true</anomalous>\n'))
+				outfile.write(str('<anomalous>true</anomalous>\n'))
 			else:
-				outfile.write(unicode('<anomalous>false</anomalous>\n'))
+				outfile.write(str('<anomalous>false</anomalous>\n'))
 		else:
 			warnEmptyAttribute("anomalous", "boolean")
 		if self._number_passes is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<number_passes>%d</number_passes>\n' % self._number_passes))
+			outfile.write(str('<number_passes>%d</number_passes>\n' % self._number_passes))
 		else:
 			warnEmptyAttribute("number_passes", "integer")
 		if self._directory is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<directory>%s</directory>\n' % self._directory))
+			outfile.write(str('<directory>%s</directory>\n' % self._directory))
 		else:
 			warnEmptyAttribute("directory", "string")
 		if self._current_energy is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<current_energy>%e</current_energy>\n' % self._current_energy))
+			outfile.write(str('<current_energy>%e</current_energy>\n' % self._current_energy))
 		else:
 			warnEmptyAttribute("current_energy", "float")
 		if self._current_osc_start is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<current_osc_start>%e</current_osc_start>\n' % self._current_osc_start))
+			outfile.write(str('<current_osc_start>%e</current_osc_start>\n' % self._current_osc_start))
 		else:
 			warnEmptyAttribute("current_osc_start", "float")
 		if self._output_file is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<output_file>%s</output_file>\n' % self._output_file))
+			outfile.write(str('<output_file>%s</output_file>\n' % self._output_file))
 		else:
 			warnEmptyAttribute("output_file", "string")
 		if self._transmission is not None:
 			showIndent(outfile, level)
-			outfile.write(unicode('<transmission>%e</transmission>\n' % self._transmission))
+			outfile.write(str('<transmission>%e</transmission>\n' % self._transmission))
 		else:
 			warnEmptyAttribute("transmission", "float")
 	def build(self, node_):
@@ -1175,7 +1175,7 @@ class XSDataMXCuBEParameters(XSData):
 	#Method for marshalling an object
 	def marshal( self ):
 		oStreamString = StringIO()
-		oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+		oStreamString.write(str('<?xml version="1.0" ?>\n'))
 		self.export( oStreamString, 0, name_="XSDataMXCuBEParameters" )
 		oStringXML = oStreamString.getvalue()
 		oStreamString.close()
@@ -1183,7 +1183,7 @@ class XSDataMXCuBEParameters(XSData):
 	#Only to export the entire XML tree to a file stream on disk
 	def exportToFile( self, _outfileName ):
 		outfile = open( _outfileName, "w" )
-		outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+		outfile.write(str('<?xml version=\"1.0\" ?>\n'))
 		self.export( outfile, 0, name_='XSDataMXCuBEParameters' )
 		outfile.close()
 	#Deprecated method, replaced by exportToFile
@@ -1294,10 +1294,10 @@ class XSDataInputMXCuBE(XSDataInput):
 		self._dataSet[index] = value
 	def export(self, outfile, level, name_='XSDataInputMXCuBE'):
 		showIndent(outfile, level)
-		outfile.write(unicode('<%s>\n' % name_))
+		outfile.write(str('<%s>\n' % name_))
 		self.exportChildren(outfile, level + 1, name_)
 		showIndent(outfile, level)
-		outfile.write(unicode('</%s>\n' % name_))
+		outfile.write(str('</%s>\n' % name_))
 	def exportChildren(self, outfile, level, name_='XSDataInputMXCuBE'):
 		XSDataInput.exportChildren(self, outfile, level, name_)
 		if self._characterisationInput is not None:
@@ -1358,7 +1358,7 @@ class XSDataInputMXCuBE(XSDataInput):
 	#Method for marshalling an object
 	def marshal( self ):
 		oStreamString = StringIO()
-		oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+		oStreamString.write(str('<?xml version="1.0" ?>\n'))
 		self.export( oStreamString, 0, name_="XSDataInputMXCuBE" )
 		oStringXML = oStreamString.getvalue()
 		oStreamString.close()
@@ -1366,7 +1366,7 @@ class XSDataInputMXCuBE(XSDataInput):
 	#Only to export the entire XML tree to a file stream on disk
 	def exportToFile( self, _outfileName ):
 		outfile = open( _outfileName, "w" )
-		outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+		outfile.write(str('<?xml version=\"1.0\" ?>\n'))
 		self.export( outfile, 0, name_='XSDataInputMXCuBE' )
 		outfile.close()
 	#Deprecated method, replaced by exportToFile
@@ -1477,10 +1477,10 @@ class XSDataResultMXCuBE(XSDataResult):
 	screeningId = property(getScreeningId, setScreeningId, delScreeningId, "Property for screeningId")
 	def export(self, outfile, level, name_='XSDataResultMXCuBE'):
 		showIndent(outfile, level)
-		outfile.write(unicode('<%s>\n' % name_))
+		outfile.write(str('<%s>\n' % name_))
 		self.exportChildren(outfile, level + 1, name_)
 		showIndent(outfile, level)
-		outfile.write(unicode('</%s>\n' % name_))
+		outfile.write(str('</%s>\n' % name_))
 	def exportChildren(self, outfile, level, name_='XSDataResultMXCuBE'):
 		XSDataResult.exportChildren(self, outfile, level, name_)
 		if self._characterisationExecutiveSummary is not None:
@@ -1541,7 +1541,7 @@ class XSDataResultMXCuBE(XSDataResult):
 	#Method for marshalling an object
 	def marshal( self ):
 		oStreamString = StringIO()
-		oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+		oStreamString.write(str('<?xml version="1.0" ?>\n'))
 		self.export( oStreamString, 0, name_="XSDataResultMXCuBE" )
 		oStringXML = oStreamString.getvalue()
 		oStreamString.close()
@@ -1549,7 +1549,7 @@ class XSDataResultMXCuBE(XSDataResult):
 	#Only to export the entire XML tree to a file stream on disk
 	def exportToFile( self, _outfileName ):
 		outfile = open( _outfileName, "w" )
-		outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+		outfile.write(str('<?xml version=\"1.0\" ?>\n'))
 		self.export( outfile, 0, name_='XSDataResultMXCuBE' )
 		outfile.close()
 	#Deprecated method, replaced by exportToFile

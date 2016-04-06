@@ -16,7 +16,7 @@ class CalculateFlux:
             nb_line = 0
             for line in f:  
                 if not line.startswith('#') and line.strip() :
-                    array.append(map(float,line.split()))
+                    array.append(list(map(float,line.split())))
                     nb_line += 1
                 else:
                     if line.startswith('#'):
@@ -30,7 +30,7 @@ class CalculateFlux:
             f.close()
         except IOError:
             logging.exception("Cannot read calibrated diodes file")
-        self.FLUX = dict(zip(self.labels, idx))
+        self.FLUX = dict(list(zip(self.labels, idx)))
         return array
 
     def calc_flux_coef(self, en):
@@ -70,7 +70,7 @@ class CalculateFlux:
         except:
             pass
         if debug:
-            print arr[min_index]
+            print(arr[min_index])
         if x1 < val and min_index > 0:
             min_index -= 1
         elif x1 > val and min_index < len(arr)-1:
@@ -78,7 +78,7 @@ class CalculateFlux:
         else:
             return None
         if debug:
-            print arr[min_index]
+            print(arr[min_index])
         x2 = arr[min_index][0]
         y2 = arr[min_index][1]
         try:
@@ -101,4 +101,4 @@ if __name__ == '__main__' :
     fl.init(fname)
     en = float(sys.argv[2])*1000
     ab = fl.calc_flux_coef(en)
-    print ab
+    print(ab)

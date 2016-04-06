@@ -32,6 +32,7 @@ import collections
 import gevent
 from HardwareRepository.TaskUtils import *
 
+__copyright__ = "Copyright 2012, ESRF"
 __credits__ = ["MXCuBE colaboration"]
 
 __version__ = "2.2."
@@ -57,9 +58,7 @@ BeamlineConfig = collections.namedtuple('BeamlineConfig',
                                          'input_files_server'])
 
 
-class AbstractCollect(object):
-    __metaclass__ = abc.ABCMeta
-
+class AbstractCollect(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.bl_config = BeamlineConfig(*[None]*17)
         
@@ -121,11 +120,11 @@ class AbstractCollect(object):
         self.get_sample_info()
         self.store_sample_info_in_lims()
 
-        if all(item == None for item in self.current_dc_parameters['motors'].values()):
+        if all(item == None for item in list(self.current_dc_parameters['motors'].values())):
             # No centring point defined
             # create point based on the current position
             current_diffractometer_position = self.diffractometer_hwobj.getPositions()
-            for motor in self.current_dc_parameters['motors'].keys():
+            for motor in list(self.current_dc_parameters['motors'].keys()):
                 self.current_dc_parameters['motors'][motor] = \
                      current_diffractometer_position[motor] 
  
@@ -172,7 +171,7 @@ class AbstractCollect(object):
             i = 1
             for jj in self.bl_config.undulators:
                 key = jj.type
-                if und.has_key(key):
+                if key in und:
                     self.current_dc_parameters["undulatorGap%d" % (i)] = und[key]
                     i += 1
             self.current_dc_parameters["resolutionAtCorner"] = self.get_resolution_at_corner()
@@ -416,7 +415,7 @@ class AbstractCollect(object):
         for directory in args:
             try:
                 os.makedirs(directory)
-            except os.error, e:
+            except os.error as e:
                 if e.errno != errno.EEXIST:
                     raise
 
@@ -551,7 +550,7 @@ class AbstractCollect(object):
         """
         logging.getLogger("user_level_log").info("Moving to centred position") 
         positions_str = ""
-        for motor, position in self.current_dc_parameters['motors'].iteritems():
+        for motor, position in self.current_dc_parameters['motors'].items():
             if position:
                 if isinstance(motor, str):
                     positions_str += " %s=%f" % (motor, position)

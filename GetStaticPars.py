@@ -24,7 +24,7 @@ class GetStaticParameters:
             larr = []
             for k in range(len(array)):
                 if self.element == array[k][1] and self.edge[0] == array[k][2]:
-                    larr = map(float,array[k][3:13])
+                    larr = list(map(float,array[k][3:13]))
                     larr.append(float(array[k][17]))
             if self.edge == "K":
                 to_delete = [1,2,3,4,5,6,7]
@@ -56,12 +56,12 @@ class GetStaticParameters:
 if __name__ == '__main__' :
 
     if len(sys.argv) != 3:
-        print "Usage: element edge"
+        print("Usage: element edge")
         sys.exit(0)
 
     cg = GetStaticParameters(sys.argv[1], sys.argv[2])
-    print cg.STATICPARS_DICT
+    print(cg.STATICPARS_DICT)
     bb = cg.STATICPARS_DICT
     bb["element"] = sys.argv[1]
     bb["edge"] = sys.argv[2]
-    print bb
+    print(bb)

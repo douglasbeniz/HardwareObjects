@@ -89,19 +89,19 @@ class XfeSpectrumPX2(Equipment):
         #inintializing the collect object
         self.xfeCollect = XfeCollect(ct, directory, prefix, sessionId = session_id, sampleId = blsample_id)
         
-        print 'ct, directory', ct, directory
+        print('ct, directory', ct, directory)
         self.spectrumInfo = {"sessionId": session_id}
         self.spectrumInfo["blSampleId"] = blsample_id
         if not os.path.isdir(directory):
             logging.getLogger().debug("XfeSpectrum: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError, diag:
+            except OSError as diag:
                 logging.getLogger().error("XfeSpectrum: error creating directory %s (%s)" % (directory,str(diag)))
                 self.emit('spectrumStatusChanged', ("Error creating directory",))
                 return False
         curr = self.getSpectrumParams()
-        print 'curr', curr
+        print('curr', curr)
         try:
             curr["escan_dir"]=directory
             curr["escan_prefix"]=prefix
@@ -250,7 +250,7 @@ class XfeSpectrumPX2(Equipment):
         try:
             self.curr='parameters' #self.energySpectrumArgs.getValue()
             return self.curr
-        except NameError, diag:
+        except NameError as diag:
             logging.getLogger().exception('XRFSpectrum: error getting xrfspectrum parameters (%s)' % str(diag))
             self.emit('spectrumStatusChanged', ("Error getting xrfspectrum parameters",))
             return False

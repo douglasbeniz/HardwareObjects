@@ -23,6 +23,7 @@ GenericDiffractometer
 
 import copy
 import time
+import types
 import gevent
 import logging
 
@@ -131,11 +132,6 @@ class GenericDiffractometer(HardwareObject):
     CENTRING_METHOD_MANUAL = "Manual 3-click"
     CENTRING_METHOD_AUTO = "Computer automatic"
     CENTRING_METHOD_MOVE_TO_BEAM = "Move to beam"
-
-    PHASE_TRANSFER = "Transfer"
-    PHASE_CENTRING = "Centring"
-    PHASE_COLLECTION = "DataCollection"
-    PHASE_BEAM = "BeamLocation"
 
     def __init__(self, name):
         HardwareObject.__init__(self, name)
@@ -309,7 +305,7 @@ class GenericDiffractometer(HardwareObject):
         """
         Descript. :
         """
-        return self.centring_methods.keys()
+        return list(self.centring_methods.keys())
 
     def get_current_centring_method(self):
         """
@@ -402,7 +398,7 @@ class GenericDiffractometer(HardwareObject):
 
         try:
             centring_method = self.centring_methods[method]
-        except KeyError, diag:
+        except KeyError as diag:
             logging.getLogger("HWR").error("Diffractometer: unknown centring method (%s)" % str(diag))
             self.emit_centring_failed()
         else:
@@ -424,7 +420,7 @@ class GenericDiffractometer(HardwareObject):
             try:
                 #TODO... do we need this at all?
                 fun = self.cancel_centring_methods[self.current_centring_method]
-            except KeyError, diag:
+            except KeyError as diag:
                 self.emit_centring_failed()
             else:
                 try:
@@ -508,7 +504,7 @@ class GenericDiffractometer(HardwareObject):
             else:
                 #if 3 click centring move -180 
                 if not self.in_plate_mode():
-                    self.motor_hwobj_dict['phi'].syncMoveRelative(-180)
+                    self.phi_motor_hwobj.syncMoveRelative(-180)
             #logging.info("EMITTING CENTRING SUCCESSFUL")
             self.centring_time = time.time()
             self.emit_centring_successful()
@@ -541,9 +537,9 @@ class GenericDiffractometer(HardwareObject):
         Arg.      : motors positions in dict. Dictionary can contain motor names 
                     as str or actual motor hwobj
         """
-        for motor in motor_positions.keys():
+        for motor in list(motor_positions.keys()):
             position = motor_positions[motor]
-            if type(motor) in (str, unicode):
+            if type(motor) in (str, str):
                 motor_role = motor
                 motor = self.motor_hwobj_dict[motor_role]
                 del motor_positions[motor_role]
@@ -667,7 +663,7 @@ class GenericDiffractometer(HardwareObject):
         new_point = {}
         point_one = point_one.as_dict()
         point_two = point_two.as_dict()
-        for motor in point_one.keys():
+        for motor in list(point_one.keys()):
             new_motor_pos = frame_num / float(frame_total) * abs(point_one[motor] - \
                   point_two[motor]) + point_one[motor]
             new_motor_pos += 0.5 * (point_two[motor] - point_one[motor]) / \
@@ -698,10 +694,3 @@ class GenericDiffractometer(HardwareObject):
 
     def move_omega_relative(self, relative_angle):
         return
-
-    def get_scan_limits(self, speed=None):
-        """
-        Gets scan limits. Necessary for example in the plate mode
-        where osc range is limited
-        """
-        return 

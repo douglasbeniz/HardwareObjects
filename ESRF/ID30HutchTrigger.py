@@ -21,7 +21,7 @@ class ID30HutchTrigger(BaseHardwareObjects.HardwareObject):
     def init(self):
         try:
             self.device = PyTango.gevent.DeviceProxy(self.getProperty("tangoname"))
-        except PyTango.DevFailed, traceback:
+        except PyTango.DevFailed as traceback:
             last_error = traceback[-1]
             logging.getLogger('HWR').error("%s: %s", str(self.name()), last_error['desc'])
             self.device = None
@@ -37,7 +37,7 @@ class ID30HutchTrigger(BaseHardwareObjects.HardwareObject):
 
         PSSinfo = self.getProperty("pss")
         try:
-            self.card, self.channel = map(int, PSSinfo.split("/"))
+            self.card, self.channel = list(map(int, PSSinfo.split("/")))
         except:
             logging.getLogger().error("%s: cannot find PSS number", self.name())
             return

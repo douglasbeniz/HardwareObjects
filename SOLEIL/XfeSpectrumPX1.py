@@ -99,7 +99,7 @@ class XfeSpectrumPX1(Equipment):
                 "XRFSpectrum: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError, diag:
+            except OSError as diag:
                 logging.getLogger().error(
                     "XRFSpectrum: error creating directory %s (%s)" % (directory, str(diag)))
                 self.emit(
@@ -139,7 +139,7 @@ class XfeSpectrumPX1(Equipment):
                     #"XRFSpectrum: error creating archive directory - the data will be saved in %s instead", tmp_dir)
 
         a_dir = os.path.normpath(directory)
-        print 'XfeSpectrumPX1.py a_dir', a_dir
+        print('XfeSpectrumPX1.py a_dir', a_dir)
         filename_pattern = os.path.join(
             directory, "%s_%s_%%02d" % (prefix, time.strftime("%d_%b_%Y")))
         aname_pattern = os.path.join(
@@ -268,7 +268,7 @@ class XfeSpectrumPX1(Equipment):
         try:
             self.curr = 'params' #self.xfeCollect.getSpectrumParameters() #energySpectrumArgs.getValue()
             return self.curr
-        except NameError, diag:
+        except NameError as diag:
             logging.getLogger().exception(
                 'XRFSpectrum: error getting xrfspectrum parameters (%s)' % str(diag))
             self.emit('spectrumStatusChanged', (

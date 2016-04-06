@@ -41,7 +41,7 @@ class Ps_attenuatorPX1(Device):
         logging.getLogger().info("HOS Attenuator: passe dans getAttState")
         try:
             value= Ps_attenuatorPX1.stateAttenuator[self.Attenuatordevice.State().name]
-            print 'State Ps_Attenuator : ' , Ps_attenuatorPX1.stateAttenuator[self.Attenuatordevice.State().name]
+            print('State Ps_Attenuator : ' , Ps_attenuatorPX1.stateAttenuator[self.Attenuatordevice.State().name])
             logging.getLogger().debug("Attenuator state read from the device %s",value)
         except:
             logging.getLogger("HWR").error('%s getAttState : received value on channel is not a integer value', str(self.name()))
@@ -81,7 +81,7 @@ class Ps_attenuatorPX1(Device):
 
     def attFactorChanged(self, channelValue):
         try:
-            print "Dans attFactorChanged channelValue = %f"  %channelValue
+            print("Dans attFactorChanged channelValue = %f"  %channelValue)
 #  	    value = float(channelValue)
             value = self.getAttFactor()
         except:

@@ -13,7 +13,7 @@ from suds.transport.http import HttpAuthenticated
 from suds.client import Client
 from suds import WebFault
 from suds.sudsobject import asdict
-from urllib2 import URLError
+from urllib.error import URLError
 from HardwareRepository.BaseHardwareObjects import HardwareObject
 from datetime import datetime
 from collections import namedtuple
@@ -87,7 +87,7 @@ def in_greenlet(fun):
 
 
 def utf_encode(res_d):
-    for key in res_d.iterkeys():
+    for key in res_d.keys():
         if isinstance(res_d[key], dict):
             utf_encode(res_d)
 
@@ -262,7 +262,7 @@ class ISPyBClient2(HardwareObject):
         try:
             try:
                 person = self.__shipping.service.findPersonByLogin(username, os.environ["SMIS_BEAMLINE_NAME"])
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(e.message)
                 person = {}
 
@@ -273,13 +273,13 @@ class ISPyBClient2(HardwareObject):
                     return empty_dict
                 proposal_code   = proposal.code
                 proposal_number = proposal.number
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(e.message)
                 proposal = {}
 
             try:
                 lab = self.__shipping.service.findLaboratoryByCodeAndNumber(proposal_code, proposal_number)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(e.message)
                 lab = {}
 
@@ -305,7 +305,7 @@ class ISPyBClient2(HardwareObject):
 
                         sessions.append(utf_encode(asdict(session)))
 
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(e.message)
                 sessions = []
 
@@ -345,7 +345,7 @@ class ISPyBClient2(HardwareObject):
                     if not person:
                         person = {}
 
-                except WebFault, e:
+                except WebFault as e:
                     logging.getLogger("ispyb_client").exception(str(e))
                     person = {}
 
@@ -363,7 +363,7 @@ class ISPyBClient2(HardwareObject):
                                 'Session': {},
                                 'status': {'code':'error'}}
 
-                except WebFault, e:
+                except WebFault as e:
                     logging.getLogger("ispyb_client").exception(str(e))
                     proposal = {}
 
@@ -375,7 +375,7 @@ class ISPyBClient2(HardwareObject):
                     if not lab:
                         lab = {}
 
-                except WebFault, e:
+                except WebFault as e:
                     logging.getLogger("ispyb_client").exception(str(e))
 
                     lab = {}
@@ -401,7 +401,7 @@ class ISPyBClient2(HardwareObject):
 
                             sessions.append(utf_encode(asdict(session)))
 
-                except WebFault, e:
+                except WebFault as e:
                     logging.getLogger("ispyb_client").exception(str(e))
                     sessions = []
 
@@ -448,7 +448,7 @@ class ISPyBClient2(HardwareObject):
         try:
             try:
                 person = self.__shipping.service.findPersonByLogin(username, self.beamline_name)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(str(e))
                 person = {}
 
@@ -459,13 +459,13 @@ class ISPyBClient2(HardwareObject):
                     return empty_dict
                 proposal_code   = proposal.code
                 proposal_number = proposal.number
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(str(e))
                 proposal = {}
 
             try:
                 lab = self.__shipping.service.findLaboratoryByCodeAndNumber(proposal_code, proposal_number)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(str(e))
                 lab = {}
 
@@ -491,7 +491,7 @@ class ISPyBClient2(HardwareObject):
 
                         sessions.append(utf_encode(asdict(session)))
 
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").warning(str(e))
                 sessions = []
 
@@ -523,7 +523,7 @@ class ISPyBClient2(HardwareObject):
             try:
                 person = self.__shipping.service.\
                     findPersonBySessionIdLocalContact(session_id)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
                 person = {}
             except URLError:
@@ -777,7 +777,7 @@ class ISPyBClient2(HardwareObject):
                         session['beamLineSetupId'] = blSetupId
                         self.update_session(session)
 
-                    except WebFault, e:
+                    except WebFault as e:
                         logging.getLogger("ispyb_client").exception(str(e))
                     except URLError:
                         logging.getLogger("ispyb_client").\
@@ -846,7 +846,7 @@ class ISPyBClient2(HardwareObject):
             try:
                 status = self.__tools_ws.service.\
                     storeOrUpdateBLSample(bl_sample)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
                 status = {}
             except URLError:
@@ -932,7 +932,7 @@ class ISPyBClient2(HardwareObject):
                 response_samples = self.__tools_ws.service.\
                     findSampleInfoLightForProposal(proposal_id,
                                                    self.beamline_name)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
                 logging.getLogger("ispyb_client").exception(_CONNECTION_ERROR_MSG)
@@ -981,7 +981,7 @@ class ISPyBClient2(HardwareObject):
                     findSampleInfoLightForProposal(proposal_id,
                                                    self.beamline_name)
 
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
                 logging.getLogger("ispyb_client").exception(_CONNECTION_ERROR_MSG)
@@ -1109,7 +1109,7 @@ class ISPyBClient2(HardwareObject):
 
             try:
                 result = self.__tools_ws.service.findBLSample(bl_sample_id)
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
                 logging.getLogger("ispyb_client").exception(_CONNECTION_ERROR_MSG)
@@ -1151,7 +1151,7 @@ class ISPyBClient2(HardwareObject):
                 session_dict["endDate"] = datetime.\
                     strftime(session_dict["endDate"], "%Y-%m-%d %H:%M:%S")
 
-            except WebFault, e:
+            except WebFault as e:
                 session = {}
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
@@ -1235,7 +1235,7 @@ class ISPyBClient2(HardwareObject):
                     storeBLSampleHasEnergyScan(entry_dict['energyScanId'],
                                                entry_dict['blSampleId'])
 
-            except WebFault, e:
+            except WebFault as e:
                 result = -1
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
@@ -1269,7 +1269,7 @@ class ISPyBClient2(HardwareObject):
                 dc['endTime'] =  datetime.\
                     strftime(dc["endTime"] , "%Y-%m-%d %H:%M:%S")
 
-            except WebFault, e:
+            except WebFault as e:
                 dc = {}
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
@@ -1293,7 +1293,7 @@ class ISPyBClient2(HardwareObject):
                     findDataCollectionFromImageDirectoryAndImagePrefixAndNumber(
                     dc_dict['directory'], dc_dict['prefix'],
                     dc_dict['run_number'])
-            except WebFault, e:
+            except WebFault as e:
                 dc = {}
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
@@ -1332,7 +1332,7 @@ class ISPyBClient2(HardwareObject):
                                                         "%Y-%m-%d %H:%M:%S")
                     session = utf_encode(asdict(session))
 
-            except WebFault, e:
+            except WebFault as e:
                 logging.getLogger("ispyb_client").exception(str(e))
             except URLError:
                 logging.getLogger("ispyb_client").exception(_CONNECTION_ERROR_MSG)
@@ -1468,7 +1468,7 @@ class ISPyBClient2(HardwareObject):
                          "phiy": "phiY", "phiz": "phiZ", "sampx": "sampX", "sampy": "sampY", "chi":"chi" }
         mpos_dict = { "omega": -9999, "phi": -9999, "kappa": -9999, "phiX": -9999,
                       "phiY": -9999, "phiZ": -9999, "sampX": -9999, "sampY": -9999, "chi": 0 }
-        for motor_name, pos in diffractometer_positions.iteritems():
+        for motor_name, pos in diffractometer_positions.items():
             if mxcube2ispyb.get(motor_name):
                 mpos_dict[mxcube2ispyb[motor_name]]=pos
 
@@ -1499,7 +1499,7 @@ class ISPyBClient2(HardwareObject):
                    for proposal in proposals:
                         if proposal['type'].upper() in ['MX', 'MB']:
                            proposal_list.append(proposal)
-            except WebFault, e:
+            except WebFault as e:
                proposal_list = []
                logging.getLogger("ispyb_client").exception(e.message)
 
@@ -1517,7 +1517,7 @@ class ISPyBClient2(HardwareObject):
                                                            proposal_number)
                         if not person:
                             person = {}
-                    except WebFault, e:
+                    except WebFault as e:
                         logging.getLogger("ispyb_client").exception(e.message)
                         person = {}
 
@@ -1528,7 +1528,7 @@ class ISPyBClient2(HardwareObject):
                                                             proposal_number)
                         if not lab:
                             lab = {}
-                    except WebFault, e:
+                    except WebFault as e:
                         logging.getLogger("ispyb_client").exception(e.message)
                         lab = {}
 
@@ -1552,7 +1552,7 @@ class ISPyBClient2(HardwareObject):
                                     pass
                                 sessions.append(utf_encode(asdict(session)))
 
-                    except WebFault, e:
+                    except WebFault as e:
                         logging.getLogger("ispyb_client").exception(e.message)
                         sessions = []
 
@@ -1761,7 +1761,7 @@ class ISPyBValueFactory():
             synchrotron_name = \
                              bl_config.synchrotron_name
             beamline_setup.synchrotronName = synchrotron_name
-        except (IndexError, AttributeError), e:
+        except (IndexError, AttributeError) as e:
             beamline_setup.synchrotronName = "ESRF"
 
         if bl_config.undulators:
@@ -1847,18 +1847,18 @@ class ISPyBValueFactory():
             try:
                 group.blSampleId = \
                     mx_collect_dict['sample_reference']['blSampleId']
-            except KeyError,diag:
+            except KeyError as diag:
                 pass
 
 
             try:
                 group.comments = mx_collect_dict['comments']
-            except KeyError,diag:
+            except KeyError as diag:
                 pass
 
             try:
                 group.workflowId = mx_collect_dict['workflow_id']
-            except KeyError,diag:
+            except KeyError as diag:
                 pass
 
             group.endTime = datetime.now()
@@ -1904,13 +1904,13 @@ class ISPyBValueFactory():
                         if not comment:
                             try:
                                 mx_collect_dict['comment'] = \
-                                    'Mesh: phiz:' +  str(mx_collect_dict['motors'].values()[0]) + \
-                                    ', phiy' + str(mx_collect_dict['motors'].values()[1])
+                                    'Mesh: phiz:' +  str(list(mx_collect_dict['motors'].values())[0]) + \
+                                    ', phiy' + str(list(mx_collect_dict['motors'].values())[1])
                             except:
                                 mx_collect_dict['comment'] = 'Mesh: Unknown motor positions'
 
                 group.experimentType = mx_collect_dict['experiment_type']
-            except KeyError,diag:
+            except KeyError as diag:
                 pass
 
 
@@ -1973,7 +1973,7 @@ class ISPyBValueFactory():
             data_collection.imageDirectory = \
                 mx_collect_dict['fileinfo']['directory']
 
-            if osc_seq.has_key('kappaStart'):
+            if 'kappaStart' in osc_seq:
                 if osc_seq['kappaStart']!=0 and osc_seq['kappaStart']!=-9999:
                     data_collection.rotationAxis = 'Omega'
                     data_collection.omegaStart = osc_seq['start']
@@ -1987,7 +1987,7 @@ class ISPyBValueFactory():
             data_collection.kappaStart = osc_seq['kappaStart']
             data_collection.phiStart = osc_seq['phiStart']
 
-        except KeyError,diag:
+        except KeyError as diag:
             err_msg = \
                 "ISPyBClient: error storing a data collection (%s)" % str(diag)
             raise ISPyBArgumentError(err_msg)
@@ -2002,7 +2002,7 @@ class ISPyBValueFactory():
 
         try:
             data_collection.wavelength = mx_collect_dict['wavelength']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         res_at_edge = None
@@ -2028,13 +2028,13 @@ class ISPyBValueFactory():
         try:
             data_collection.detectorDistance = \
                 mx_collect_dict['detectorDistance']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
             data_collection.xbeam = mx_collect_dict['xBeam']
             data_collection.ybeam = mx_collect_dict['yBeam']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
@@ -2060,35 +2060,35 @@ class ISPyBValueFactory():
 
         try:
             data_collection.imagePrefix = mx_collect_dict['fileinfo']['prefix']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
             data_collection.imageSuffix = mx_collect_dict['fileinfo']['suffix']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
         try:
             data_collection.fileTemplate = \
                 mx_collect_dict['fileinfo']['template']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
             data_collection.dataCollectionNumber = \
                 mx_collect_dict['fileinfo']['run_number']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
             data_collection.synchrotronMode = \
                 mx_collect_dict['synchrotronMode']
             data_collection.flux = mx_collect_dict['flux']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
             data_collection.flux_end = mx_collect_dict['flux_end']
-        except KeyError,diag:
+        except KeyError as diag:
             pass
 
         try:
@@ -2153,10 +2153,10 @@ class ISPyBValueFactory():
         except:
             pass
 
-        if mx_collect_dict.has_key('lims_start_pos_id'):
+        if 'lims_start_pos_id' in mx_collect_dict:
             data_collection.startPositionId = mx_collect_dict['lims_start_pos_id']
 
-        if mx_collect_dict.has_key('lims_end_pos_id'):
+        if 'lims_end_pos_id' in mx_collect_dict:
             data_collection.endPositionId = mx_collect_dict['lims_end_pos_id']
 
         data_collection.endTime = datetime.now()
@@ -2188,7 +2188,7 @@ class ISPyBValueFactory():
             workflow_vo.resultFilePath = workflow_info_dict.get("result_file_path", "")
             workflow_vo.status = workflow_info_dict.get("status", "")
             workflow_vo.workflowTitle = workflow_info_dict.get("title", "")
-        except KeyError,diag:
+        except KeyError as diag:
             err_msg = \
                 "ISPyBClient: error storing a workflow (%s)" % str(diag)
             raise ISPyBArgumentError(err_msg)
@@ -2221,7 +2221,7 @@ class ISPyBValueFactory():
             workflow_mesh_vo.value2 = workflow_info_dict.get("value_2")
             workflow_mesh_vo.value3 = workflow_info_dict.get("value_3")
             workflow_mesh_vo.value4 = workflow_info_dict.get("value_4")
-        except KeyError,diag:
+        except KeyError as diag:
             err_msg = \
                 "ISPyBClient: error storing a workflow mesh (%s)" % str(diag)
             raise ISPyBArgumentError(err_msg)
@@ -2254,7 +2254,7 @@ class ISPyBValueFactory():
             grid_info_vo.steps_y = workflow_info_dict.get("steps_y")
             grid_info_vo.xOffset = workflow_info_dict.get("xOffset")
             grid_info_vo.yOffset = workflow_info_dict.get("yOffset")
-        except KeyError,diag:
+        except KeyError as diag:
             err_msg = \
                 "ISPyBClient: error storing a grid info (%s)" % str(diag)
             raise ISPyBArgumentError(err_msg)

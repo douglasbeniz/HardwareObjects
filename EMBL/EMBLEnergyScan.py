@@ -1,24 +1,5 @@
-#
-#  Project: MXCuBE
-#  https://github.com/mxcube.
-#
-#  This file is part of MXCuBE software.
-#
-#  MXCuBE is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  MXCuBE is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with MXCuBE.  If not, see <http://www.gnu.org/licenses/>.
-
 """
-EMBLEnergyScan
+Descript. :
 """
 
 import os
@@ -34,23 +15,9 @@ from AbstractEnergyScan import AbstractEnergyScan
 from HardwareRepository.TaskUtils import *
 from HardwareRepository.BaseHardwareObjects import HardwareObject
 
-
-__author__ = "Ivars Karpics"
-__credits__ = ["MXCuBE colaboration"]
-
-__version__ = "2.2."
-__maintainer__ = "Ivars Karpics"
-__email__ = "ivars.karpics[at]embl-hamburg.de"
-__status__ = "Draft"
-
-
 class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
 
     def __init__(self, name):
-        """
-        Descript. :
-        """
-
         AbstractEnergyScan.__init__(self)
         HardwareObject.__init__(self, name)
         self._tunable_bl = True
@@ -182,7 +149,7 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
             logging.getLogger("HWR").debug("EnergyScan: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError, diag:
+            except OSError as diag:
                 logging.getLogger("HWR").error("EnergyScan: error creating directory %s (%s)" % (directory, str(diag)))
                 self.emit('energyScanStatusChanged', ("Error creating directory",))
                 return False
@@ -206,10 +173,8 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
                 self.chan_scan_start.setValue("%s;%s" % (element, edge))
                 self.scanCommandStarted()
             else:
-                logging.getLogger("HWR").error("Another energy scan in " + \
-                     "progress. Please wait when the scan is finished")
-                self.emit('energyScanStatusChanged', ("Another energy " + \
-                     "scan in progress. Please wait when the scan is finished"))
+                logging.getLogger("HWR").error('Another energy scan in progress. Please wait when the scan is finished')
+                self.emit('energyScanStatusChanged', ("Another energy scan in progress. Please wait when the scan is finished"))
                 self.scanCommandFailed()
                 return False
         except:
@@ -341,13 +306,10 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
           pk = 0
           ip = 0
           rm = self.thEdge + 0.03
-          comm = "Calculated peak (%f) is more that 10eV away from the " + \
-                 "theoretical value (%f). Please check your scan" % \
+          comm = 'Calculated peak (%f) is more that 10eV away from the theoretical value (%f). Please check your scan' % \
                  (savpk, self.thEdge)
 
-          logging.getLogger("HWR").warning("EnergyScan: calculated peak " + \
-                  "(%f) is more that 20eV %s the theoretical value (%f). " + \
-                  "Please check your scan and choose the energies manually" % \
+          logging.getLogger("HWR").warning('EnergyScan: calculated peak (%f) is more that 20eV %s the theoretical value (%f). Please check your scan and choose the energies manually' % \
                    (savpk, (self.thEdge - ip) > 0.02 and "below" or "above", self.thEdge))
 
         try:
@@ -371,7 +333,7 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
         self.scanInfo["inflectionFDoublePrime"] = fppInfl
         self.scanInfo["comments"] = comm
 
-        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = zip(*chooch_graph_data)
+        chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
         for i in range(len(chooch_graph_x)):
             chooch_graph_x[i] = chooch_graph_x[i] / 1000.0
@@ -384,7 +346,7 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
         ax = fig.add_subplot(211)
         ax.set_title("%s\n%s" % (scan_file_efs_filename, title))
         ax.grid(True)
-        ax.plot(*(zip(*scanData)), **{"color": 'black'})
+        ax.plot(*(list(zip(*scanData))), **{"color": 'black'})
         ax.set_xlabel("Energy")
         ax.set_ylabel("MCA counts")
         ax2 = fig.add_subplot(212)
@@ -398,14 +360,12 @@ class EMBLEnergyScan(AbstractEnergyScan, HardwareObject):
 
         self.scanInfo["jpegChoochFileFullPath"] = str(archive_file_png_filename)
         try:
-            logging.getLogger("HWR").info("Rendering energy scan and Chooch " + \
-                 "graphs to PNG file : %s", scan_file_png_filename)
+            logging.getLogger("HWR").info("Rendering energy scan and Chooch graphs to PNG file : %s", scan_file_png_filename)
             canvas.print_figure(scan_file_png_filename, dpi = 80)
         except:
             logging.getLogger("HWR").exception("could not print figure")
         try:
-            logging.getLogger("HWR").info("Saving energy scan to archive " +\
-                 "directory for ISPyB : %s", archive_file_png_filename)
+            logging.getLogger("HWR").info("Saving energy scan to archive directory for ISPyB : %s", archive_file_png_filename)
             canvas.print_figure(archive_file_png_filename, dpi = 80)
         except:
             logging.getLogger("HWR").exception("could not save figure")

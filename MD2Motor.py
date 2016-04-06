@@ -89,7 +89,7 @@ class MD2Motor(AbstractMotor, Device):
 
     def getDynamicLimits(self):
         try:
-            low_lim,hi_lim = map(float, self.get_dynamic_limits_cmd(self.motor_name))
+            low_lim,hi_lim = list(map(float, self.get_dynamic_limits_cmd(self.motor_name)))
             if low_lim==float(1E999) or hi_lim==float(1E999):
                 raise ValueError
             return low_lim, hi_lim
@@ -98,7 +98,7 @@ class MD2Motor(AbstractMotor, Device):
 
     def getLimits(self):
         try:
-            low_lim,hi_lim = map(float, self.get_limits_cmd(self.motor_name))
+            low_lim,hi_lim = list(map(float, self.get_limits_cmd(self.motor_name)))
             if low_lim==float(1E999) or hi_lim==float(1E999):
                 raise ValueError
             return low_lim, hi_lim

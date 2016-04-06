@@ -1,5 +1,6 @@
 import gevent
 from gevent.event import AsyncResult
+import collections
 try:
     from Qub.Tools import QubImageSave
 except ImportError:
@@ -321,7 +322,7 @@ class MiniDiff(Equipment):
 
     def getBeamInfo(self, callback=None):
 	beam_info = self.beam_info.get_beam_info() 
-	if callable(callback):
+	if isinstance(callback, collections.Callable):
           callback(beam_info)
         return beam_info
 
@@ -394,7 +395,7 @@ class MiniDiff(Equipment):
 
 
     def getAvailableCentringMethods(self):
-        return self.centringMethods.keys()
+        return list(self.centringMethods.keys())
 
 
     def startCentringMethod(self,method,sample_info=None):
@@ -417,7 +418,7 @@ class MiniDiff(Equipment):
 
         try:
             fun=self.centringMethods[method]
-        except KeyError,diag:
+        except KeyError as diag:
             logging.getLogger("HWR").error("MiniDiff: unknown centring method (%s)" % str(diag))
             self.emitCentringFailed()
         else:
@@ -436,7 +437,7 @@ class MiniDiff(Equipment):
                 logging.getLogger("HWR").exception("MiniDiff: problem aborting the centring method")
             try:
                 fun=self.cancelCentringMethods[self.currentCentringMethod]
-            except KeyError,diag:
+            except KeyError as diag:
                 self.emitCentringFailed()
             else:
                 try:
@@ -591,7 +592,7 @@ class MiniDiff(Equipment):
             self.centringStatus["endTime"]=curr_time
             self.centringStatus["motors"]=self.getPositions()
             centred_pos = self.currentCentringProcedure.get()
-            for role in self.centringStatus["motors"].iterkeys():
+            for role in self.centringStatus["motors"].keys():
               motor = self.getDeviceByRole(role)
               try:
                 self.centringStatus["motors"][role] = centred_pos[motor]
@@ -641,7 +642,7 @@ class MiniDiff(Equipment):
                   "kappa_phi": self.kappaPhiMotor,
                   "zoom": self.zoomMotor }
    
-        for role, pos in roles_positions_dict.iteritems():
+        for role, pos in roles_positions_dict.items():
            m = motor.get(role)
            if not None in (m, pos):
              m.move(pos)
@@ -651,7 +652,7 @@ class MiniDiff(Equipment):
         # already finished) 
         time.sleep(1)
  
-        while not all([m.getState() == m.READY for m in motor.itervalues() if m is not None]):
+        while not all([m.getState() == m.READY for m in motor.values() if m is not None]):
            time.sleep(0.1)
 
 

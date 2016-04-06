@@ -24,6 +24,7 @@ import queue_model_objects_v1 as queue_model_objects
 import types
 
 from HardwareRepository.BaseHardwareObjects import HardwareObject
+import collections
 
 SELECTED_COLOR = "green"
 NORMAL_COLOR = "yellow"
@@ -110,7 +111,7 @@ class ShapeHistoryMockup(HardwareObject):
         """
         :returns: All the shapes currently handled.
         """
-        return self.shapes.values()
+        return list(self.shapes.values())
 
     def get_points(self):
         """
@@ -149,13 +150,13 @@ class ShapeHistoryMockup(HardwareObject):
         if shape in self.selected_shapes:
             del self.selected_shapes[shape]
 
-            if callable(self._drawing_event.selection_cb):
-                self._drawing_event.selection_cb(self.selected_shapes.values())
+            if isinstance(self._drawing_event.selection_cb, collections.Callable):
+                self._drawing_event.selection_cb(list(self.selected_shapes.values()))
 
         if shape is self._drawing_event.current_shape:
             self._drawing_event.current_shape = None
 
-        if callable(self._drawing_event.deletion_cb):
+        if isinstance(self._drawing_event.deletion_cb, collections.Callable):
             self._drawing_event.deletion_cb(shape)
 
     def delete_shape(self, shape):

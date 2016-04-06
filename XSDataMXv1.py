@@ -95,15 +95,15 @@ from XSDataCommon import XSDataAngle
 
 # Compabiltity between Python 2 and 3:
 if sys.version.startswith('3'):
-    unicode = str
+    str = str
     from io import StringIO
 else:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 def showIndent(outfile, level):
     for idx in range(level):
-        outfile.write(unicode('    '))
+        outfile.write(str('    '))
 
 
 def warnEmptyAttribute(_strName, _strTypeName):
@@ -148,15 +148,15 @@ class MixedContainer(object):
             self.value.export(outfile, level, name)
     def exportSimple(self, outfile, level, name):
         if self.content_type == MixedContainer.TypeString:
-            outfile.write(unicode('<%s>%s</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%s</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeInteger or \
                 self.content_type == MixedContainer.TypeBoolean:
-            outfile.write(unicode('<%s>%d</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%d</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeFloat or \
                 self.content_type == MixedContainer.TypeDecimal:
-            outfile.write(unicode('<%s>%f</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%f</%s>' % (self.name, self.value, self.name)))
         elif self.content_type == MixedContainer.TypeDouble:
-            outfile.write(unicode('<%s>%g</%s>' % (self.name, self.value, self.name)))
+            outfile.write(str('<%s>%g</%s>' % (self.name, self.value, self.name)))
 
 #
 # Data representation classes.
@@ -244,10 +244,10 @@ class XSDataStatisticsIntegrationAverageAndNumberOfReflections(object):
     numberOfReflections = property(getNumberOfReflections, setNumberOfReflections, delNumberOfReflections, "Property for numberOfReflections")
     def export(self, outfile, level, name_='XSDataStatisticsIntegrationAverageAndNumberOfReflections'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsIntegrationAverageAndNumberOfReflections'):
         pass
         if self._averageIOverSigma is not None:
@@ -294,7 +294,7 @@ class XSDataStatisticsIntegrationAverageAndNumberOfReflections(object):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsIntegrationAverageAndNumberOfReflections" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -302,7 +302,7 @@ class XSDataStatisticsIntegrationAverageAndNumberOfReflections(object):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsIntegrationAverageAndNumberOfReflections' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -398,10 +398,10 @@ class XSDataAtom(XSData):
     symbol = property(getSymbol, setSymbol, delSymbol, "Property for symbol")
     def export(self, outfile, level, name_='XSDataAtom'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataAtom'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._concentration is not None:
@@ -436,7 +436,7 @@ class XSDataAtom(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataAtom" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -444,7 +444,7 @@ class XSDataAtom(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataAtom' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -522,10 +522,10 @@ class XSDataAtomicComposition(XSData):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataAtomicComposition'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataAtomicComposition'):
         XSData.exportChildren(self, outfile, level, name_)
         for atom_ in self.getAtom():
@@ -544,7 +544,7 @@ class XSDataAtomicComposition(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataAtomicComposition" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -552,7 +552,7 @@ class XSDataAtomicComposition(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataAtomicComposition' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -711,10 +711,10 @@ class XSDataBeam(XSData):
     wavelength = property(getWavelength, setWavelength, delWavelength, "Property for wavelength")
     def export(self, outfile, level, name_='XSDataBeam'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataBeam'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._exposureTime is not None:
@@ -768,7 +768,7 @@ class XSDataBeam(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataBeam" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -776,7 +776,7 @@ class XSDataBeam(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataBeam' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -929,10 +929,10 @@ class XSDataCell(XSData):
     length_c = property(getLength_c, setLength_c, delLength_c, "Property for length_c")
     def export(self, outfile, level, name_='XSDataCell'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataCell'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._angle_alpha is not None:
@@ -998,7 +998,7 @@ class XSDataCell(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataCell" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -1006,7 +1006,7 @@ class XSDataCell(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataCell' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -1121,10 +1121,10 @@ class XSDataChain(XSData):
     type = property(getType, setType, delType, "Property for type")
     def export(self, outfile, level, name_='XSDataChain'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataChain'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._heavyAtoms is not None:
@@ -1172,7 +1172,7 @@ class XSDataChain(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataChain" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -1180,7 +1180,7 @@ class XSDataChain(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataChain' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -1257,10 +1257,10 @@ class XSDataChemicalCompositionMM(XSData):
     structure = property(getStructure, setStructure, delStructure, "Property for structure")
     def export(self, outfile, level, name_='XSDataChemicalCompositionMM'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataChemicalCompositionMM'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._solvent is not None:
@@ -1290,7 +1290,7 @@ class XSDataChemicalCompositionMM(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataChemicalCompositionMM" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -1298,7 +1298,7 @@ class XSDataChemicalCompositionMM(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataChemicalCompositionMM' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -1415,10 +1415,10 @@ class XSDataCollection(XSData):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataCollection'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataCollection'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._diffractionPlan is not None:
@@ -1453,7 +1453,7 @@ class XSDataCollection(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataCollection" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -1461,7 +1461,7 @@ class XSDataCollection(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataCollection' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -1823,10 +1823,10 @@ class XSDataDetector(XSData):
     type = property(getType, setType, delType, "Property for type")
     def export(self, outfile, level, name_='XSDataDetector'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataDetector'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._beamPositionX is not None:
@@ -1989,7 +1989,7 @@ class XSDataDetector(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataDetector" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -1997,7 +1997,7 @@ class XSDataDetector(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataDetector' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -2507,10 +2507,10 @@ class XSDataDiffractionPlan(XSData):
     userDefinedRotationStart = property(getUserDefinedRotationStart, setUserDefinedRotationStart, delUserDefinedRotationStart, "Property for userDefinedRotationStart")
     def export(self, outfile, level, name_='XSDataDiffractionPlan'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataDiffractionPlan'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._aimedCompleteness is not None:
@@ -2683,7 +2683,7 @@ class XSDataDiffractionPlan(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataDiffractionPlan" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -2691,7 +2691,7 @@ class XSDataDiffractionPlan(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataDiffractionPlan' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -2887,10 +2887,10 @@ class XSDataGoniostat(XSData):
     samplePosition = property(getSamplePosition, setSamplePosition, delSamplePosition, "Property for samplePosition")
     def export(self, outfile, level, name_='XSDataGoniostat'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataGoniostat'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._maxOscillationSpeed is not None:
@@ -2966,7 +2966,7 @@ class XSDataGoniostat(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataGoniostat" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -2974,7 +2974,7 @@ class XSDataGoniostat(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataGoniostat' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -3070,10 +3070,10 @@ class XSDataExperimentalCondition(XSData):
     goniostat = property(getGoniostat, setGoniostat, delGoniostat, "Property for goniostat")
     def export(self, outfile, level, name_='XSDataExperimentalCondition'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataExperimentalCondition'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._beam is not None:
@@ -3106,7 +3106,7 @@ class XSDataExperimentalCondition(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataExperimentalCondition" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -3114,7 +3114,7 @@ class XSDataExperimentalCondition(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataExperimentalCondition' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -3494,10 +3494,10 @@ class XSDataImageQualityIndicators(XSData):
     totalIntegratedSignal = property(getTotalIntegratedSignal, setTotalIntegratedSignal, delTotalIntegratedSignal, "Property for totalIntegratedSignal")
     def export(self, outfile, level, name_='XSDataImageQualityIndicators'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataImageQualityIndicators'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._binPopCutOffMethod2Res is not None:
@@ -3651,7 +3651,7 @@ class XSDataImageQualityIndicators(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataImageQualityIndicators" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -3659,7 +3659,7 @@ class XSDataImageQualityIndicators(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataImageQualityIndicators' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -3754,10 +3754,10 @@ class XSDataIndexingSolution(XSData):
     penalty = property(getPenalty, setPenalty, delPenalty, "Property for penalty")
     def export(self, outfile, level, name_='XSDataIndexingSolution'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIndexingSolution'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._crystal is not None:
@@ -3796,7 +3796,7 @@ class XSDataIndexingSolution(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIndexingSolution" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -3804,7 +3804,7 @@ class XSDataIndexingSolution(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIndexingSolution' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -4034,10 +4034,10 @@ class XSDataIntegrationSubWedgeResult(XSData):
     subWedgeNumber = property(getSubWedgeNumber, setSubWedgeNumber, delSubWedgeNumber, "Property for subWedgeNumber")
     def export(self, outfile, level, name_='XSDataIntegrationSubWedgeResult'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIntegrationSubWedgeResult'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._bestfileDat is not None:
@@ -4130,7 +4130,7 @@ class XSDataIntegrationSubWedgeResult(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIntegrationSubWedgeResult" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -4138,7 +4138,7 @@ class XSDataIntegrationSubWedgeResult(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIntegrationSubWedgeResult' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -4234,10 +4234,10 @@ class XSDataLigand(XSData):
     numberOfLightAtoms = property(getNumberOfLightAtoms, setNumberOfLightAtoms, delNumberOfLightAtoms, "Property for numberOfLightAtoms")
     def export(self, outfile, level, name_='XSDataLigand'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataLigand'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._heavyAtoms is not None:
@@ -4276,7 +4276,7 @@ class XSDataLigand(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataLigand" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -4284,7 +4284,7 @@ class XSDataLigand(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataLigand' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -4360,10 +4360,10 @@ class XSDataOrientation(XSData):
     matrixU = property(getMatrixU, setMatrixU, delMatrixU, "Property for matrixU")
     def export(self, outfile, level, name_='XSDataOrientation'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataOrientation'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._matrixA is not None:
@@ -4393,7 +4393,7 @@ class XSDataOrientation(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataOrientation" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -4401,7 +4401,7 @@ class XSDataOrientation(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataOrientation' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -4686,10 +4686,10 @@ class XSDataResolutionBin(XSData):
     redundancy = property(getRedundancy, setRedundancy, delRedundancy, "Property for redundancy")
     def export(self, outfile, level, name_='XSDataResolutionBin'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResolutionBin'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._IOverSigma is not None:
@@ -4810,7 +4810,7 @@ class XSDataResolutionBin(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResolutionBin" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -4818,7 +4818,7 @@ class XSDataResolutionBin(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResolutionBin' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -4975,10 +4975,10 @@ class XSDataSample(XSData):
     susceptibility = property(getSusceptibility, setSusceptibility, delSusceptibility, "Property for susceptibility")
     def export(self, outfile, level, name_='XSDataSample'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSample'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._absorbedDoseRate is not None:
@@ -5032,7 +5032,7 @@ class XSDataSample(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSample" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5040,7 +5040,7 @@ class XSDataSample(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSample' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -5098,10 +5098,10 @@ class XSDataSolvent(XSData):
     atoms = property(getAtoms, setAtoms, delAtoms, "Property for atoms")
     def export(self, outfile, level, name_='XSDataSolvent'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSolvent'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._atoms is not None:
@@ -5122,7 +5122,7 @@ class XSDataSolvent(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSolvent" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5130,7 +5130,7 @@ class XSDataSolvent(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSolvent' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -5207,10 +5207,10 @@ class XSDataSpaceGroup(XSData):
     name = property(getName, setName, delName, "Property for name")
     def export(self, outfile, level, name_='XSDataSpaceGroup'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSpaceGroup'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._ITNumber is not None:
@@ -5238,7 +5238,7 @@ class XSDataSpaceGroup(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSpaceGroup" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5246,7 +5246,7 @@ class XSDataSpaceGroup(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSpaceGroup' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -5398,10 +5398,10 @@ class XSDataStatisticsIndexing(XSData):
     spotsUsed = property(getSpotsUsed, setSpotsUsed, delSpotsUsed, "Property for spotsUsed")
     def export(self, outfile, level, name_='XSDataStatisticsIndexing'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsIndexing'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._beamPositionShiftX is not None:
@@ -5467,7 +5467,7 @@ class XSDataStatisticsIndexing(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsIndexing" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5475,7 +5475,7 @@ class XSDataStatisticsIndexing(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsIndexing' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -5684,10 +5684,10 @@ class XSDataStatisticsIntegration(XSData):
     numberOfReflectionsGenerated = property(getNumberOfReflectionsGenerated, setNumberOfReflectionsGenerated, delNumberOfReflectionsGenerated, "Property for numberOfReflectionsGenerated")
     def export(self, outfile, level, name_='XSDataStatisticsIntegration'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsIntegration'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._RMSSpotDeviation is not None:
@@ -5780,7 +5780,7 @@ class XSDataStatisticsIntegration(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsIntegration" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5788,7 +5788,7 @@ class XSDataStatisticsIntegration(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsIntegration' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -5864,10 +5864,10 @@ class XSDataStatisticsIntegrationPerReflectionType(XSData):
     partials = property(getPartials, setPartials, delPartials, "Property for partials")
     def export(self, outfile, level, name_='XSDataStatisticsIntegrationPerReflectionType'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsIntegrationPerReflectionType'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._fullyRecorded is not None:
@@ -5897,7 +5897,7 @@ class XSDataStatisticsIntegrationPerReflectionType(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsIntegrationPerReflectionType" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -5905,7 +5905,7 @@ class XSDataStatisticsIntegrationPerReflectionType(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsIntegrationPerReflectionType' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6019,10 +6019,10 @@ class XSDataStatisticsIntegrationPerResolutionBin(XSData):
     summation = property(getSummation, setSummation, delSummation, "Property for summation")
     def export(self, outfile, level, name_='XSDataStatisticsIntegrationPerResolutionBin'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsIntegrationPerResolutionBin'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._maxResolution is not None:
@@ -6070,7 +6070,7 @@ class XSDataStatisticsIntegrationPerResolutionBin(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsIntegrationPerResolutionBin" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -6078,7 +6078,7 @@ class XSDataStatisticsIntegrationPerResolutionBin(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsIntegrationPerResolutionBin' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6156,10 +6156,10 @@ class XSDataStatisticsStrategy(XSData):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataStatisticsStrategy'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStatisticsStrategy'):
         XSData.exportChildren(self, outfile, level, name_)
         for resolutionBin_ in self.getResolutionBin():
@@ -6178,7 +6178,7 @@ class XSDataStatisticsStrategy(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStatisticsStrategy" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -6186,7 +6186,7 @@ class XSDataStatisticsStrategy(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStatisticsStrategy' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6396,10 +6396,10 @@ class XSDataStrategySummary(XSData):
     totalExposureTime = property(getTotalExposureTime, setTotalExposureTime, delTotalExposureTime, "Property for totalExposureTime")
     def export(self, outfile, level, name_='XSDataStrategySummary'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStrategySummary'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._attenuation is not None:
@@ -6490,7 +6490,7 @@ class XSDataStrategySummary(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStrategySummary" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -6498,7 +6498,7 @@ class XSDataStrategySummary(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStrategySummary' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6632,10 +6632,10 @@ class XSDataCollectionPlan(XSData):
     strategySummary = property(getStrategySummary, setStrategySummary, delStrategySummary, "Property for strategySummary")
     def export(self, outfile, level, name_='XSDataCollectionPlan'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataCollectionPlan'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._collectionPlanNumber is not None:
@@ -6690,7 +6690,7 @@ class XSDataCollectionPlan(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataCollectionPlan" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -6698,7 +6698,7 @@ class XSDataCollectionPlan(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataCollectionPlan' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6794,10 +6794,10 @@ class XSDataCrystal(XSData):
     spaceGroup = property(getSpaceGroup, setSpaceGroup, delSpaceGroup, "Property for spaceGroup")
     def export(self, outfile, level, name_='XSDataCrystal'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataCrystal'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._cell is not None:
@@ -6834,7 +6834,7 @@ class XSDataCrystal(XSData):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataCrystal" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -6842,7 +6842,7 @@ class XSDataCrystal(XSData):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataCrystal' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -6981,10 +6981,10 @@ This structure is also defined by its number in the asymmetric unit."""
     numberOfCopiesInAsymmetricUnit = property(getNumberOfCopiesInAsymmetricUnit, setNumberOfCopiesInAsymmetricUnit, delNumberOfCopiesInAsymmetricUnit, "Property for numberOfCopiesInAsymmetricUnit")
     def export(self, outfile, level, name_='XSDataStructure'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataStructure'):
         XSData.exportChildren(self, outfile, level, name_)
         for chain_ in self.getChain():
@@ -7019,7 +7019,7 @@ This structure is also defined by its number in the asymmetric unit."""
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataStructure" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7027,7 +7027,7 @@ This structure is also defined by its number in the asymmetric unit."""
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataStructure' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7164,10 +7164,10 @@ The subWedgeNumber is an optional number for relating different subwedges, espec
     subWedgeNumber = property(getSubWedgeNumber, setSubWedgeNumber, delSubWedgeNumber, "Property for subWedgeNumber")
     def export(self, outfile, level, name_='XSDataSubWedge'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSubWedge'):
         XSData.exportChildren(self, outfile, level, name_)
         if self._action is not None:
@@ -7209,7 +7209,7 @@ The subWedgeNumber is an optional number for relating different subwedges, espec
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSubWedge" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7217,7 +7217,7 @@ The subWedgeNumber is an optional number for relating different subwedges, espec
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSubWedge' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7294,10 +7294,10 @@ class XSDataGeneratePredictionInput(XSDataInput):
     selectedIndexingSolution = property(getSelectedIndexingSolution, setSelectedIndexingSolution, delSelectedIndexingSolution, "Property for selectedIndexingSolution")
     def export(self, outfile, level, name_='XSDataGeneratePredictionInput'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataGeneratePredictionInput'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._dataCollection is not None:
@@ -7327,7 +7327,7 @@ class XSDataGeneratePredictionInput(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataGeneratePredictionInput" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7335,7 +7335,7 @@ class XSDataGeneratePredictionInput(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataGeneratePredictionInput' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7413,10 +7413,10 @@ class XSDataGeneratePredictionResult(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataGeneratePredictionResult'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataGeneratePredictionResult'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for predictionImage_ in self.getPredictionImage():
@@ -7437,7 +7437,7 @@ class XSDataGeneratePredictionResult(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataGeneratePredictionResult" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7445,7 +7445,7 @@ class XSDataGeneratePredictionResult(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataGeneratePredictionResult' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7540,10 +7540,10 @@ class XSDataIndexingInput(XSDataInput):
     experimentalCondition = property(getExperimentalCondition, setExperimentalCondition, delExperimentalCondition, "Property for experimentalCondition")
     def export(self, outfile, level, name_='XSDataIndexingInput'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIndexingInput'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._crystal is not None:
@@ -7578,7 +7578,7 @@ class XSDataIndexingInput(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIndexingInput" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7586,7 +7586,7 @@ class XSDataIndexingInput(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIndexingInput' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7700,10 +7700,10 @@ class XSDataIndexingSolutionSelected(XSDataIndexingSolution):
     statistics = property(getStatistics, setStatistics, delStatistics, "Property for statistics")
     def export(self, outfile, level, name_='XSDataIndexingSolutionSelected'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIndexingSolutionSelected'):
         XSDataIndexingSolution.exportChildren(self, outfile, level, name_)
         if self._experimentalConditionRefined is not None:
@@ -7749,7 +7749,7 @@ class XSDataIndexingSolutionSelected(XSDataIndexingSolution):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIndexingSolutionSelected" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -7757,7 +7757,7 @@ class XSDataIndexingSolutionSelected(XSDataIndexingSolution):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIndexingSolutionSelected' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -7951,10 +7951,10 @@ class XSDataIndexingResult(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataIndexingResult'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIndexingResult'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for image_ in self.getImage():
@@ -8012,7 +8012,7 @@ class XSDataIndexingResult(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIndexingResult" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8020,7 +8020,7 @@ class XSDataIndexingResult(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIndexingResult' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8077,10 +8077,10 @@ class XSDataInputCharacterisation(XSDataInput):
     dataCollection = property(getDataCollection, setDataCollection, delDataCollection, "Property for dataCollection")
     def export(self, outfile, level, name_='XSDataInputCharacterisation'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputCharacterisation'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._dataCollection is not None:
@@ -8101,7 +8101,7 @@ class XSDataInputCharacterisation(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputCharacterisation" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8109,7 +8109,7 @@ class XSDataInputCharacterisation(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputCharacterisation' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8223,10 +8223,10 @@ class XSDataInputControlISPyB(XSDataInput):
     phi = property(getPhi, setPhi, delPhi, "Property for phi")
     def export(self, outfile, level, name_='XSDataInputControlISPyB'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputControlISPyB'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._characterisationResult is not None:
@@ -8268,7 +8268,7 @@ class XSDataInputControlISPyB(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputControlISPyB" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8276,7 +8276,7 @@ class XSDataInputControlISPyB(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputControlISPyB' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8354,10 +8354,10 @@ class XSDataInputControlImageQualityIndicators(XSDataInput):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataInputControlImageQualityIndicators'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputControlImageQualityIndicators'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         for image_ in self.getImage():
@@ -8378,7 +8378,7 @@ class XSDataInputControlImageQualityIndicators(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputControlImageQualityIndicators" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8386,7 +8386,7 @@ class XSDataInputControlImageQualityIndicators(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputControlImageQualityIndicators' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8443,10 +8443,10 @@ class XSDataInputControlXDSGenerateBackgroundImage(XSDataInput):
     dataCollection = property(getDataCollection, setDataCollection, delDataCollection, "Property for dataCollection")
     def export(self, outfile, level, name_='XSDataInputControlXDSGenerateBackgroundImage'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputControlXDSGenerateBackgroundImage'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._dataCollection is not None:
@@ -8467,7 +8467,7 @@ class XSDataInputControlXDSGenerateBackgroundImage(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputControlXDSGenerateBackgroundImage" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8475,7 +8475,7 @@ class XSDataInputControlXDSGenerateBackgroundImage(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputControlXDSGenerateBackgroundImage' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8532,10 +8532,10 @@ class XSDataInputInducedRadiationProcess(XSDataInput):
     characterisationResult = property(getCharacterisationResult, setCharacterisationResult, delCharacterisationResult, "Property for characterisationResult")
     def export(self, outfile, level, name_='XSDataInputInducedRadiationProcess'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputInducedRadiationProcess'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._characterisationResult is not None:
@@ -8556,7 +8556,7 @@ class XSDataInputInducedRadiationProcess(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputInducedRadiationProcess" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8564,7 +8564,7 @@ class XSDataInputInducedRadiationProcess(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputInducedRadiationProcess' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8622,10 +8622,10 @@ class XSDataInputReadImageHeader(XSDataInput):
     image = property(getImage, setImage, delImage, "Property for image")
     def export(self, outfile, level, name_='XSDataInputReadImageHeader'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputReadImageHeader'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._image is not None:
@@ -8646,7 +8646,7 @@ class XSDataInputReadImageHeader(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputReadImageHeader" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8654,7 +8654,7 @@ class XSDataInputReadImageHeader(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputReadImageHeader' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -8865,10 +8865,10 @@ class XSDataInputStrategy(XSDataInput):
     xdsBackgroundImage = property(getXdsBackgroundImage, setXdsBackgroundImage, delXdsBackgroundImage, "Property for xdsBackgroundImage")
     def export(self, outfile, level, name_='XSDataInputStrategy'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputStrategy'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         if self._bestFileContentDat is not None:
@@ -8950,7 +8950,7 @@ class XSDataInputStrategy(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputStrategy" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -8958,7 +8958,7 @@ class XSDataInputStrategy(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputStrategy' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9037,10 +9037,10 @@ class XSDataInputSubWedgeAssemble(XSDataInput):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataInputSubWedgeAssemble'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputSubWedgeAssemble'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         for file_ in self.getFile():
@@ -9061,7 +9061,7 @@ class XSDataInputSubWedgeAssemble(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputSubWedgeAssemble" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9069,7 +9069,7 @@ class XSDataInputSubWedgeAssemble(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputSubWedgeAssemble' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9148,10 +9148,10 @@ class XSDataInputSubWedgeMerge(XSDataInput):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataInputSubWedgeMerge'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataInputSubWedgeMerge'):
         XSDataInput.exportChildren(self, outfile, level, name_)
         for subWedge_ in self.getSubWedge():
@@ -9172,7 +9172,7 @@ class XSDataInputSubWedgeMerge(XSDataInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataInputSubWedgeMerge" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9180,7 +9180,7 @@ class XSDataInputSubWedgeMerge(XSDataInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataInputSubWedgeMerge' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9258,10 +9258,10 @@ class XSDataIntegrationResult(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataIntegrationResult'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIntegrationResult'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for integrationSubWedgeResult_ in self.getIntegrationSubWedgeResult():
@@ -9280,7 +9280,7 @@ class XSDataIntegrationResult(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIntegrationResult" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9288,7 +9288,7 @@ class XSDataIntegrationResult(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIntegrationResult' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9518,10 +9518,10 @@ class XSDataResultCharacterisation(XSDataResult):
     xdsBackgroundImage = property(getXdsBackgroundImage, setXdsBackgroundImage, delXdsBackgroundImage, "Property for xdsBackgroundImage")
     def export(self, outfile, level, name_='XSDataResultCharacterisation'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultCharacterisation'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         if self._dataCollection is not None:
@@ -9604,7 +9604,7 @@ class XSDataResultCharacterisation(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultCharacterisation" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9612,7 +9612,7 @@ class XSDataResultCharacterisation(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultCharacterisation' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9670,10 +9670,10 @@ class XSDataResultControlISPyB(XSDataResult):
     screeningId = property(getScreeningId, setScreeningId, delScreeningId, "Property for screeningId")
     def export(self, outfile, level, name_='XSDataResultControlISPyB'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultControlISPyB'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         if self._screeningId is not None:
@@ -9692,7 +9692,7 @@ class XSDataResultControlISPyB(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultControlISPyB" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9700,7 +9700,7 @@ class XSDataResultControlISPyB(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultControlISPyB' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9778,10 +9778,10 @@ class XSDataResultControlImageQualityIndicators(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataResultControlImageQualityIndicators'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultControlImageQualityIndicators'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for imageQualityIndicators_ in self.getImageQualityIndicators():
@@ -9800,7 +9800,7 @@ class XSDataResultControlImageQualityIndicators(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultControlImageQualityIndicators" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9808,7 +9808,7 @@ class XSDataResultControlImageQualityIndicators(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultControlImageQualityIndicators' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9865,10 +9865,10 @@ class XSDataResultControlXDSGenerateBackgroundImage(XSDataResult):
     xdsBackgroundImage = property(getXdsBackgroundImage, setXdsBackgroundImage, delXdsBackgroundImage, "Property for xdsBackgroundImage")
     def export(self, outfile, level, name_='XSDataResultControlXDSGenerateBackgroundImage'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultControlXDSGenerateBackgroundImage'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         if self._xdsBackgroundImage is not None:
@@ -9889,7 +9889,7 @@ class XSDataResultControlXDSGenerateBackgroundImage(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultControlXDSGenerateBackgroundImage" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -9897,7 +9897,7 @@ class XSDataResultControlXDSGenerateBackgroundImage(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultControlXDSGenerateBackgroundImage' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -9992,10 +9992,10 @@ class XSDataResultInducedRadiationProcess(XSDataResult):
     scale = property(getScale, setScale, delScale, "Property for scale")
     def export(self, outfile, level, name_='XSDataResultInducedRadiationProcess'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultInducedRadiationProcess'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         if self._bFactor is not None:
@@ -10034,7 +10034,7 @@ class XSDataResultInducedRadiationProcess(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultInducedRadiationProcess" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10042,7 +10042,7 @@ class XSDataResultInducedRadiationProcess(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultInducedRadiationProcess' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10100,10 +10100,10 @@ class XSDataResultReadImageHeader(XSDataResult):
     subWedge = property(getSubWedge, setSubWedge, delSubWedge, "Property for subWedge")
     def export(self, outfile, level, name_='XSDataResultReadImageHeader'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultReadImageHeader'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         if self._subWedge is not None:
@@ -10124,7 +10124,7 @@ class XSDataResultReadImageHeader(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultReadImageHeader" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10132,7 +10132,7 @@ class XSDataResultReadImageHeader(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultReadImageHeader' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10308,10 +10308,10 @@ class XSDataResultStrategy(XSDataResult):
     sample = property(getSample, setSample, delSample, "Property for sample")
     def export(self, outfile, level, name_='XSDataResultStrategy'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultStrategy'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for bestGraphFile_ in self.getBestGraphFile():
@@ -10358,7 +10358,7 @@ class XSDataResultStrategy(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultStrategy" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10366,7 +10366,7 @@ class XSDataResultStrategy(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultStrategy' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10445,10 +10445,10 @@ class XSDataResultSubWedgeAssemble(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataResultSubWedgeAssemble'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultSubWedgeAssemble'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for subWedge_ in self.getSubWedge():
@@ -10469,7 +10469,7 @@ class XSDataResultSubWedgeAssemble(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultSubWedgeAssemble" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10477,7 +10477,7 @@ class XSDataResultSubWedgeAssemble(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultSubWedgeAssemble' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10556,10 +10556,10 @@ class XSDataResultSubWedgeMerge(XSDataResult):
             raise BaseException(strMessage)
     def export(self, outfile, level, name_='XSDataResultSubWedgeMerge'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataResultSubWedgeMerge'):
         XSDataResult.exportChildren(self, outfile, level, name_)
         for subWedge_ in self.getSubWedge():
@@ -10580,7 +10580,7 @@ class XSDataResultSubWedgeMerge(XSDataResult):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataResultSubWedgeMerge" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10588,7 +10588,7 @@ class XSDataResultSubWedgeMerge(XSDataResult):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataResultSubWedgeMerge' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10646,10 +10646,10 @@ class XSDataSampleCrystal(XSDataSample):
     crystal = property(getCrystal, setCrystal, delCrystal, "Property for crystal")
     def export(self, outfile, level, name_='XSDataSampleCrystal'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSampleCrystal'):
         XSDataSample.exportChildren(self, outfile, level, name_)
         if self._crystal is not None:
@@ -10670,7 +10670,7 @@ class XSDataSampleCrystal(XSDataSample):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSampleCrystal" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10678,7 +10678,7 @@ class XSDataSampleCrystal(XSDataSample):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSampleCrystal' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10755,10 +10755,10 @@ class XSDataIntegrationInput(XSDataGeneratePredictionInput):
     experimentalConditionRefined = property(getExperimentalConditionRefined, setExperimentalConditionRefined, delExperimentalConditionRefined, "Property for experimentalConditionRefined")
     def export(self, outfile, level, name_='XSDataIntegrationInput'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataIntegrationInput'):
         XSDataGeneratePredictionInput.exportChildren(self, outfile, level, name_)
         if self._crystalRefined is not None:
@@ -10784,7 +10784,7 @@ class XSDataIntegrationInput(XSDataGeneratePredictionInput):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataIntegrationInput" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10792,7 +10792,7 @@ class XSDataIntegrationInput(XSDataGeneratePredictionInput):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataIntegrationInput' )
         outfile.close()
     #Deprecated method, replaced by exportToFile
@@ -10850,10 +10850,10 @@ class XSDataSampleCrystalMM(XSDataSampleCrystal):
     chemicalComposition = property(getChemicalComposition, setChemicalComposition, delChemicalComposition, "Property for chemicalComposition")
     def export(self, outfile, level, name_='XSDataSampleCrystalMM'):
         showIndent(outfile, level)
-        outfile.write(unicode('<%s>\n' % name_))
+        outfile.write(str('<%s>\n' % name_))
         self.exportChildren(outfile, level + 1, name_)
         showIndent(outfile, level)
-        outfile.write(unicode('</%s>\n' % name_))
+        outfile.write(str('</%s>\n' % name_))
     def exportChildren(self, outfile, level, name_='XSDataSampleCrystalMM'):
         XSDataSampleCrystal.exportChildren(self, outfile, level, name_)
         if self._chemicalComposition is not None:
@@ -10874,7 +10874,7 @@ class XSDataSampleCrystalMM(XSDataSampleCrystal):
     #Method for marshalling an object
     def marshal( self ):
         oStreamString = StringIO()
-        oStreamString.write(unicode('<?xml version="1.0" ?>\n'))
+        oStreamString.write(str('<?xml version="1.0" ?>\n'))
         self.export( oStreamString, 0, name_="XSDataSampleCrystalMM" )
         oStringXML = oStreamString.getvalue()
         oStreamString.close()
@@ -10882,7 +10882,7 @@ class XSDataSampleCrystalMM(XSDataSampleCrystal):
     #Only to export the entire XML tree to a file stream on disk
     def exportToFile( self, _outfileName ):
         outfile = open( _outfileName, "w" )
-        outfile.write(unicode('<?xml version=\"1.0\" ?>\n'))
+        outfile.write(str('<?xml version=\"1.0\" ?>\n'))
         self.export( outfile, 0, name_='XSDataSampleCrystalMM' )
         outfile.close()
     #Deprecated method, replaced by exportToFile

@@ -105,7 +105,7 @@ class MicrodiffMotorPX2(Device):
           #info = self.position_attr.getInfo()
           #return (float(info.min_value)+self.offset, float(info.max_value)+self.offset)
           #MS 29.01.13
-          return map(float,self.limits.split())
+          return list(map(float,self.limits.split()))
           return self.MotorLimits[self.motor_name]
         except:
           return (-1., 1.)

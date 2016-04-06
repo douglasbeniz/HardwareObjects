@@ -32,7 +32,7 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ,
     logging.info("phiz is ready = %s " % str(phiz.isReady()))
     logging.info("sampx is ready = %s " % str(sampx.isReady()))
     logging.info("sampy is ready = %s " % str(sampy.isReady()))
-    raise RuntimeError, "motors not ready"
+    raise RuntimeError("motors not ready")
   
   kappa.move(0)
   omega.move(0)
@@ -62,7 +62,7 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ,
     #yc = (Y[0]+Y[2]) / 2.
     #y =  Y[0] - yc
     #x =  yc - Y[1]
-    print "MANUAL_CENTRING:", X, Y, pixelsPerMmY, pixelsPerMmZ, beam_xc, beam_yc
+    print("MANUAL_CENTRING:", X, Y, pixelsPerMmY, pixelsPerMmZ, beam_xc, beam_yc)
     #b1 = -math.radians(phiSavedDialPosition)
     #b1 = -math.radians(phiSavedPosition - phiSavedDialPosition)
     #rotMatrix = numpy.matrix([math.cos(b1), -math.sin(b1), math.sin(b1), math.cos(b1)])
@@ -83,7 +83,7 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ,
     x_echantillon=(p01+p02+p03)/3.0
     y_echantillon=(q01+q02+q03)/3.0
     z_echantillon=(-dx1-dx2-dx3)/3.0
-    print "Microglide X = %d :    Y = %d :    Z = %d : " %(x_echantillon,y_echantillon,z_echantillon)
+    print("Microglide X = %d :    Y = %d :    Z = %d : " %(x_echantillon,y_echantillon,z_echantillon))
         
     x_echantillon_real=1000.*x_echantillon/pixelsPerMmY
     y_echantillon_real=1000.*y_echantillon/pixelsPerMmY
@@ -99,18 +99,18 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ,
     #               phiz: phiz.getPosition() + (y - beam_yc_real) }
     if (z_echantillon_real + phiy.getPosition() < phiy.getLimits()[0]) :
         logging.getLogger("HWR").error("loop too long")
-        print 'loop too long '
+        print('loop too long ')
         centredPos = {}
         phi.move(phiSavedPosition)            
     else :    
-        print 'loop Ok '
+        print('loop Ok ')
         centredPos= { sampx: x_echantillon_real,
                       sampy: y_echantillon_real,
                       phiy: z_echantillon_real}
-    print 'Fin procedure de centrage'
-    print "   sampx: %.1f" % x_echantillon_real
-    print "   sampy: %.1f" % y_echantillon_real
-    print "   phiy:  %.1f" % z_echantillon_real
+    print('Fin procedure de centrage')
+    print("   sampx: %.1f" % x_echantillon_real)
+    print("   sampy: %.1f" % y_echantillon_real)
+    print("   phiy:  %.1f" % z_echantillon_real)
     #try:
     #    sampx.move(x_echantillon_real)
     #    sampy.move(y_echantillon_real)
@@ -126,17 +126,17 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ,
 def move_to_centred_position(centred_pos):
   logging.getLogger("HWR").info("move_to_centred_position")
   pos_to_go = []
-  for motor, pos in centred_pos.iteritems():
+  for motor, pos in centred_pos.items():
     #print "AAA motor:", motor.name(), " pos:", pos #, dir(motor)
     pos_to_go.append(pos)
     if motor.name() in ["/uglidex", "/uglidey"]:
         #print "--->",  motor.name(), motor.getCommandNamesList()
         moveXYZ = motor.getCommandObject("moveRelativeXYZ")        
-  print "POS_TO_GO: %8.2f %8.2f %8.2f" % tuple(pos_to_go)
+  print("POS_TO_GO: %8.2f %8.2f %8.2f" % tuple(pos_to_go))
   moveXYZ(pos_to_go)
 
   with gevent.Timeout(15):
-    while not all([m.getState() == m.READY for m in centred_pos.iterkeys()]):
+    while not all([m.getState() == m.READY for m in centred_pos.keys()]):
       time.sleep(0.1)
 
 
@@ -213,7 +213,7 @@ class MiniDiffPX1(MiniDiff):
 
    def getState(self):
        logging.info("XX1 getState")
-       print "phi_position", self.phiMotor.getPosition()
+       print("phi_position", self.phiMotor.getPosition())
        return "STANDBY"
 
    def getBeamInfo(self, callback=None, error_callback=None):
@@ -256,8 +256,8 @@ class MiniDiffPX1(MiniDiff):
                        self.beam_yc = float(calibrationData.beamPositionY)
                        self.light_level = float(position.lightLevel)
                        self.lightMotor.move(self.light_level)
-                       print "CALIBR:", (self.calib_x, self.calib_y)
-                       print "BEAMXY:", (self.beam_xc, self.beam_yc)
+                       print("CALIBR:", (self.calib_x, self.calib_y))
+                       print("BEAMXY:", (self.beam_xc, self.beam_yc))
                        return (self.calib_x or 0, self.calib_y or 0)
 
        return (None, None)

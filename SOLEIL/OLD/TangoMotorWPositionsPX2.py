@@ -40,11 +40,11 @@ class TangoMotorWPositionsPX2(TangoMotorZoomPX2.TangoMotorZoomPX2):
                     
             self.sortPredefinedPositionsList()
             
-            print 
-            print 'MS debug 18.10.2012,    self.predefinedPositionsNamesList', self.predefinedPositionsNamesList
-            print 'MS debug 18.10.2012,    self.predefinedPositions', self.predefinedPositions
-            print 'MS debug 18.10.2012,    self.predefinedFocusPositions', self.predefinedFocusPositions
-            print 
+            print() 
+            print('MS debug 18.10.2012,    self.predefinedPositionsNamesList', self.predefinedPositionsNamesList)
+            print('MS debug 18.10.2012,    self.predefinedPositions', self.predefinedPositions)
+            print('MS debug 18.10.2012,    self.predefinedFocusPositions', self.predefinedFocusPositions)
+            print() 
     #        try :
     #            self.Zoomdevice = SimpleDevice(self.getProperty("tangoname"), verbose=False)
     #            self.Zoomdevice.waitMoves = True
@@ -57,7 +57,7 @@ class TangoMotorWPositionsPX2(TangoMotorZoomPX2.TangoMotorZoomPX2):
 
         logging.info("zoom connectNotify called for signal %s" % signal)
 
-        TangoMotorZoomPX2.TangoMotorZoomPX2.connectNotify.im_func(self, signal)
+        TangoMotorZoomPX2.TangoMotorZoomPX2.connectNotify.__func__(self, signal)
 
         if signal == 'predefinedPositionChanged':
             positionName = self.getCurrentPositionName()
@@ -86,12 +86,12 @@ class TangoMotorWPositionsPX2(TangoMotorZoomPX2.TangoMotorZoomPX2):
         return self.device.ZoomLevel, self.device.PhiTableXAxisPosition
         
     def sortPredefinedPositionsList(self):
-        self.predefinedPositionsNamesList = self.predefinedPositions.keys()
+        self.predefinedPositionsNamesList = list(self.predefinedPositions.keys())
         self.predefinedPositionsNamesList.sort(lambda x, y: int(round(self.predefinedPositions[x] - self.predefinedPositions[y]))) 
                 
     def motorMoveDone(self, channelValue):
         logging.getLogger("HWR").debug("Motor move done")
-        TangoMotorZoomPX2.TangoMotorZoomPX2.motorMoveDone.im_func(self, channelValue)
+        TangoMotorZoomPX2.TangoMotorZoomPX2.motorMoveDone.__func__(self, channelValue)
         self.checkPredefinedPosition()
     
     def checkPredefinedPosition(self):
@@ -105,7 +105,7 @@ class TangoMotorWPositionsPX2(TangoMotorZoomPX2.TangoMotorZoomPX2):
         self.emit('predefinedPositionChanged', ('', None, ))
         
     def motorPositionChanged(self, channelValue):
-        TangoMotorZoomPX2.TangoMotorZoomPX2.motorPositionChanged.im_func(self, channelValue)
+        TangoMotorZoomPX2.TangoMotorZoomPX2.motorPositionChanged.__func__(self, channelValue)
 
         #self.emit('predefinedPositionChanged', ('', None, ))
         self.checkPredefinedPosition()
@@ -158,7 +158,7 @@ class TangoMotorWPositionsPX2(TangoMotorZoomPX2.TangoMotorZoomPX2):
         #print "focus_offset is", focus_offset
         if focus_offset is not None:
             self.device.write_attribute("PhiTableXAxisPosition", focus_offset)
-        print "We're supposed to see zoomPostionChanged signal here"
+        print("We're supposed to see zoomPostionChanged signal here")
         self.emit(PYSIGNAL("zoomPositionChanged"), (absolutePosition, focus_offset))
 
 

@@ -9,7 +9,7 @@ Derived from Michael Hellmig's implementation for the BESSY CATS sample changer
  -enable setondiff for the catsmaint object 
  -fix the bug of MD2 jam during exchange or unload
 """
-from .GenericSampleChanger import *
+from GenericSampleChanger import *
 import time
 import qt
 
@@ -385,7 +385,7 @@ class Cats90(SampleChanger):
         """
         self._waitDeviceReady(3.0)
         task_id = method(*args)
-        print "Cats90._executeServerTask", task_id
+        print("Cats90._executeServerTask", task_id)
         ret=None
         if task_id is None: #Reset
             while self._isDeviceBusy():

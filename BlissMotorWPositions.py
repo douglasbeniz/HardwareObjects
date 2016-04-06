@@ -52,7 +52,7 @@ class BlissMotorWPositions(BlissMotor):
             self.emit(signal, (self.getState(), ))
             
     def sortPredefinedPositionsList(self):
-        self.predefinedPositionsNamesList = self.predefinedPositions.keys()
+        self.predefinedPositionsNamesList = list(self.predefinedPositions.keys())
 	self.predefinedPositionsNamesList.sort(lambda x, y: int(round(self.predefinedPositions[x] - self.predefinedPositions[y]))) 
         
     def updateState(self, state=None):

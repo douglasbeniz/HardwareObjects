@@ -1,4 +1,4 @@
-from .GenericSampleChanger import *
+from GenericSampleChanger import *
 import gevent
 
 class Pin(Sample):        
@@ -112,7 +112,7 @@ class Robodiff(SampleChanger):
               saved["barcodes"]=barcodes
             logging.info("Scanning completed.")
         def get_barcodes():
-            if None in saved.values():
+            if None in list(saved.values()):
                 read_barcodes()
             return saved["barcodes"]
        

@@ -63,11 +63,10 @@ class SampleChangerMode:
     Disabled    = 11
 
 
-class SampleChanger(Container,Equipment):
+class SampleChanger(Container, Equipment, metaclass=abc.ABCMeta):
     """
     Abstract base class for sample changers
     """
-    __metaclass__ = abc.ABCMeta
 
 #########################           EVENTS           #########################             
     STATE_CHANGED_EVENT="stateChanged"
@@ -79,7 +78,9 @@ class SampleChanger(Container,Equipment):
     
                 
     def __init__(self,type,scannable, *args, **kwargs):
-        super(SampleChanger, self).__init__(type,None,type,scannable)
+        # LNLS
+        #super(SampleChanger, self).__init__(type,None,type,scannable)
+        super().__init__(type,None,type,scannable)
         if len(args)==0:
             args=(type,)
         Equipment.__init__(self,*args, **kwargs)
@@ -331,7 +332,7 @@ class SampleChanger(Container,Equipment):
     
     @task
     def scan(self, component=None, recursive=False):
-        if type(component) == types.ListType:
+        if type(component) == list:
             for c in component:
                 self._scan_one(c, recursive)     
         else:
@@ -353,7 +354,7 @@ class SampleChanger(Container,Equipment):
 
     def chained_load(self, sample_to_unload, sample_to_load):
         self.unload(sample_to_unload)
-        self.waitReady(timeout=10)
+        self.waitReady(timeout=3)
         return self.load(sample_to_load)
 
     def load(self, sample=None, wait=True):    
@@ -397,7 +398,7 @@ class SampleChanger(Container,Equipment):
         self._doUnload(sample_slot)
     
     def _resolveComponent(self, component):
-        if component is not None and isinstance(component, basestring):
+        if component is not None and isinstance(component, str):
             c=self.getComponentByAddress(component)
             if c is None:
                  raise Exception("Invalid component: " + component)
@@ -481,7 +482,7 @@ class SampleChanger(Container,Equipment):
             exception=ex
         #if self.getState()==self.task:            
         #    self._setState(SampleChangerState.Ready)
-	self.updateInfo()
+        self.updateInfo()
         task=self.task
         self.task=None
         self.task_proc=None
@@ -494,7 +495,7 @@ class SampleChanger(Container,Equipment):
         try:                
             e = task.get()
             logging.debug ("Task ended. Return value: " + str(e))
-        except Exception, errmsg:
+        except Exception as errmsg:
             logging.error("Error while executing sample changer task: %s", errmsg)            
     
     def _setState(self,state=None,status=None):

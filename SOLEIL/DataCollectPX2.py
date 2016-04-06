@@ -147,10 +147,10 @@ from HardwareRepository.BaseHardwareObjects import Procedure
 from HardwareRepository import HardwareRepository
 import logging
 import qt
-import Queue
+import queue
 import time
 import os
-import commands
+import subprocess
 import types
 import string
 import subprocess
@@ -158,7 +158,7 @@ import math
 import threading
 import copy
 import signal
-import xmlrpclib
+import xmlrpc.client
 
 ## Added MS 
 import socket # for adxv visualisation
@@ -172,11 +172,11 @@ import Collect
 def make_dir(dirname):    
     try:
         os.mkdir(dirname)
-        os.chmod(dirname, 0777)
+        os.chmod(dirname, 0o777)
     except OSError:
         pass
-    except Exception, err:
-        print "Error in creating process directory %s:" % dirname, err
+    except Exception as err:
+        print("Error in creating process directory %s:" % dirname, err)
 
 def make_process_dir(dirname):
     _pdir = os.path.join(dirname, "process")
@@ -191,7 +191,7 @@ def write_goimg(path):
     dbo = open(db_f, "w")
     dbo.write(path)
     dbo.close()
-    os.chmod(db_f, 0777)
+    os.chmod(db_f, 0o777)
 ###
 
 """
@@ -242,7 +242,7 @@ imageQueue
     Notes      : The convertion of detector images to jpegs was also initiated here, but now
                  it's deprecated since the detector software writes the jpegs itself.
 """
-imageQueue=Queue.Queue()
+imageQueue=queue.Queue()
 
 
 
@@ -273,7 +273,7 @@ class DataCollectPX2(Procedure):
     """
     Some class configuration parameters
     """
-    print "Debug MS 13.09.2012, DataCollectPX2 hobj"
+    print("Debug MS 13.09.2012, DataCollectPX2 hobj")
     SPEC_PARAMS_TIMEOUT  = 15     # Timeout (sec) while waiting for spec validate parameters macro
     LOADSAMPLE_TIMEOUT   = 4*60   # Timeout (sec) waiting for the sample changer to load a sample
     UNLOADSAMPLE_TIMEOUT = 4*60   # Timeout (sec) waiting for the sample changer to unload a sample
@@ -333,7 +333,7 @@ class DataCollectPX2(Procedure):
         # Create instance variables
         self.configOk=True
         self.xds_dir=None
-        print "DataCollect init()"
+        print("DataCollect init()")
         self.persistentValues = {
                                     "owner":None,
                                     "callback":None,
@@ -401,7 +401,7 @@ class DataCollectPX2(Procedure):
         # Read the configuration file and setup the HO
         if self.getProperty('specversion') is None:
             logging.getLogger("HWR").error('DataCollect: you must specify a spec version')
-            print 'self.configOk problem possibility 2'
+            print('self.configOk problem possibility 2')
             self.configOk=False
         else:
             if isConsoleApplication():
@@ -413,10 +413,10 @@ class DataCollectPX2(Procedure):
             for prop_name in DataCollectPX2.MANDATORY_PROPS:
                 desc=DataCollectPX2.MANDATORY_PROPS[prop_name]
                 prop=self.getProperty(prop_name)
-                print 'Debug 12.09.2012 MANDATORY_PROPS MS', prop_name, prop
+                print('Debug 12.09.2012 MANDATORY_PROPS MS', prop_name, prop)
                 if prop is None:
                     logging.getLogger("HWR").error("DataCollect: you must specify the %s property in the xml configuration" % desc)
-                    print 'self.configOk problem possibility 3'
+                    print('self.configOk problem possibility 3')
                     self.configOk=False
                 exec("self.%sProp=prop" % prop_name)
 
@@ -424,7 +424,7 @@ class DataCollectPX2(Procedure):
             for prop_name in DataCollectPX2.OPTIONAL_PROPS:
                 desc=DataCollectPX2.OPTIONAL_PROPS[prop_name]
                 prop=self.getProperty(prop_name)
-                print 'Debug 12.09.2012 OPTIONAL_PROPS MS', prop_name, prop
+                print('Debug 12.09.2012 OPTIONAL_PROPS MS', prop_name, prop)
                 if prop is None:
                     logging.getLogger("HWR").warning("DataCollect: you could specify the optional %s property in the xml configuration" % desc)
                 exec("self.%sProp=prop" % prop_name)
@@ -438,14 +438,14 @@ class DataCollectPX2(Procedure):
                     channel=None
                 if channel is None:
                     logging.getLogger("HWR").error("DataCollect: you must specify the %s spec channel" % desc)
-                    print 'self.configOk problem possibility 4'
+                    print('self.configOk problem possibility 4')
                     self.configOk=False
                 else:
                     try:
                         exec("self.connect(channel,'update',self.%sUpdate)" % chan)
                     except AttributeError:
                         pass
-                print 'Debug 12.09.2012 MANDATORY_CHANNELS', chan, desc
+                print('Debug 12.09.2012 MANDATORY_CHANNELS', chan, desc)
                 exec("self.%sChannel=channel" % chan)
 
             # Get optional spec channels
@@ -468,17 +468,17 @@ class DataCollectPX2(Procedure):
             for ho in DataCollectPX2.MANDATORY_HO:
                 desc=DataCollectPX2.MANDATORY_HO[ho]
                 name=self.getProperty(ho)
-                print 'Debug 12.09.2012 MANDATORY_HO MS', prop_name, prop
+                print('Debug 12.09.2012 MANDATORY_HO MS', prop_name, prop)
                 if name is None:
                     logging.getLogger("HWR").error('DataCollect: you must specify the %s hardware object' % desc)
                     hobj=None
-                    print 'self.configOk problem possibility 5'
+                    print('self.configOk problem possibility 5')
                     self.configOk=False
                 else:
                     hobj=HardwareRepository.HardwareRepository().getHardwareObject(name)
                     if hobj is None:
                         logging.getLogger("HWR").error('DataCollect: invalid %s hardware object' % desc)
-                        print 'self.configOk problem possibility 6'
+                        print('self.configOk problem possibility 6')
                         self.configOk=False
                 exec("self.%sHO=hobj" % ho)
 
@@ -603,7 +603,7 @@ class DataCollectPX2(Procedure):
 
                 except:
                     logging.getLogger("HWR").exception('DataCollect: error reading parameters from mxlocal configuration file')
-                    print 'self.configOk problem possibility 1'
+                    print('self.configOk problem possibility 1')
                     self.configOk = False
 
                 # Initialize state
@@ -617,7 +617,7 @@ class DataCollectPX2(Procedure):
         _cl += " --geometry=100x30+1680+5 -e /home/experiences/proxima2a/com-proxima2a/MxCuBE/bin/adxv_follow &"
         
         def adxv_socket_running():
-            return commands.getoutput('ps aux | grep adxv | grep socket').find('-socket') != -1
+            return subprocess.getoutput('ps aux | grep adxv | grep socket').find('-socket') != -1
             
         if not adxv_socket_running():
             os.system(_cl)
@@ -637,7 +637,7 @@ class DataCollectPX2(Procedure):
             self.persistentValues["adxv"].connect((adxv_host, adxv_port)) #(adxv_host, adxv_port))
         except:
             self.persistentValues["adxv"] = None
-            print "Warning: Can't connect to adxv for the following collect."
+            print("Warning: Can't connect to adxv for the following collect.")
             
 
     """
@@ -660,8 +660,8 @@ class DataCollectPX2(Procedure):
                 logging.getLogger("HWR").error("%s: unknown device name", self.getProperty('md2'))
                 return False
             return True
-        except Exception, err:
-            print err
+        except Exception as err:
+            print(err)
             return False
         #return self.macroCollectCmd.isSpecConnected()
 
@@ -774,15 +774,15 @@ class DataCollectPX2(Procedure):
             md2device = DeviceProxy(self.getProperty('md2'))
         except:
             logging.getLogger("HWR").error("%s: unknown device name", self.getProperty('md2'))
-        print 'self.isConnected()', self.isConnected()
+        print('self.isConnected()', self.isConnected())
         if self.isConnected():
             #if self.macroCollectCmd.isSpecReady():
-            print 'md2.state()', md2device.state() 
+            print('md2.state()', md2device.state()) 
             if md2device.state().name in ['STANDBY']:
-                print 'self.globalLock.locked()', self.globalLock.locked()
+                print('self.globalLock.locked()', self.globalLock.locked())
                 if not self.globalLock.locked(): # MS 17.09.2012, is globalLock.locked() False or True that we wnat? 
                 #if self.globalLock.locked():
-                    print "DataCollect: isReady OK"
+                    print("DataCollect: isReady OK")
                     return True
         return False
 
@@ -1113,7 +1113,7 @@ class DataCollectPX2(Procedure):
         log_file=self.persistentValues["logFile"]
         curr_time=time.strftime("%Y-%m-%d %H:%M:%S")
                 
-        if type(msg)==types.TupleType or type(msg)==types.ListType:
+        if type(msg)==tuple or type(msg)==list:
             if log_file is not None and level!="debug":
                 lines=[]
                 for m in msg:
@@ -1130,7 +1130,7 @@ class DataCollectPX2(Procedure):
                     else:
                         log_msg=m.capitalize()
                     log_fun(log_msg)
-        elif type(msg)==types.StringType:
+        elif type(msg)==bytes:
             if log_file is not None and level!="debug":
                 try:
                     log_file.write("[%s] %s\r\n" % (curr_time,msg.capitalize()))
@@ -1276,14 +1276,14 @@ class DataCollectPX2(Procedure):
             self.collectLog("creating directory %s" % directory)
             try:
                 makedirsRetry(directory)
-            except OSError,diag:
+            except OSError as diag:
                 return (False,"error creating directory %s! (%s)" % (directory,str(diag)))
         process_dir = arguments['fileinfo']['process_directory']
         if not os.path.isdir(process_dir):
             self.collectLog("creating process directory %s" % process_dir)
             try:
                 makedirsRetry(process_dir)
-            except OSError,diag:
+            except OSError as diag:
                 return (False,"error creating process directory %s! (%s)" % (process_dir,str(diag)))      
  
         ### use collectLog to store the collection parameters in the collect log file
@@ -1318,7 +1318,7 @@ class DataCollectPX2(Procedure):
             make_process_dir(directory)
             write_goimg(os.path.join(directory, "process"))
         except:
-            print "Error. Can't creat the process directory in %s." % directory
+            print("Error. Can't creat the process directory in %s." % directory)
             
         return (True,osc_seq)
 
@@ -1491,7 +1491,7 @@ class DataCollectPX2(Procedure):
                             else:
                                 try:
                                     session_id=int(self.persistentValues['arguments']['sessionId'])
-                                except (ValueError,TypeError,KeyError),ex:
+                                except (ValueError,TypeError,KeyError) as ex:
                                     self.collectLog("invalid current session (%s)" % str(ex),"debug")
                                     motors_pos_dict={}
                                 else:
@@ -1736,12 +1736,12 @@ class DataCollectPX2(Procedure):
                 target_energy = float(arguments["energy"])
                 #print target_energy
                 optimal_energy = self.BLEnergyHO.getEnergyComputedFromCurrentGap()
-                print "%%%%%  OPT_E:",  optimal_energy
+                print("%%%%%  OPT_E:",  optimal_energy)
                 abs_energy_diff = abs(target_energy-optimal_energy)
-                print "%%%%%  ABS_E: ", abs_energy_diff
+                print("%%%%%  ABS_E: ", abs_energy_diff)
                 if abs_energy_diff > 0.014:
                     stateI =  self.BLEnergyHO.BLEnergydevice.State
-                    print "%%%%%  STATE0 BLE: ", stateI
+                    print("%%%%%  STATE0 BLE: ", stateI)
                     self.BLEnergyHO.startMoveEnergy(target_energy)
                     time.sleep(0.1) # waiting for the start
                     debut = time.time()
@@ -1749,21 +1749,21 @@ class DataCollectPX2(Procedure):
                         #print "%%%%%  STATE1 BLE: ", stateI
                         duration = time.time() - debut
                         time.sleep(0.5)
-                        print "Waiting for moving energy. t= %.3f sec" % duration
+                        print("Waiting for moving energy. t= %.3f sec" % duration)
                         if duration > 10:
                             break
                 #elif abs_energy_diff > 0.001:
                 else:
-                    print "%%%%%  STATE0 MONO: ", self.BLEnergyHO.monodevice.State
+                    print("%%%%%  STATE0 MONO: ", self.BLEnergyHO.monodevice.State)
                     self.BLEnergyHO.monodevice.energy = target_energy
                     stateI = self.BLEnergyHO.monodevice.State
-                    print "%%%%%  STATE1 MONO: ", stateI
+                    print("%%%%%  STATE1 MONO: ", stateI)
                     time.sleep(0.1) # waiting for the start
                     debut = time.time()
                     while self.BLEnergyHO.monodevice.State != stateI:
-                        print "%%%%%  STATE MONO: ", stateI
+                        print("%%%%%  STATE MONO: ", stateI)
                         duration = time.time() - debut
-                        print "Waiting for moving energy. t= %.3f sec" % duration
+                        print("Waiting for moving energy. t= %.3f sec" % duration)
                         time.sleep(0.5)
                         if duration > 10:
                             break
@@ -1776,7 +1776,7 @@ class DataCollectPX2(Procedure):
         if "resolution" in arguments and self.resmotorHO is not None:
             try:
                 target_resolution = float(arguments["resolution"]["upper"])
-                print "^^^^0  RESOLUTION: ", self.resmotorHO.getState(), target_resolution, self.resmotorHO.getPosition()
+                print("^^^^0  RESOLUTION: ", self.resmotorHO.getState(), target_resolution, self.resmotorHO.getPosition())
                 stateI = self.resmotorHO.getState()
                 # PL_2011_06_10: Temporairement commente... avant modification. Moderation de la modification de la distance
                 # si changement d'energy de faible amplitude... cf. 
@@ -1784,7 +1784,7 @@ class DataCollectPX2(Procedure):
                 time.sleep(0.5) # waiting for the start
                 while self.resmotorHO.getState() != stateI:
                     time.sleep(0.05)
-                    print "^^^^1  RESOLUTION: ", self.resmotorHO.getState(), target_resolution, self.resmotorHO.getPosition()
+                    print("^^^^1  RESOLUTION: ", self.resmotorHO.getState(), target_resolution, self.resmotorHO.getPosition())
             except:
                 logging.getLogger("HWR").error("DataCollect.prepareMacro4Collect: can't set resolution to %s" % target_resolution)
         # PL. 13 Jan 2011
@@ -1794,9 +1794,9 @@ class DataCollectPX2(Procedure):
         if "transmission" in arguments and self.transmissionHO is not None:
             if True:
                 target_transmission = float(arguments["transmission"])
-                print "^^^^0  TRANSMISSION  state: %s   target:%.1f   current:%.1f" % \
+                print("^^^^0  TRANSMISSION  state: %s   target:%.1f   current:%.1f" % \
                         (self.transmissionHO.getAttState(),
-                        target_transmission, self.transmissionHO.getAttFactor())
+                        target_transmission, self.transmissionHO.getAttFactor()))
                 self.transmissionHO.setTransmission(target_transmission)
                 time.sleep(0.2) # waiting for the start
         ### End of code from PX1 (MS 13.09.2012)
@@ -1878,7 +1878,7 @@ class DataCollectPX2(Procedure):
                      waiting for the centring.
     """
     def collect(self,owner,arguments,callback=None):
-        print "Debug MS 13.09.2012, about to start collection from within DataCollectPX2.collect()"
+        print("Debug MS 13.09.2012, about to start collection from within DataCollectPX2.collect()")
         # Adding logging. Sync with PX1 (MS 13.09.2012)
         logging.getLogger("HWR").debug('DataCollect:  collect ')  
         # Cleanup the data collection and release resources
@@ -1947,8 +1947,8 @@ class DataCollectPX2(Procedure):
         self.persistentValues["arguments"]=arguments
         try:
             self.persistentValues["arguments"]['centring_status'] = self.centring_status
-        except AttributeError, diag:
-            print diag
+        except AttributeError as diag:
+            print(diag)
             #self.persistentValues["arguments"]
         #print "DataCollectPX2: collect, arguements", arguments
 
@@ -1985,9 +1985,9 @@ class DataCollectPX2(Procedure):
         arguments["collection_message"]="Starting a data collection..."
 
         self.cmdNotReady(force=True)
-        print 'about to emit collectStarted signal'
-        print 'owner', owner
-        print 'number_of_images', arguments["oscillation_sequence"][0]['number_of_images']
+        print('about to emit collectStarted signal')
+        print('owner', owner)
+        print('number_of_images', arguments["oscillation_sequence"][0]['number_of_images'])
         self.guiEmit('collectStarted', (owner, arguments["oscillation_sequence"][0]['number_of_images']))
         #self.guiEmit('collectOscillationStarted', (owner,blsampleid,sample_code,sample_location,arguments))
 
@@ -2000,7 +2000,7 @@ class DataCollectPX2(Procedure):
             logging.getLogger("HWR").info("Creating directory %s" % directory)
             try:
                 makedirsRetry(directory)
-            except OSError,diag:
+            except OSError as diag:
                 return collectCleanup("error creating directory %s! (%s)" % (directory,str(diag)))
         try:
             file_prefix=arguments['fileinfo']['prefix']
@@ -2090,7 +2090,7 @@ class DataCollectPX2(Procedure):
         time.sleep(0.5)
 
         try:
-            print "here will go collect!"
+            print("here will go collect!")
             
             exposure = arguments['oscillation_sequence'][0]['exposure_time']
             start = arguments['oscillation_sequence'][0]['start']
@@ -2101,9 +2101,9 @@ class DataCollectPX2(Procedure):
             overlap = arguments['oscillation_sequence'][0]['overlap']
             reference_interval = arguments['oscillation_sequence'][0].get('reference_interval')
             
-            print '\n'*10
-            print 'reference_interval', reference_interval
-            print '\n'*10
+            print('\n'*10)
+            print('reference_interval', reference_interval)
+            print('\n'*10)
             prefix = arguments['fileinfo']['prefix']
             run = arguments['fileinfo']['run_number']
             suffix = arguments['fileinfo']['suffix']
@@ -2129,7 +2129,7 @@ class DataCollectPX2(Procedure):
                                                     #energy = float(arguments["energy"])
                                                 )
                    
-            print 'self.collectObject', self.collectObject
+            print('self.collectObject', self.collectObject)
             # MS 14.2.2013 trying to enable stop, abort and progress widgets
             self.guiEmit('collectOscillationStarted', (owner,blsampleid,sample_code,sample_location,arguments))
             
@@ -2137,9 +2137,9 @@ class DataCollectPX2(Procedure):
             self.macroCollectStarted()
             #self.macroCollectEnded({'code': 2005, 'message': 'Hello, It is finished!'})
             
-        except Exception, err:
-            print err
-            print Exception
+        except Exception as err:
+            print(err)
+            print(Exception)
             msg="problem calling collect sequence!"
             #self.guiEmit('collectSpecStarted', (False, ))
             #self.updateDatabase(prep_db[1],msg=msg,images=0)
@@ -2159,7 +2159,7 @@ class DataCollectPX2(Procedure):
         Threading  : Wakes the thread blocked on the self.continueCollect condition object.
     """
     def sampleAcceptCentring(self, accepted, centring_status):
-        print 'DataCollectPX2: sampleAcceptCentring, accepted' #, accepted
+        print('DataCollectPX2: sampleAcceptCentring, accepted') #, accepted
         self.centring_status = centring_status
         if not self.globalLock.locked():
             return
@@ -2450,12 +2450,12 @@ class DataCollectPX2(Procedure):
         last_image=None
         try:
             image_info=self.imageCollectedChannel.getValue()
-        except Exception,diag:
+        except Exception as diag:
             self.collectLog("problem getting last image taken! (%s)" % str(diag),"warning")
         else:
             try:
                 last_image=int(image_info.split()[0])
-            except (ValueError,IndexError,TypeError),diag:
+            except (ValueError,IndexError,TypeError) as diag:
                 self.collectLog("problem getting last image taken! (%s)" % str(diag),"warning")
             except AttributeError:
                 try:
@@ -2490,24 +2490,24 @@ class DataCollectPX2(Procedure):
                processAnalyseParams['residues'] = self.persistentValues["arguments"]["residues"]
                processAnalyseParams['xds_dir'] = self.xds_dir
                processAnalyseParams['inverse_beam']=self.persistentValues["arguments"]["experiment_type"].endswith("Beam")
-           except Exception,msg:
+           except Exception as msg:
                logging.getLogger().exception("DataCollect:processing: %r" % msg)
            else:
                try:
-                   server_proxy = xmlrpclib.Server("http://%s" % server)
+                   server_proxy = xmlrpc.client.Server("http://%s" % server)
                except:
                    logging.exception("Cannot create XML-RPC server instance")
 
                if str(self.persistentValues['arguments']['processing']) == 'True' and self.persistentValues['arguments'].get('input_files', False):
                  try: 
                      server_proxy.startProcessing(processEvent,processAnalyseParams)
-                 except Exception,msg:
+                 except Exception as msg:
                      logging.getLogger().exception("Error starting processing, is the autoprocessing server correctly configured?: %r" % msg)
                if processEvent=="after" and str(self.persistentValues["arguments"]["do_inducedraddam"]) == 'True':
                  try:
                      #logging.info("executing: server_proxy.startInducedRadDam(%r)", processAnalyseParams)
                      server_proxy.startInducedRadDam(processAnalyseParams)
-                 except Exception, msg:
+                 except Exception as msg:
                      logging.exception("Error starting induced rad.dam: %s", msg)
                
                """ Do not care what happens next """
@@ -2532,7 +2532,7 @@ class DataCollectPX2(Procedure):
                              "slitGapHorizontal": "slitGapHorizontal", "slitGapVertical": "slitGapVertical" }
         update_dict = {}
 
-        for key, attr in floats.iteritems():
+        for key, attr in floats.items():
           old_value = None
           if attr:
             try:
@@ -2547,7 +2547,7 @@ class DataCollectPX2(Procedure):
           if key in update_dict_keys:
             update_dict[update_dict_keys[key]]=value
           if attr:
-            exec attr+"="+str(value) 
+            exec(attr+"="+str(value)) 
  
         curr_beam_centre=None
         try:
@@ -2568,15 +2568,15 @@ class DataCollectPX2(Procedure):
         update_dict["undu_type2"] = self.lastMacroResult.get("undulatorType2")        
 
         # Update the previous DB entry with successful/stopped status
-        print "--->>>  persistentValues: a "#, 
+        print("--->>>  persistentValues: a ")#, 
         #pprint.pprint(self.persistentValues)
         
         #MS 19.09.2012. Adding try/except clause to handle not understood problem with missing 'collection_datacollectionid' KeyError
         try:
             update_dict["col_id"] = self.persistentValues["arguments"]["collection_datacollectionid"]
-        except KeyError, e:
+        except KeyError as e:
             update_dict["col_id"] = 1
-            print "problem with 'collection_datacollectionid' key", e
+            print("problem with 'collection_datacollectionid' key", e)
             
         update_dict["images"] = None #number of images, in fact
         if failed or self.persistentValues["stopped"]:
@@ -2648,7 +2648,7 @@ class DataCollectPX2(Procedure):
         
         col_dict = { 'dataCollectionId': col_id, 'endTime': curr_time }
 
-        for mxcube_arg, ispyb_arg in mxcube2ispyb.iteritems():
+        for mxcube_arg, ispyb_arg in mxcube2ispyb.items():
             value = kwargs.get(mxcube_arg)
             if value is not None:
                 col_dict[ispyb_arg]=value
@@ -2721,9 +2721,9 @@ class DataCollectPX2(Procedure):
             return (False,msg)
         
         # Added two debugging lines. Sync with PX1 (MS 13.09.2012)
-        print "--->>>  persistentValues: x" #, 
+        print("--->>>  persistentValues: x") #, 
         #pprint.pprint(self.persistentValues)
-        print self.persistentValues
+        print(self.persistentValues)
         self.persistentValues["stopped"] = True
         if self.persistentValues["owner"] is None:
             return stopCleanup("no collection to stop!")
@@ -2736,7 +2736,7 @@ class DataCollectPX2(Procedure):
             self.continueCollect.softAbort()
             return (True,"Data collection will be stopped")
         
-            print "--->>>  persistentValues: y" #, 
+            print("--->>>  persistentValues: y") #, 
             #pprint.pprint(self.persistentValues)
         
         else:
@@ -2748,11 +2748,11 @@ class DataCollectPX2(Procedure):
             try:
                 self.collectObject.stop()
                 time.sleep(1)
-                print 'limaadsc Status:', self.limaadscDevice.Status()
-                print 'limaadsc State:', self.limaadscDevice.State()
+                print('limaadsc Status:', self.limaadscDevice.Status())
+                print('limaadsc State:', self.limaadscDevice.State())
                 pprint.pprint(self.persistentValues)
                 
-            except Exception,diag:
+            except Exception as diag:
                 return stopCleanup("error stopping through the stopscan spec channel! (%s)" % str(diag))
             else:
                
@@ -2812,8 +2812,8 @@ class DataCollectPX2(Procedure):
         self.persistentValues["aborted"] = True
         self.collectObject.abort()
         time.sleep(1)
-        print 'limaadsc Status:', self.limaadscDevice.Status()
-        print 'limaadsc State:', self.limaadscDevice.State()
+        print('limaadsc Status:', self.limaadscDevice.Status())
+        print('limaadsc State:', self.limaadscDevice.State())
         self.persistentValues["aborted"] = True
         #self.persistentValues["stopped"] = True
         self.macroCollectEnded('2005 Collect aborted')  # MS 20.09.2012
@@ -2908,14 +2908,14 @@ class DataCollectPX2(Procedure):
         try:
             first_image=int(self.persistentValues["arguments"]["oscillation_sequence"][0]["start_image_number"])
             image_number=int(image_number)-first_image+1
-            print 'imageCollectedUpdate'
-            print 'self.guiEmit(\'collectImageTaken\', (image_number,))'
-            print 'image_number', image_number
-            print 'first_image', first_image
+            print('imageCollectedUpdate')
+            print('self.guiEmit(\'collectImageTaken\', (image_number,))')
+            print('image_number', image_number)
+            print('first_image', first_image)
             #print '', 
             self.guiEmit('collectImageTaken', (image_number,))
-        except (ValueError,TypeError), e:
-            print 'Exception', e
+        except (ValueError,TypeError) as e:
+            print('Exception', e)
             pass
         
         if self.persistentValues['arguments'].get('processing',False) == 'True' and self.persistentValues['arguments'].get('input_files', False):
@@ -2938,7 +2938,7 @@ class DataCollectPX2(Procedure):
         self.collectLog("starting data collection with md2")
         
         osc_seq = self.persistentValues["arguments"]["oscillation_sequence"][0]
-        print "**** LEN of OSC_SEQ: ", len(self.persistentValues["arguments"]["oscillation_sequence"])
+        print("**** LEN of OSC_SEQ: ", len(self.persistentValues["arguments"]["oscillation_sequence"]))
         
         #pprint.pprint(self.persistentValues["arguments"])
         fileinfo = self.persistentValues["arguments"]["fileinfo"]
@@ -2965,7 +2965,7 @@ class DataCollectPX2(Procedure):
                 adxv_sender = self.persistentValues["adxv"]
             except:
                 adxv_sender = None
-                print "Warning: Can't connect to adxv for the following collect."
+                print("Warning: Can't connect to adxv for the following collect.")
                 
         while self.collectObject.state() == "STANDBY":
             time.sleep(0.1)
@@ -2979,15 +2979,15 @@ class DataCollectPX2(Procedure):
         def tryToLoad(currentImageName):
             currentImageName = os.path.join(self.collectObject.imagePath, currentImageName)
             try:
-                print 'adxv_sender.send(adxv_send_fmt % currentImageName)'
+                print('adxv_sender.send(adxv_send_fmt % currentImageName)')
                 while not os.path.exists(currentImageName):
-                    commands.getoutput('ls ' + self.collectObject.imagePath )
+                    subprocess.getoutput('ls ' + self.collectObject.imagePath )
                     time.sleep(0.2)
-                print 'command', adxv_send_fmt % currentImageName
+                print('command', adxv_send_fmt % currentImageName)
                 adxv_sender.send(adxv_send_fmt % currentImageName)
                 adxv_sender.send('\n')
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
         
         while self.collectObject.state() == "RUNNING":
             imageNum = self.collectObject.imageNum
@@ -3011,7 +3011,7 @@ class DataCollectPX2(Procedure):
         
         self.imageCollectedUpdate("%d %s %s" % (imageNum, currentImageName, intensity))
         
-        print "### DC:COLLECT: END2"
+        print("### DC:COLLECT: END2")
         #self.macroCollectEnded({'code': 2005, 'message': 'The collect is finished!'})
         
 
@@ -3067,7 +3067,7 @@ class DataCollectPX2(Procedure):
         # Added logging. Sync with PX1 (MS 13.09.2012)
         logging.getLogger("HWR").debug('DataCollect:  macroCollectEnded ')
         self.lastMacroResult={} #None
-        if type(result)==types.DictType:
+        if type(result)==dict:
             self.lastMacroResult=result
             try:
                 result_code=int(result['code'])
@@ -3088,7 +3088,7 @@ class DataCollectPX2(Procedure):
             try:
                 result_list=str(result).split()
                 result_code=int(result_list[0])
-            except (TypeError,ValueError,IndexError,AttributeError),diag:
+            except (TypeError,ValueError,IndexError,AttributeError) as diag:
                 self.macroCollectFailed(None,None,None,"didn't understand the result (please check spec)!")
                 return
 
@@ -3132,12 +3132,12 @@ class DataCollectPX2(Procedure):
         # Added logging. Sync with PX1 (MS 13.09.2012)
         logging.getLogger("HWR").debug('DataCollect:  macroCollectFailed ')
         self.lastMacroResult={} #None
-        if type(result)==types.DictType:
+        if type(result)==dict:
             self.lastMacroResult=result
         elif self.fatalCollectChannel is not None:
             try:
                 fatal_collect=self.fatalCollectChannel.getValue()
-            except Exception,diag:
+            except Exception as diag:
                 self.collectLog("problem getting fatal collect return! (%s)" % str(diag),"warning")
             except:
                 logging.getLogger("HWR").exception("Problem getting fatal collect return!")
@@ -3547,7 +3547,7 @@ class postCentringActions:
     # Leaving the code untouched, significant differences with PX1 for now (MS 13.09.2012)
     
     def __init__(self, data_collect):
-        print 'postCentringActions'
+        print('postCentringActions')
         self.dataCollect=data_collect
         # Reference the centred jpegs inside the thread
         self.centredImages=None
@@ -3646,7 +3646,7 @@ class postCentringActions:
                     if not os.path.isdir(directory_snapshot):
                         try:
                             makedirsRetry(directory_snapshot)
-                        except OSError, diag:
+                        except OSError as diag:
                             self.dataCollect.collectLog("error creating directory %s" % directory_snapshot,"error")
                             directory_snapshot=None
 
@@ -4040,7 +4040,7 @@ def makedirsRetry(directory):
         retries-=1
         try:
             os.makedirs(directory)
-        except OSError,diag:
+        except OSError as diag:
             if diag.errno==17:
                 return
             if retries==0:

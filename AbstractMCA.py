@@ -56,9 +56,7 @@ read_raw_data - read the data from chmin to chmax, return a list
 read_roi_data - read the data for the configured roi, return a list
 """
 
-class AbstractMCA(object):
-    __metaclass__ = abc.ABCMeta
-
+class AbstractMCA(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.mca = None
         self.calib_cf = []

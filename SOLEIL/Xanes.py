@@ -7,7 +7,7 @@ import threading
 import logging
 import matplotlib.pyplot as plt
 import numpy
-import commands
+import subprocess
 import pickle
 import math
 import os
@@ -287,7 +287,7 @@ class xanes(object):
                   '11 Ref Pt 5um']
         if x == None:
             status = Attenuator.Status()
-            print 'status', status
+            print('status', status)
             status = status[:status.index(':')]
             value = status
             return value
@@ -309,9 +309,9 @@ class xanes(object):
         
     def getObservationPoints(self):
         if self.test:
-            print 'getObservationPoints in test mode'
+            print('getObservationPoints in test mode')
             self.getTestData()
-            print "self.testData['ens']", self.testData['ens']
+            print("self.testData['ens']", self.testData['ens'])
             return self.testData['ens']
         points = numpy.arange(
             0., 1. + 1. / (self.nbSteps), 1. / (self.nbSteps))
@@ -347,15 +347,15 @@ class xanes(object):
         return self._pointsToStrings(points)
         
     def getBleVsEn(self):
-        print 'inside getBleVsEn'
+        print('inside getBleVsEn')
         ens_floats = self.getObservationPoints()
         ble_floats = self.getBLEPoints()
         ens_strings = self.getObservationPointsAsStrings()
         ble_strings = self.getBLEPointsAsStrings()
-        print 'ens_floats', ens_floats
-        print 'ble_floats', ble_floats
-        print 'ens_strings', ens_strings
-        print 'ble_strings', ble_strings
+        print('ens_floats', ens_floats)
+        print('ble_floats', ble_floats)
+        print('ens_strings', ens_strings)
+        print('ble_strings', ble_strings)
         return dict([(en, ble_floats[list(abs(en - ble_floats)).index(min(list(abs(en - ble_floats))))]) for k, en in enumerate(ens_floats)])
         
     def getBleVsEnAsStrings(self):
@@ -363,10 +363,10 @@ class xanes(object):
         ble_floats = self.getBLEPoints()
         ens_strings = self.getObservationPointsAsStrings()
         ble_strings = self.getBLEPointsAsStrings()
-        print 'ens_floats', ens_floats
-        print 'ble_floats', ble_floats
-        print 'ens_strings', ens_strings
-        print 'ble_strings', ble_strings
+        print('ens_floats', ens_floats)
+        print('ble_floats', ble_floats)
+        print('ens_strings', ens_strings)
+        print('ble_strings', ble_strings)
         return dict([(ens_strings[k], ble_floats[list(abs(en - ble_floats)).index(min(list(abs(en - ble_floats))))]) for k, en in enumerate(ens_floats)])
         
     def setMono(self, energy):
@@ -379,8 +379,8 @@ class xanes(object):
         logging.info('setBLE')
         if self.test: return                                   
         if abs(self.ble.read_attribute('energy').w_value - self.BleVsEnStrings[energy]) > 0.001:
-            print 'setting undulator energy', energy
-            print 'self.BleVsEn[energy]', self.BleVsEnStrings[energy]
+            print('setting undulator energy', energy)
+            print('self.BleVsEn[energy]', self.BleVsEnStrings[energy])
             self.ble.write_attribute('energy', self.BleVsEnStrings[energy])
             self.wait(self.ble)
             if self.undulatorOffset != 0:
@@ -431,22 +431,22 @@ class xanes(object):
         self.bles = self.getBLEPoints()
         self.ens_strings = self.getObservationPointsAsStrings()
         self.bles_strings = self.getBLEPointsAsStrings() 
-        print 'ens'
-        print self.ens
-        print 'bles'
-        print self.bles
-        print 'ens strings'
-        print self.ens_strings
-        print 'bles strings'
-        print self.bles_strings
+        print('ens')
+        print(self.ens)
+        print('bles')
+        print(self.bles)
+        print('ens strings')
+        print(self.ens_strings)
+        print('bles strings')
+        print(self.bles_strings)
         
         self.BleVsEn = self.getBleVsEn()
         self.BleVsEnStrings = self.getBleVsEnAsStrings()
-        print 'ble vs en'
-        print self.BleVsEn
+        print('ble vs en')
+        print(self.BleVsEn)
         
-        print 'ble vs en strings'
-        print self.BleVsEnStrings
+        print('ble vs en strings')
+        print(self.BleVsEnStrings)
         
         self.safeOpenSafetyShutter()
         
@@ -468,7 +468,7 @@ class xanes(object):
         self.results['raw'] = self.runningScan
         
         if self.test is True:
-            print 'self.testData.keys()', self.testData.keys()
+            print('self.testData.keys()', list(self.testData.keys()))
         for en in self.ens_strings:
             #logging.info('measuring at energy %s (%s of %s)' % (en, x(en), len(ens)))
             if self.stt == 'Stop':
@@ -587,7 +587,7 @@ class xanes(object):
         table = output[output.find('Table of results'):]
         tabl = table.split('\n')
         tab = numpy.array([ line.split('|') for line in tabl if line and line[0] == '|'])
-        print 'tab', tab
+        print('tab', tab)
         self.pk = float(tab[1][2])
         self.fppPeak = float(tab[1][3])
         self.fpPeak = float(tab[1][4])
@@ -607,9 +607,9 @@ class xanes(object):
         chooch_cmd = 'chooch -p {output_ps} -o {output_efs} -e {element} -a {edge} {raw_file}'.format(**chooch_parameters)
         logging.info('chooch command %s' % chooch_cmd)
         
-        chooch_output = commands.getoutput(chooch_cmd)
+        chooch_output = subprocess.getoutput(chooch_cmd)
         self.results['chooch_output'] = chooch_output
-        print 'chooch_output', chooch_output
+        print('chooch_output', chooch_output)
         chooch_results = self.parse_chooch_output(chooch_output)
         self.results['chooch_results'] = chooch_results
         
@@ -617,7 +617,7 @@ class xanes(object):
         filename = os.path.join(self.directory, '{prefix}_{element}_{edge}.efs'.format(**self.results))
         f = open(filename)
         data = f.read().split('\n')
-        efs = numpy.array([numpy.array(map(float, line.split())) for line in data if len(line.split()) == 3])
+        efs = numpy.array([numpy.array(list(map(float, line.split()))) for line in data if len(line.split()) == 3])
         return efs
         
     def suivi(self):
@@ -641,7 +641,7 @@ class xanes(object):
         points = []
         for en in self.results['ens']:
             en = round(en, self.cutoff)
-            if self.results.has_key(en):
+            if en in self.results:
                 ens.append(en)
                 normalized_intensity = self.results['observations'][en]['roiCounts'] / self.results['observations'][en]['diode1']
                 points.append(normalized_intensity)
@@ -654,7 +654,7 @@ class xanes(object):
         f = open(self.testFile)
         fr = f.read()
         lines = fr.split('\n')
-        print 'lines', lines
+        print('lines', lines)
         try:
             nPoints = int(lines[1])
         except ValueError:
@@ -715,8 +715,8 @@ if __name__ == "__main__":
     
     options, args = parser.parse_args()
     
-    print 'options', options
-    print 'args', args
+    print('options', options)
+    print('args', args)
     
     x = xanes(options.element,
               options.edge,

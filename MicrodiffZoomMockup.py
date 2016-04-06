@@ -19,7 +19,7 @@ class MicrodiffZoomMockup(Device):
         self.sortPredefinedPositionsList()
 
     def sortPredefinedPositionsList(self):
-        self.predefinedPositionsNamesList = self.predefinedPositions.keys()
+        self.predefinedPositionsNamesList = list(self.predefinedPositions.keys())
         self.predefinedPositionsNamesList.sort(lambda x, y: int(round(self.predefinedPositions[x] - self.predefinedPositions[y])))
 
     def connectNotify(self, signal):
@@ -56,7 +56,7 @@ class MicrodiffZoomMockup(Device):
         return ''          
     def moveToPosition(self, positionName):
         try:
-            self.predefined_position_attr = self.predefinedPositions[positionName]
+            self.predefined_position_attr = positionName
             return True
         except:
             return False

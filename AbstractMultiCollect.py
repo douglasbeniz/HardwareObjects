@@ -47,9 +47,7 @@ BeamlineConfig = collections.namedtuple('BeamlineConfig',
                                          'input_files_server'])
 
 
-class AbstractMultiCollect(object):
-    __metaclass__ = abc.ABCMeta
-
+class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.bl_control = BeamlineControl(*[None]*14)
         self.bl_config = BeamlineConfig(*[None]*17)
@@ -331,7 +329,7 @@ class AbstractMultiCollect(object):
         for directory in args:
             try:
                 os.makedirs(directory)
-            except os.error, e:
+            except os.error as e:
                 if e.errno != errno.EEXIST:
                     raise
      
@@ -497,13 +495,13 @@ class AbstractMultiCollect(object):
         motors = centring_info.get("motors", {}) #.update(centring_info.get("extraMotors", {}))
         motors_to_move_before_collect = data_collect_parameters.setdefault("motors", {})
 
-        for motor, pos in motors.iteritems():
+        for motor, pos in motors.items():
               if motor in motors_to_move_before_collect:
                   continue
               motors_to_move_before_collect[motor]=pos
 
         current_diffractometer_position = self.diffractometer().getPositions()
-        for motor in motors_to_move_before_collect.keys():
+        for motor in list(motors_to_move_before_collect.keys()):
             if motors_to_move_before_collect[motor] is None:
                 del motors_to_move_before_collect[motor]
                 try:
@@ -513,7 +511,7 @@ class AbstractMultiCollect(object):
                     pass
 
         # this is for the LIMS
-        positions_str += " ".join([motor+("=%f" % pos) for motor, pos in motors_to_move_before_collect.iteritems()])
+        positions_str += " ".join([motor+("=%f" % pos) for motor, pos in motors_to_move_before_collect.items()])
         data_collect_parameters['actualCenteringPosition'] = positions_str
 
         self.move_motors(motors_to_move_before_collect)
@@ -622,7 +620,7 @@ class AbstractMultiCollect(object):
         if nframes == 0:
             return
 
-	# data collection
+        # data collection
         self.data_collection_hook(data_collect_parameters)
 
         if 'transmission' in data_collect_parameters:
@@ -678,7 +676,7 @@ class AbstractMultiCollect(object):
                     i = 1
                     for jj in self.bl_config.undulators:
                         key = jj.type
-                        if und.has_key(key):
+                        if key in und:
                             data_collect_parameters["undulatorGap%d" % (i)] = und[key]
                             i += 1
                     data_collect_parameters["resolutionAtCorner"] = self.get_resolution_at_corner()
@@ -784,7 +782,7 @@ class AbstractMultiCollect(object):
 
                           if data_collect_parameters.get("shutterless"):
                               with gevent.Timeout(10, RuntimeError("Timeout waiting for detector trigger, no image taken")):
-   			          while self.last_image_saved() == 0:
+                                  while self.last_image_saved() == 0:
                                       time.sleep(exptime)
                           
                               last_image_saved = self.last_image_saved()
@@ -925,11 +923,11 @@ class AbstractMultiCollect(object):
     def trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir=None, anomalous=None, residues=200, do_inducedraddam=False, spacegroup=None, cell=None):
       # quick fix for anomalous, do_inducedraddam... passed as a string!!!
       # (comes from the queue)
-      if type(anomalous) == types.StringType:
+      if type(anomalous) == bytes:
         anomalous = anomalous == "True"      
-      if type(do_inducedraddam) == types.StringType:
+      if type(do_inducedraddam) == bytes:
         do_inducedraddam = do_inducedraddam == "True" 
-      if type(residues) == types.StringType:
+      if type(residues) == bytes:
         try:
           residues = int(residues)
         except:
@@ -944,7 +942,7 @@ class AbstractMultiCollect(object):
       processAnalyseParams['EDNA_files_dir'] = EDNA_files_dir
 
       try:
-        if type(xds_dir) == types.ListType:
+        if type(xds_dir) == list:
             processAnalyseParams["collections_params"] = xds_dir
         else:
             processAnalyseParams['datacollect_id'] = self.collection_id
@@ -953,7 +951,7 @@ class AbstractMultiCollect(object):
         processAnalyseParams['residues'] = residues
         processAnalyseParams["spacegroup"]=spacegroup
         processAnalyseParams["cell"]=cell
-      except Exception,msg:
+      except Exception as msg:
         logging.getLogger().exception("DataCollect:processing: %r" % msg)
       else:
         #logging.info("AUTO PROCESSING: %s, %s, %s, %s, %s, %s, %r, %r", process_event, EDNA_files_dir, anomalous, residues, do_inducedraddam, spacegroup, cell)

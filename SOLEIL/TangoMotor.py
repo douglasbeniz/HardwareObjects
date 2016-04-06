@@ -38,7 +38,7 @@ class TangoMotor(Device):
         self.device.waitMoves = False
         logging.getLogger("HWR").info("TangoMotor._init of device %s" % self.device.name)
         self.setIsReady(True)
-        print "TangoMotor._init of device %s" % self.device.name
+        print("TangoMotor._init of device %s" % self.device.name)
         positionChan = self.getChannelObject("position") # utile seulement si statechan n'est pas defini dans le code
         positionChan.connectSignal("update", self.positionChanged) 
         stateChan = self.getChannelObject("state") # utile seulement si statechan n'est pas defini dans le code
@@ -130,13 +130,13 @@ class TangoMotor(Device):
         prev_position = self.getPosition()
         self.device.position = position
 
-        print 'move started from %s to %s, state is %s' % (prev_position, position, self.device.State)
+        print('move started from %s to %s, state is %s' % (prev_position, position, self.device.State))
         
         while self.device.State == "RUNNING" or self.device.State == "MOVING": # or self.device.State == SpecMotor.MOVESTARTED:
             #print 'processing events...', self.motorState
             qApp.processEvents(100)
 
-        print 'move done (%s s), state is %s' % (time.time()-t0,  self.device.State)
+        print('move done (%s s), state is %s' % (time.time()-t0,  self.device.State))
         
     def moveRelative(self, position):
         old_pos = self.device.position

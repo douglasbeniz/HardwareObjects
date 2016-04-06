@@ -111,7 +111,7 @@ class Robodiff(MiniDiff.MiniDiff):
 
         _aperture_move = gevent.spawn(self.controller.move_to_last_known_aperture)
 
-        for role, pos in roles_positions_dict.iteritems():
+        for role, pos in roles_positions_dict.items():
            logging.info("moving motor %s to %f", role, pos)
            motor[role].move(pos)
 
@@ -120,11 +120,11 @@ class Robodiff(MiniDiff.MiniDiff):
         # already finished) 
         time.sleep(1)
 
-        while any([m.getState() == m.MOVING for m in motor.itervalues()]):
+        while any([m.getState() == m.MOVING for m in motor.values()]):
            time.sleep(0.1)
 
         _aperture_move.get()
 
-        if any([m.getState() == m.ONLIMIT for m in motor.itervalues()]):
+        if any([m.getState() == m.ONLIMIT for m in motor.values()]):
            raise RuntimeError("Motor %s on limit" % m.username)
 

@@ -19,8 +19,8 @@ def test():
     hwr.connect()
 
     analysis = hwr.getHardwareObject("/data-analysis")
-    print analysis.get_beam_size()
-    print analysis.is_running()
+    print(analysis.get_beam_size())
+    print(analysis.is_running())
 
 if __name__ == '__main__':
     test()

@@ -5,9 +5,7 @@ import logging
 from HardwareRepository.TaskUtils import *
 
 
-class AbstractEnergyScan(object):
-    __metaclass__ = abc.ABCMeta
-
+class AbstractEnergyScan(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.data_collect_task = None
         self._egyscan_task = None

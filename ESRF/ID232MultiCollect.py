@@ -29,7 +29,7 @@ class ID232MultiCollect(ESRFMultiCollect):
       oscillation_parameters = data_collect_parameters["oscillation_sequence"][0]
       if data_collect_parameters.get("nb_sum_images"):
         if oscillation_parameters["number_of_images"] % data_collect_parameters.get("nb_sum_images", 1) != 0:
-          raise RuntimeError, "invalid number of images to sum"
+          raise RuntimeError("invalid number of images to sum")
 
       data_collect_parameters["dark"] = 0
       # are we doing shutterless ?

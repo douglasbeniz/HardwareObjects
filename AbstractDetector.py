@@ -1,9 +1,7 @@
 import abc 
 
 
-class AbstractDetector(object):    
-    __metaclass__ = abc.ABCMeta
-
+class AbstractDetector(object, metaclass=abc.ABCMeta):    
     def __init__(self): 
         """
         Descript. : 

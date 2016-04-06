@@ -16,7 +16,7 @@ import time
 import json
 
 from HardwareRepository.BaseHardwareObjects import HardwareObject
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 
 
 __author__ = "Marcus Oskarsson, Matias Guijarro"
@@ -297,7 +297,7 @@ class XMLRPCServer(HardwareObject):
 
     def shape_history_set_grid_data(self, key, result_data):
         int_based_result = {}
-        for result in result_data.iteritems():
+        for result in result_data.items():
             int_based_result[int(result[0])] = result[1]
 
         self.shape_history_hwobj.set_grid_data(key, int_based_result)
@@ -381,7 +381,7 @@ class XMLRPCServer(HardwareObject):
         log.info('Registering functions in module %s with XML-RPC server' %
                             module_name)
 
-        if not sys.modules.has_key(module_name):
+        if module_name not in sys.modules:
             __import__(module_name)
         module = sys.modules[module_name]
 

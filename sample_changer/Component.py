@@ -1,5 +1,5 @@
 
-class Component(object):
+class Component():
     """
     Entity class representing any a sample or sample container
     """
@@ -40,7 +40,7 @@ class Component(object):
     def getCoords(self):
         coords_list = [self.getIndex()+1]
         x = self.getContainer()
-	while x:
+        while x:
           idx = x.getIndex()
           if idx is not None:
             coords_list.append(idx+1)

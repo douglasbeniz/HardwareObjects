@@ -1,9 +1,6 @@
 import abc
 
-class AbstractDataAnalysis(object):
-    __metaclass__ = abc.ABCMeta
-
-
+class AbstractDataAnalysis(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def characterise(self, edna_input):
         """

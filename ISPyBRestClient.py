@@ -210,7 +210,7 @@ class ISPyBRestClient(HardwareObject):
         :returns: None
 
         """
-        print "store_data_collection..." , mx_collection
+        print("store_data_collection..." , mx_collection)
         return None, None
 
 
@@ -228,7 +228,7 @@ class ISPyBRestClient(HardwareObject):
         :returns beamline_setup_id: The database id of the beamline setup.
         :rtype: str
         """
-        print "store_beamline_setup...", beamline_setup 
+        print("store_beamline_setup...", beamline_setup) 
         pass
 
 
@@ -242,7 +242,7 @@ class ISPyBRestClient(HardwareObject):
 
         :returns: None
         """  
-        print "update_data_collection... ", mx_collection
+        print("update_data_collection... ", mx_collection)
         pass
 
 
@@ -255,7 +255,7 @@ class ISPyBRestClient(HardwareObject):
 
         :returns: None
         """
-        print "store_image ", image_dict
+        print("store_image ", image_dict)
         pass
 
     

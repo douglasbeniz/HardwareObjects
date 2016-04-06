@@ -34,8 +34,8 @@ class XfeCollect(object):
         self.channelToeV = 10. #self.fluodet.dynamicRange / len(self.fluodet.channel00)
         try:
             os.mkdir(directory)
-        except OSError, e:
-            print e
+        except OSError as e:
+            print(e)
     
     def wait(self, device):
         while device.state().name == 'MOVING':
@@ -99,7 +99,7 @@ class XfeCollect(object):
         
     def optimizeTransmission(self, element, edge):
         if self.test == True: return 0
-        print 'Going to optimize transmission'
+        print('Going to optimize transmission')
         self.optimize = True
         e_edge, roi_center = self.getEdgefromXabs(element, edge)
         self.thEdge = e_edge
@@ -127,18 +127,18 @@ class XfeCollect(object):
             self.inverseDeadTime = 1. - (OCR / ICR) # * eventTime
             self.tentativeDeadTime = (OCR / ICR)
             k += 1
-            print 'Cycle %d, deadtime is %f' % (k, self.inverseDeadTime)
+            print('Cycle %d, deadtime is %f' % (k, self.inverseDeadTime))
             self.adjustTransmission()
-        print 'Transmission optimized at %s, the deadtime is %s' % (self.currentTransmission, self.inverseDeadTime)
-        print 'Tentative real deadtime is %f' % self.tentativeDeadTime
+        print('Transmission optimized at %s, the deadtime is %s' % (self.currentTransmission, self.inverseDeadTime))
+        print('Tentative real deadtime is %f' % self.tentativeDeadTime)
         self.obx.Open()
         self.extractDetector()
         
     def adjustTransmission(self):
         if self.test == True: return 0
         self.currentTransmission = self.transmission()
-        print 'current transmission is %f' % self.currentTransmission
-        print 'the deadtime is %f' % self.inverseDeadTime
+        print('current transmission is %f' % self.currentTransmission)
+        print('the deadtime is %f' % self.inverseDeadTime)
         if self.tentativeDeadTime < 0.7: #too much flux
             self.highBoundary = self.setTransmission
             self.setTransmission -= (self.highBoundary - self.lowBoundary)/2.
@@ -189,10 +189,10 @@ class XfeCollect(object):
         
     def open_fast_shutter(self):
         while self.md2.FastShutterIsOpen is False:
-            print 'Fast shutter is open ?', self.md2.FastShutterIsOpen
+            print('Fast shutter is open ?', self.md2.FastShutterIsOpen)
             while self.get_state() != 'Ready':
                 time.sleep(0.1)
-            print 'opening the fast shutter'
+            print('opening the fast shutter')
             try:
                 self.md2.FastShutterIsOpen = True
             except:
@@ -293,8 +293,8 @@ if __name__ == '__main__':
     parser.add_option('-d', '--directory', default = '/tmp/fxetests2', type = str, help = 'where to store spectrum collected (default: %default)')
 
     (options, args) = parser.parse_args()
-    print options
-    print args
+    print(options)
+    print(args)
     
     doCollect = XfeCollect(options.exposure, options.directory, options.prefix)
     doCollect.setROI(1, 2048)

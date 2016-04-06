@@ -96,10 +96,10 @@ def test():
 
     conn = hwr.getHardwareObject("/mach")
 
-    print "Machine current is ", conn.getCurrent()
-    print "Life time is ", conn.getLifeTime()
-    print "Fill mode is ", conn.getFillMode()
-    print "Message is ", conn.getMessage()
+    print("Machine current is ", conn.getCurrent())
+    print("Life time is ", conn.getLifeTime())
+    print("Fill mode is ", conn.getFillMode())
+    print("Message is ", conn.getMessage())
 
 
 if __name__ == '__main__':

@@ -89,14 +89,14 @@ class GonioPositions(Equipment):
         if abs(self.omega.getPosition() + 17.) > EPSILON:
             self.omega.move(-17.)
         _obx = self.obx.getShutterState()
-        print "OBX State = %s" % _obx
+        print("OBX State = %s" % _obx)
         if _obx == "opened":
             self.obx.closeShutter()
         _zoom = self.zoom.getCurrentPositionName()
         if _zoom != "Zoom 1":
             self.zoom.moveToPosition("Zoom 1")
         _light = self.lightarm.getWagoState()
-        print "LIGHT POSITION:", _light
+        print("LIGHT POSITION:", _light)
         if _light == "out":
             self.lightarm.wagoIn()
         self.state = "Centring"    
@@ -129,11 +129,11 @@ class GonioPositions(Equipment):
         if abs(self.omega.getPosition()) > EPSILON:
             self.omega.move(0.)
         _zoom = self.zoom.getCurrentPositionName()
-        print "ZOOM POSITION:", _zoom
+        print("ZOOM POSITION:", _zoom)
         if _zoom != "Zoom 1":
             self.zoom.moveToPosition("Zoom 1")
         _light = self.lightarm.getWagoState()
-        print "LIGHT POSITION:", _light
+        print("LIGHT POSITION:", _light)
         if _light == "out":
             self.lightarm.wagoIn()
         self.state = "Centring"    
@@ -166,7 +166,7 @@ class GonioPositions(Equipment):
 #                device.motorStateChanged("READY")
                
     def initGoniometer(self):
-        print "EUREKA :!!!!!!!!!!!!!!!!!!!!!!!"
+        print("EUREKA :!!!!!!!!!!!!!!!!!!!!!!!")
         
     def isSpecConnected(self):
         #logging.getLogger().debug("%s: MSCEquipment.isSpecConnected()" % self.name())

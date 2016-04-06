@@ -6,6 +6,7 @@ import time
 import logging
 import os
 import tempfile
+import collections
 
 try:
   import lucid2 as lucid
@@ -49,12 +50,12 @@ def prepare(centring_motors_dict):
   USER_CLICKED_EVENT = gevent.event.AsyncResult()  
 
   motors_to_move = dict()
-  for m in centring_motors_dict.itervalues():
+  for m in centring_motors_dict.values():
     if m.reference_position is not None:
       motors_to_move[m.motor] = m.reference_position
   move_motors(motors_to_move)
 
-  SAVED_INITIAL_POSITIONS = dict([(m.motor, m.motor.getPosition()) for m in centring_motors_dict.itervalues()])
+  SAVED_INITIAL_POSITIONS = dict([(m.motor, m.motor.getPosition()) for m in centring_motors_dict.values()])
 
   phi = centring_motors_dict["phi"]
   phiy = centring_motors_dict["phiy"]
@@ -199,15 +200,15 @@ def move_motors(motor_positions_dict):
   #import pdb; pdb.set_trace()
   def wait_ready(timeout=None):
     with gevent.Timeout(timeout):
-      while not ready(*motor_positions_dict.keys()):
+      while not ready(*list(motor_positions_dict.keys())):
         time.sleep(0.1)
 
   wait_ready(timeout=30)
 
-  if not ready(*motor_positions_dict.keys()):
+  if not ready(*list(motor_positions_dict.keys())):
     raise RuntimeError("Motors not ready")
 
-  for motor, position in motor_positions_dict.iteritems():
+  for motor, position in motor_positions_dict.items():
     motor.move(position)
   
   wait_ready()
@@ -327,9 +328,9 @@ def find_loop(camera, pixelsPerMm_Hor, chi_angle, msg_cb, new_point_cb):
   except Exception:
     return -1, -1
  
-  if callable(msg_cb):
+  if isinstance(msg_cb, collections.Callable):
     msg_cb("Loop found: %s (%d, %d)" % (info, x, y))
-  if callable(new_point_cb):
+  if isinstance(new_point_cb, collections.Callable):
     new_point_cb((x,y))
         
   return x, y
@@ -351,13 +352,13 @@ def auto_center(camera,
         phi.syncMoveRelative(90)
         i+=1
         if i>4:
-            if callable(msg_cb):
+            if isinstance(msg_cb, collections.Callable):
                 msg_cb("No loop detected, aborting")
             return
     
     # Number of lucid2 runs increased to 3 (Olof June 26th 2015)
     for k in range(3):
-      if callable(msg_cb):
+      if isinstance(msg_cb, collections.Callable):
             msg_cb("Doing automatic centring")
             
       centring_greenlet = gevent.spawn(center,
@@ -381,13 +382,13 @@ def auto_center(camera,
                 if x >=0:
                   if y < imgHeight/2:
                     y = 0
-                    if callable(new_point_cb):
+                    if isinstance(new_point_cb, collections.Callable):
                         new_point_cb((x,y))
                     user_click(x,y,wait=True)
                     break
                   else:
                     y = imgHeight
-                    if callable(new_point_cb):
+                    if isinstance(new_point_cb, collections.Callable):
                         new_point_cb((x,y))
                     user_click(x,y,wait=True)
                     break

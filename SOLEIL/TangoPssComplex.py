@@ -72,7 +72,7 @@ class TangoPssComplex(Device):
         else :
             self.wagoState = "unknown"
             return self.wagoState
-        print "value PSS :" , value
+        print("value PSS :" , value)
         if value != self.__oldValue:
             self.__oldValue = value
         if value in TangoPssComplex.states:

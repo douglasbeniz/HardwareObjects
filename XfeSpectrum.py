@@ -39,7 +39,7 @@ class XfeSpectrum(Equipment):
                 self.doSpectrum.connectSignal('commandAborted', self.spectrumCommandAborted)
                 self.doSpectrum.connectSignal('commandReady', self.spectrumCommandReady)
                 self.doSpectrum.connectSignal('commandNotReady', self.spectrumCommandNotReady)
-            except AttributeError,diag:
+            except AttributeError as diag:
                 logging.getLogger().warning('XRFSpectrum: error initializing energy spectrum (%s)' % str(diag))
                 self.doSpectrum=None
             else:
@@ -84,7 +84,7 @@ class XfeSpectrum(Equipment):
             logging.getLogger().debug("XRFSpectrum: creating directory %s" % directory)
             try:
                 os.makedirs(directory)
-            except OSError,diag:
+            except OSError as diag:
                 logging.getLogger().error("XRFSpectrum: error creating directory %s (%s)" % (directory,str(diag)))
                 self.spectrumStatusChanged("Error creating directory")
                 return False

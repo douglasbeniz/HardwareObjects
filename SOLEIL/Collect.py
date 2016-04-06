@@ -27,7 +27,7 @@ class collect(object):
                    
     motorShortNames = ['PhiX', 'PhiY', 'PhiZ', 'SamX', 'SamY']
     
-    shortFull = dict(zip(motorShortNames, motorsNames))
+    shortFull = dict(list(zip(motorShortNames, motorsNames)))
     
     def __init__(self,
                 exposure = 0.5,
@@ -297,13 +297,13 @@ class collect(object):
         
         stepsizes = lengths / nbsteps
         
-        print 'center', center
-        print 'nbsteps', nbsteps
-        print 'lengths', lengths
-        print 'stepsizes', stepsizes
+        print('center', center)
+        print('nbsteps', nbsteps)
+        print('lengths', lengths)
+        print('stepsizes', stepsizes)
         
         # adding [1] so that we can use homogeneous coordinates
-        positions = list(itertools.product(range(nbsteps[0]), range(nbsteps[1]), [1])) 
+        positions = list(itertools.product(list(range(nbsteps[0])), list(range(nbsteps[1])), [1])) 
         
         points = [numpy.array(position) for position in positions]
         points = numpy.array(points)
@@ -342,13 +342,13 @@ class collect(object):
         
         stepsizes = lengths / nbsteps
         
-        print 'center', center
-        print 'nbsteps', nbsteps
-        print 'lengths', lengths
-        print 'stepsizes', stepsizes
+        print('center', center)
+        print('nbsteps', nbsteps)
+        print('lengths', lengths)
+        print('stepsizes', stepsizes)
         
         # adding [1] so that we can use homogeneous coordinates
-        positions = list(itertools.product(range(nbsteps[0]), range(nbsteps[1]), [1])) 
+        positions = list(itertools.product(list(range(nbsteps[0])), list(range(nbsteps[1])), [1])) 
         
         points = [numpy.array(position) for position in positions]
         points = numpy.array(points)
@@ -584,7 +584,7 @@ class collect(object):
         wedges = []
         
         if self.inverse is None:
-            imageNums = range(firstImage, nbFrames + firstImage)
+            imageNums = list(range(firstImage, nbFrames + firstImage))
             positions = self.getCollectPositions(imageNums)
             wedges.append({'imageNumbers': imageNums, 
                            'startAtAngle': ScanStartAngle, 
@@ -596,7 +596,7 @@ class collect(object):
             for k in range(0, numberOfFullWedges):
                 _ScanStartAngle = ScanStartAngle + k * wedgeSize * (self.ScanRange - self.ScanOverlap)
                 _firstImage = firstImage + k * wedgeSize
-                imageNums = range(_firstImage, _firstImage + wedgeSize)
+                imageNums = list(range(_firstImage, _firstImage + wedgeSize))
                 positions = self.getCollectPositions(imageNums)
                 
                 wedges.append({'imageNumbers': imageNums, 
@@ -610,7 +610,7 @@ class collect(object):
             
             _ScanStartAngle = ScanStartAngle + numberOfFullWedges * wedgeSize * (self.ScanRange - self.ScanOverlap)
             _firstImage = firstImage + numberOfFullWedges * wedgeSize
-            imageNums = range(_firstImage, _firstImage + lastWedgeSize)
+            imageNums = list(range(_firstImage, _firstImage + lastWedgeSize))
             positions = self.getCollectPositions(imageNums)
             
             wedges.append({'imageNumbers': imageNums, 
@@ -623,8 +623,8 @@ class collect(object):
                            'positions': positions})
         
         #self.logger.info('Wedges to collect: ')
-        print 'Wedges to collect:'
-        print wedges
+        print('Wedges to collect:')
+        print(wedges)
         return wedges
 
 
@@ -727,8 +727,8 @@ class collect(object):
                 self.StartScan()
                 self.limaadscStop()
                 imageTaken = True
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 import traceback
                 traceback.print_exc()
                 self.logger.info('Problem occured during collection of image ' + fileName)
@@ -740,8 +740,8 @@ class collect(object):
         try:
             self.md2.command_inout('StartScan')
             self.wait(self.md2)
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.logger.info('Problem executing StartScan command')
             self.logger.info('Exception ' + str(e))
         return
@@ -794,8 +794,8 @@ def main():
     parser.add_option('-N', '--test', default = False, help = 'Collect without beam (do not attempt to open the safety shutter')
     
     (options, args) = parser.parse_args()
-    print options
-    print args
+    print(options)
+    print(args)
     
     ScanAnticipation = options.anticipation # 1
     ScanNumberOfPasses = options.passes # 1
@@ -805,7 +805,7 @@ def main():
     ScanOverlap = options.overlap
     
     if options.nImages == None and options.range == None :
-        print parser.usage
+        print(parser.usage)
         sys.exit("Option nImages or option range have to be specified.")
 
     if options.range != None:
@@ -813,7 +813,7 @@ def main():
     else:
         nbFrames = int(options.nImages)
 
-    print 'nbFrames', nbFrames
+    print('nbFrames', nbFrames)
 
     collectObject = Collect.collect(    
                                         exposure = options.exposure,

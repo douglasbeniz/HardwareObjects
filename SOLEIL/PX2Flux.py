@@ -22,8 +22,8 @@ class PX2Flux(BaseHardwareObjects.Device):
             logging.getLogger().debug('%s: connected to channels', self.name())
         except KeyError:
             logging.getLogger().warning('%s: cannot connect to channel', self.name())
-        except Exception, e:
-            print "FLUX INIT, ERROR MESSAGE: %s"  % e
+        except Exception as e:
+            print("FLUX INIT, ERROR MESSAGE: %s"  % e)
             logging.getLogger().info('%s: FLUX ERROR Message', self.name())            
             import traceback 
             logging.getLogger().info("flux is type: %s ", str(type(self.flux)))
@@ -62,7 +62,7 @@ def test():
     hwr.connect()
 
     flux = hwr.getHardwareObject("/flux")
-    print "PX2 Flux is ",flux.getCurrentFlux()
+    print("PX2 Flux is ",flux.getCurrentFlux())
 
 
 if __name__ == '__main__':

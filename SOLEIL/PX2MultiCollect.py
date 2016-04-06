@@ -66,9 +66,9 @@ class PX2MultiCollect(SOLEILMultiCollect):
     @task
     def move_motors(self, motor_position_dict, epsilon=0):
         logging.info("<PX2 MultiCollect> move_motors")
-        for motor in motor_position_dict.keys(): #iteritems():
+        for motor in list(motor_position_dict.keys()): #iteritems():
             position = motor_position_dict[motor]
-            if isinstance(motor, str) or isinstance(motor, unicode):
+            if isinstance(motor, str) or isinstance(motor, str):
                 # find right motor object from motor role in diffractometer obj.
                 motor_role = motor
                 motor = self.bl_control.diffractometer.getDeviceByRole(motor_role)
@@ -80,7 +80,7 @@ class PX2MultiCollect(SOLEILMultiCollect):
             logging.getLogger("HWR").info("Moving motor '%s' to %f", motor.getMotorMnemonic(), position)
             motor.move(position, epsilon=epsilon, sync=True)
 
-        while any([motor.motorIsMoving() for motor in motor_position_dict.iterkeys()]):
+        while any([motor.motorIsMoving() for motor in motor_position_dict.keys()]):
             logging.getLogger("HWR").info("Waiting for end of motors motion")
             time.sleep(0.1)  
 
@@ -276,7 +276,7 @@ class PX2MultiCollect(SOLEILMultiCollect):
         beam_center_y += -17.2 #3.5
         beam_center_x += 3.5 #17.2
         
-        print 'beamCenter2', beam_center_y, beam_center_x
+        print('beamCenter2', beam_center_y, beam_center_x)
         return beam_center_x, beam_center_y
                 
     def set_collect_position(self, position):
@@ -357,13 +357,13 @@ class PX2MultiCollect(SOLEILMultiCollect):
         
         stepsizes = lengths / nbsteps
         
-        print 'center', center
-        print 'nbsteps', nbsteps
-        print 'lengths', lengths
-        print 'stepsizes', stepsizes
+        print('center', center)
+        print('nbsteps', nbsteps)
+        print('lengths', lengths)
+        print('stepsizes', stepsizes)
         
         # adding [1] so that we can use homogeneous coordinates
-        positions = list(itertools.product(range(nbsteps[0]), range(nbsteps[1]), [1])) 
+        positions = list(itertools.product(list(range(nbsteps[0])), list(range(nbsteps[1])), [1])) 
         
         points = [numpy.array(position) for position in positions]
         points = numpy.array(points)
@@ -417,13 +417,13 @@ class PX2MultiCollect(SOLEILMultiCollect):
         
         stepsizes = lengths / nbsteps
         
-        print 'center', center
-        print 'nbsteps', nbsteps
-        print 'lengths', lengths
-        print 'stepsizes', stepsizes
+        print('center', center)
+        print('nbsteps', nbsteps)
+        print('lengths', lengths)
+        print('stepsizes', stepsizes)
         
         # adding [1] so that we can use homogeneous coordinates
-        positions = list(itertools.product(range(nbsteps[0]), range(nbsteps[1]), [1])) 
+        positions = list(itertools.product(list(range(nbsteps[0])), list(range(nbsteps[1])), [1])) 
         
         points = [numpy.array(position) for position in positions]
         points = numpy.array(points)
@@ -462,7 +462,7 @@ class PX2MultiCollect(SOLEILMultiCollect):
             positions.append(Positions[motor])
             
         positions = numpy.array(positions)
-        return [dict(zip(self.motors, p)) for p in positions.T]
+        return [dict(list(zip(self.motors, p))) for p in positions.T]
     
     def calculateHelicalCollectPositions(self, start, final, nImages):
         logging.info("<PX2 MultiCollect> calculateHelicalCollectPositions")
@@ -563,7 +563,7 @@ class PX2MultiCollect(SOLEILMultiCollect):
                 pass
         wedges = []
         
-        imageNums = range(firstImage, nbFrames + firstImage)
+        imageNums = list(range(firstImage, nbFrames + firstImage))
         positions = self.getCollectPositions(nbFrames)
         
         wedges = self.newWedge(imageNums, ScanStartAngle, template, positions)
@@ -576,8 +576,8 @@ class PX2MultiCollect(SOLEILMultiCollect):
                 stop = (k+1) * numberOfFullWedges
                 wedges.append(wedge[start: stop] + inv_wedge[start: stop])
             wedges.append(wedge[stop:] + inv_wedge[stop:])
-        print 'Wedges to collect:'
-        print wedges
+        print('Wedges to collect:')
+        print(wedges)
         logging.info('Wedges to collect %s' % wedges)
         return wedges
     
@@ -615,8 +615,8 @@ class PX2MultiCollect(SOLEILMultiCollect):
         while (not os.path.exists(last_file)) and time.time() - start < 5.:
             time.sleep(0.1)
         source = os.path.join(file_location, image_file_template.replace('%04d', '*'))
-        print 'sync_collect'
-        print 'excuting command', 'ssh p10 "rsync -av %s %s"' % (source, self.sync_destination)
+        print('sync_collect')
+        print('excuting command', 'ssh p10 "rsync -av %s %s"' % (source, self.sync_destination))
         os.system('ssh p10 "rsync -av %s %s"' % (source, self.sync_destination))
         
     def should_i_take_snapshots(self, data_collect_parameters):
@@ -1050,10 +1050,10 @@ def test():
 
     coll = hwr.getHardwareObject("/mxcollect")
 
-    print "Machine current is ", coll.get_machine_current()
-    print "Synchrotron name is ", coll.bl_config.synchrotron_name
+    print("Machine current is ", coll.get_machine_current())
+    print("Synchrotron name is ", coll.bl_config.synchrotron_name)
     res_corner = coll.get_resolution_at_corner()
-    print "Resolution corner is ", res_corner
+    print("Resolution corner is ", res_corner)
 
 if __name__ == '__main__':
    test()

@@ -32,8 +32,8 @@ class XfeCollector(object):
         
         try:
             os.mkdir(options.directory)
-        except OSError, e:
-            print e
+        except OSError as e:
+            print(e)
         
     def setIntegrationTime(self, integrationTime=.64):
         #self.counter.integrationTime = integrationTime
@@ -107,8 +107,8 @@ if __name__ == '__main__':
     parser.add_option('-d', '--directory', default = '/tmp/fxetests2', type = str, help = 'where to store spectrum collected (default: %default)')
 
     (options, args) = parser.parse_args()
-    print options
-    print args
+    print(options)
+    print(args)
     
     doCollect = XfeCollector(options.exposure, options.directory + '/' + options.prefix + '_fxe.png')
     doCollect.setROI(1, 2048)

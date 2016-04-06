@@ -1,9 +1,9 @@
 
 from HardwareRepository import HardwareRepository
 import logging
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import os
-from cookielib import CookieJar
+from http.cookiejar import CookieJar
 
 from suds.transport.http import HttpAuthenticated
 from suds.client import Client
@@ -43,15 +43,15 @@ class SOLEILISPyBClient(ISPyBClient2.ISPyBClient2):
 
                 except: 
                     import traceback
-                    print traceback.print_exc()
+                    print(traceback.print_exc())
                 #except URLError:
-                    print "URLError"
+                    print("URLError")
                     logging.getLogger("ispyb_client")\
                         .exception(_CONNECTION_ERROR_MSG)
                     return
         except:
             import traceback
-            print traceback.print_exc()
+            print(traceback.print_exc())
             logging.getLogger("ispyb_client").exception(_CONNECTION_ERROR_MSG)
             return
  
@@ -104,10 +104,10 @@ class SOLEILISPyBClient(ISPyBClient2.ISPyBClient2):
 
         # Handling of redirection at soleil needs cookie handling
         cj = CookieJar()
-        url_opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        url_opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 
         trans = HttpAuthenticated(username = self.ws_username, password = self.ws_password)
-        print '_wsdl_client %s' % service_name, trans
+        print('_wsdl_client %s' % service_name, trans)
         trans.urlopener = url_opener
         urlbase = service_name + "?wsdl"
         locbase = service_name
@@ -156,7 +156,7 @@ def test():
     proposal_number = '20140088' #'20100023'
     
     info = db.get_proposal(proposal_code, proposal_number)# proposal_number)
-    print info
+    print(info)
  
 if __name__ == '__main__':
     test()

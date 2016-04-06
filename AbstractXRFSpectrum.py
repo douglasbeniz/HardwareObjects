@@ -22,11 +22,10 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
-class AbstractXRFSpectrum(object):
+class AbstractXRFSpectrum(object, metaclass=abc.ABCMeta):
     """
     Descript. 
     """
-    __metaclass__ = abc.ABCMeta
     
     def __init__(self):
         """
@@ -65,7 +64,7 @@ class AbstractXRFSpectrum(object):
                     os.makedirs(archive_directory)
                 if not os.path.exists(spectrum_directory):
                     os.makedirs(spectrum_directory)
-            except OSError, diag:
+            except OSError as diag:
                 logging.getLogger().error(\
                     "XRFSpectrum: error creating directory %s (%s)" % \
                     (archive_directory, str(diag)))
@@ -216,7 +215,7 @@ class AbstractXRFSpectrum(object):
             ax.set_title(self.spectrum_info["jpegScanFileFullPath"])
             ax.grid(True)
 
-            ax.plot(*(zip(*calibrated_array)), **{"color" : 'black'})
+            ax.plot(*(list(zip(*calibrated_array))), **{"color" : 'black'})
             ax.set_xlabel("Energy")
             ax.set_ylabel("Counts")
             canvas = FigureCanvasAgg(fig)

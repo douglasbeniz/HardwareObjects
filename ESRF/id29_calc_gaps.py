@@ -24,7 +24,7 @@ class CalculateGaps:
             logging.exception("Cannot read undulators file")
 
         if nb_line == 1:
-            larr = map(float,array[2:])
+            larr = list(map(float,array[2:]))
             gg = self._calc_gap(energy, larr)
             if gg == 0:
                 gg = array[1]
@@ -34,7 +34,7 @@ class CalculateGaps:
             p_gap = {}
 
             for i in array:
-                larr = map(float,i[2:])
+                larr = list(map(float,i[2:]))
                 gg = self._calc_gap(energy, larr)
                 if gg == 0:
                     gg = int(i[1].strip("."))
@@ -51,20 +51,20 @@ class CalculateGaps:
             if undulator != None:
                 for i in array:
                     if i[0] != undulator and gap[undulator] == gmax :
-                        larr = map(float,i[2:])
+                        larr = list(map(float,i[2:]))
                         gg = self._calc_gap(energy, larr)
                         gap[i[0]] = gg
-            gaps = gap.values()
-            labels = gap.keys()
+            gaps = list(gap.values())
+            labels = list(gap.keys())
             if undulator != None:
                 for i in gaps:
                     if i == gmax and gaps.index(i) != 0:
                         gaps.reverse()
                         labels.reverse()
-            self.GAPS = dict(zip(labels, gaps))
+            self.GAPS = dict(list(zip(labels, gaps)))
         else:
             logging.exception("Undulators file format error")
-        print p_gap
+        print(p_gap)
         return self.GAPS
 
     def _calc_gap(self, energy, arr):
@@ -126,4 +126,4 @@ if __name__ == '__main__' :
 
     cg = CalculateGaps(float(sys.argv[1]))
     gg = cg._calc_gaps(float(sys.argv[1]), "u21d")
-    print gg
+    print(gg)

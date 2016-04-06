@@ -28,7 +28,7 @@ def read_file(file_name):
                                           'values' : values_arr}
             return flux_values
     else:
-        print "File %s does not exist!" % file_name
+        print("File %s does not exist!" % file_name)
 
 
 def calculate_flux(aperture, energy, mode):
@@ -38,8 +38,8 @@ def calculate_flux(aperture, energy, mode):
         try:
            aperture_index = apertures.index(str(aperture))
         except ValueError:
-           print "Aperture value %s is not in the list of apertures: %s.'" %(str(aperture), str(apertures))
-           print "Out position will be used"
+           print("Aperture value %s is not in the list of apertures: %s.'" %(str(aperture), str(apertures)))
+           print("Out position will be used")
            aperture_index = 0
 
         if mode in values:
@@ -48,19 +48,19 @@ def calculate_flux(aperture, energy, mode):
             f = interp1d(x_arr, y_arr, kind='cubic')
             return float(f(energy))
         else:
-            print "Mode %s not in the list of available modes: %s" %(mode, str(values.keys()))
+            print("Mode %s not in the list of available modes: %s" %(mode, str(list(values.keys()))))
 
 if __name__ == '__main__' :
    if len(sys.argv) < 3:
-       print "Not enough command line argument passed!"
-       print "Pass aperture size, energy and mode (small, middle, large) to calculate flux"
+       print("Not enough command line argument passed!")
+       print("Pass aperture size, energy and mode (small, middle, large) to calculate flux")
    else:
        aper = sys.argv[1]
        energy = float(sys.argv[2])
        mode = sys.argv[3]
        flux = calculate_flux(aper, energy, mode)
        if flux:
-           print "Input: aperture %s, energy %.4f, mode: %s. " %(aper, energy, mode)
-           print "---------------------------------------------"
-           print "Output: calculated flux = %f" %(flux)
+           print("Input: aperture %s, energy %.4f, mode: %s. " %(aper, energy, mode))
+           print("---------------------------------------------")
+           print("Output: calculated flux = %f" %(flux))
             

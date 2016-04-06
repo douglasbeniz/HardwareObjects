@@ -356,7 +356,7 @@ class CatsMaintSoleil(Equipment):
 
     def _executeServerTask(self, method, *args):
         task_id = method(*args)
-        print "CatsMaint._executeServerTask", task_id
+        print("CatsMaint._executeServerTask", task_id)
         ret=None
         # introduced wait because it takes some time before the attribute PathRunning is set
         # after launching a transfer

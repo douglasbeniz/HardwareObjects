@@ -90,7 +90,7 @@ class DetectorMockup(Equipment):
         Descript. :
         """
         if self.detector_modes_dict is not None:
-            return self.detector_modes_dict.keys()	
+            return list(self.detector_modes_dict.keys())	
         else:
             return [] 
 

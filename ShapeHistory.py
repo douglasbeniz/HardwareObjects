@@ -38,6 +38,7 @@ from Qub.Objects.QubDrawingCanvasTools import QubCanvasTarget
 
 from HardwareRepository.BaseHardwareObjects import HardwareObject
 from HardwareRepository.HardwareRepository import dispatcher
+import collections
 
 SELECTED_COLOR = qt.Qt.green
 NORMAL_COLOR = qt.Qt.yellow
@@ -159,7 +160,7 @@ class ShapeHistory(HardwareObject):
         """
         :returns: All the shapes currently handled.
         """
-        return self.shapes.values()
+        return list(self.shapes.values())
 
     def get_points(self):
         """
@@ -198,13 +199,13 @@ class ShapeHistory(HardwareObject):
         if shape in self.selected_shapes:
             del self.selected_shapes[shape]
 
-            if callable(self._drawing_event.selection_cb):
-                self._drawing_event.selection_cb(self.selected_shapes.values())
+            if isinstance(self._drawing_event.selection_cb, collections.Callable):
+                self._drawing_event.selection_cb(list(self.selected_shapes.values()))
 
         if shape is self._drawing_event.current_shape:
             self._drawing_event.current_shape = None
 
-        if callable(self._drawing_event.deletion_cb):
+        if isinstance(self._drawing_event.deletion_cb, collections.Callable):
             self._drawing_event.deletion_cb(shape)
 
     def delete_shape(self, shape):
@@ -301,7 +302,7 @@ class ShapeHistory(HardwareObject):
         return shape in self.selected_shapes
 
     def get_selected_shapes(self):
-        return list(self.selected_shapes.itervalues())
+        return list(self.selected_shapes.values())
 
 
 class DrawingEvent(QubDrawingEvent):
@@ -411,13 +412,13 @@ class DrawingEvent(QubDrawingEvent):
         """
         De selects all shapes.
         """
-        for shape in self.qub_helper.selected_shapes.values():
+        for shape in list(self.qub_helper.selected_shapes.values()):
             shape.unhighlight()
 
         self.qub_helper.selected_shapes = {}
 
-        if callable(self.selection_cb):
-            self.selection_cb(self.qub_helper.selected_shapes.values())
+        if isinstance(self.selection_cb, collections.Callable):
+            self.selection_cb(list(self.qub_helper.selected_shapes.values()))
 
     def de_select_current(self, call_cb = True):
         self.set_selected(self.current_shape, False, call_cb)
@@ -433,7 +434,7 @@ class DrawingEvent(QubDrawingEvent):
         """
         Delete all the selected shapes.
         """
-        for shape in self.qub_helper.selected_shapes.values():
+        for shape in list(self.qub_helper.selected_shapes.values()):
             self.qub_helper.delete_shape(shape)
 
     def set_selected(self, shape, state, call_cb = True):
@@ -450,16 +451,17 @@ class DrawingEvent(QubDrawingEvent):
             shape.unhighlight()
             del self.qub_helper.selected_shapes[shape]
 
-        if callable(self.selection_cb) and call_cb:
-            self.selection_cb(self.qub_helper.selected_shapes.values())
+        if isinstance(self.selection_cb, collections.Callable) and call_cb:
+            self.selection_cb(list(self.qub_helper.selected_shapes.values()))
 
 
-class Shape(object):
+class Shape():
     """
     Base class for shapes.
     """
     def __init__(self):
-        object.__init__(self)
+        # LNLS
+        #object.__init__(self)
         self._drawing = None
 
     def get_drawing(self):

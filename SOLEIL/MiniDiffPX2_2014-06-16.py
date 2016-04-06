@@ -21,7 +21,7 @@ def manual_centring(phi, phiy, phiz, sampx, sampy, pixelsPerMmY, pixelsPerMmZ, b
     #phiSavedDialPosition = phi.getDialPosition()
     #logging.info("MiniDiff phi saved dial = %f " % phiSavedDialPosition)
   else:
-    raise RuntimeError, "motors not ready"
+    raise RuntimeError("motors not ready")
 
   try:  
     while True:
@@ -128,8 +128,8 @@ class MiniDiffPX2(MiniDiff):
                 self.wait(self.md2)
                 self.md2.write_attribute("ScanStartAngle", sangle )
                 executed = True
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 logging.info('Problem writing ScanStartAngle command')
                 logging.info('Exception ' + str(e))
 
@@ -147,8 +147,8 @@ class MiniDiffPX2(MiniDiff):
                 self.wait(self.md2)
                 executed = True
                 logging.info('Successfully executing StartScan command')
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 os.system('echo $(date) error executing StartScan command >> /927bis/ccd/collectErrors.log')
                 logging.info('Problem executing StartScan command')
                 logging.info('Exception ' + str(e))

@@ -4,7 +4,7 @@ import Crims
 import PyTango
 
 def char_range(c1, c2):
-    for c in xrange(ord(c1), ord(c2)+1): yield chr(c)
+    for c in range(ord(c1), ord(c2)+1): yield chr(c)
 
 
 class Xtal(Sample):
@@ -272,9 +272,9 @@ CHANNEL_EXPORTER="exporter"
         
 if __name__ == "__main__":    
     def onStateChanged(state,former):
-        print "State Change:  " + str(former) + " => " + str(state)
+        print("State Change:  " + str(former) + " => " + str(state))
     def onInfoChanged():
-        print "Info Changed"
+        print("Info Changed")
         
     sc = PMSC()    
     sc.connect(sc, sc.STATE_CHANGED_EVENT, onStateChanged)
@@ -321,7 +321,7 @@ if __name__ == "__main__":
         #sc.select(sc.getComponentByAddress('C12:1'), wait=True)
         #sc.select(sc.getComponentByAddress('C12'), wait=True)
     except:
-        print sys.exc_info()[1]      
+        print(sys.exc_info()[1])      
         
 
         

@@ -444,8 +444,8 @@ class MiniDiffPX2(Equipment):
                 logging.info("MiniDiffPX2 state %s " % self.md2.State() )
                 self.md2.write_attribute("ScanStartAngle", sangle )
                 executed = True
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 logging.info('Problem writing ScanStartAngle command')
                 logging.info('Exception ' + str(e))
     
@@ -464,9 +464,9 @@ class MiniDiffPX2(Equipment):
                 #self.wait()
                 executed = True
                 logging.info('Successfully executing StartScan command')
-            except Exception, e:
+            except Exception as e:
                 executed = False
-                print e
+                print(e)
                 os.system('echo $(date) error executing StartScan command >> /927bis/ccd/collectErrors.log')
                 logging.info('Problem executing StartScan command')
                 logging.info('Exception ' + str(e))
@@ -503,7 +503,7 @@ class MiniDiffPX2(Equipment):
 
 
     def getAvailableCentringMethods(self):
-        return self.centringMethods.keys()
+        return list(self.centringMethods.keys())
 
 
     def startCentringMethod(self,method,sample_info=None):
@@ -519,7 +519,7 @@ class MiniDiffPX2(Equipment):
 
         try:
             fun=self.centringMethods[method]
-        except KeyError,diag:
+        except KeyError as diag:
             logging.getLogger("HWR").error("MiniDiff: unknown centring method (%s)" % str(diag))
             self.emitCentringFailed()
         else:
@@ -538,7 +538,7 @@ class MiniDiffPX2(Equipment):
                 logging.getLogger("HWR").exception("MiniDiff: problem aborting the centring method")
             try:
                 fun=self.cancelCentringMethods[self.currentCentringMethod]
-            except KeyError,diag:
+            except KeyError as diag:
                 self.emitCentringFailed()
             else:
                 try:
@@ -699,7 +699,7 @@ class MiniDiffPX2(Equipment):
             self.centringStatus["endTime"]=curr_time
             self.centringStatus["motors"]=self.getPositions()
             centred_pos = self.currentCentringProcedure.get()
-            for role in self.centringStatus["motors"].iterkeys():
+            for role in self.centringStatus["motors"].keys():
               motor = self.getDeviceByRole(role)
               try:
                 self.centringStatus["motors"][role] = centred_pos[motor]
@@ -748,7 +748,7 @@ class MiniDiffPX2(Equipment):
                   #"kappa_phi": self.kappaPhiMotor,     
                   "zoom": self.zoomMotor }
    
-        for role, pos in roles_positions_dict.iteritems():
+        for role, pos in roles_positions_dict.items():
            motor[role].move(pos)
  
         # TODO: remove this sleep, the motors states should
@@ -756,7 +756,7 @@ class MiniDiffPX2(Equipment):
         # already finished) 
         time.sleep(1)
  
-        while not all([m.getState() == m.READY for m in motor.itervalues()]):
+        while not all([m.getState() == m.READY for m in motor.values()]):
            time.sleep(0.1)
 
 

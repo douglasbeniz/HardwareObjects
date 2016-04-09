@@ -25,7 +25,7 @@ __license__ = "GPL"
 
 
 import gevent
-import httplib
+import http.client
 import json
 
 from PyQt4 import QtGui
@@ -297,7 +297,7 @@ class Qt4_MjpgStreamVideo(Device):
         if(port is None): port = self.port
         if(path is None): path = self.path
         # send get request and return response
-        http = httplib.HTTPConnection(host, port, timeout=3)
+        http = http.client.HTTPConnection(host, port, timeout=3)
         try:
             http.request("GET", path+query)
             response = http.getresponse()
@@ -338,8 +338,8 @@ class Qt4_MjpgStreamVideo(Device):
             value = None
             if(type(option) is str):
                 info = self.getCmdInfo(cmd, group)
-                if(info and "menu" in info and option in info["menu"].values()):
-                    value = str([k for k, v in info["menu"].iteritems() if(v == option)][0])
+                if(info and "menu" in info and option in list(info["menu"].values())):
+                    value = str([k for k, v in info["menu"].items() if(v == option)][0])
             if(value is None):
                 return None
         if(plugin is None):
@@ -472,7 +472,7 @@ class Qt4_MjpgStreamVideo(Device):
         data = self.getControls(0, self.DEST_PROGRAM)
         if(data is None):
             return None
-        if(data.has_key("inputs")):
+        if("inputs" in data):
             for info in data["inputs"]:
                 if(info["name"][:12] == "input_avt.so"):
                     return True

@@ -19,7 +19,6 @@ class Session(HardwareObject):
         self.proposal_id = None
         self.in_house_users = []
         self.endstation_name = None
-        self.beamline_name = None
         self.session_start_date = None
         self.user_group = ''
 
@@ -35,7 +34,6 @@ class Session(HardwareObject):
     def init(self):
         self.synchrotron_name = self.getProperty('synchrotron_name')
         self.endstation_name = self.getProperty('endstation_name').lower()
-        self.beamline_name = self.getProperty('beamline_name').lower()
         self.suffix = self["file_info"].getProperty('file_suffix')
         self.base_directory = self["file_info"].\
                               getProperty('base_directory')

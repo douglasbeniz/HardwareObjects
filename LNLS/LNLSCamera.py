@@ -3,6 +3,7 @@
 from HardwareRepository import BaseHardwareObjects
 import logging
 import os
+from io import BytesIO
 import gevent
 import time
 import numpy
@@ -50,6 +51,11 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         self.emit("imageReceived", qtPixMap)
 
+    def getStaticImage(self):
+        qtPixMap = QtGui.QPixmap(self.source, "1")
+
+        self.emit("imageReceived", qtPixMap)
+
     def getOneImage(self):
 
         a = numpy.random.rand(485,650) * 255
@@ -79,6 +85,7 @@ class LNLSCamera(BaseHardwareObjects.Device):
         #
         print("start_camera......")
         #self.getCameraImage()
+        #self.getStaticImage()
         self.setLive(True)
 
     def stop_camera(self):

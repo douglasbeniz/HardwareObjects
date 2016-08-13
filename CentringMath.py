@@ -126,9 +126,9 @@ class CentringMath(Procedure):
            if axis['type'] == 'rotation':
               d=axis['direction']
               axis['mT']=numpy.outer(d,d)
-              axis['mC']=numpy.array([[ 0.0 ,-d[2], d[1]],
-                                     [ d[2], 0.0 ,-d[0] ],
-                                     [-d[1], d[0], 0.0  ]])
+              axis['mC']=numpy.array([[ 0.0,  -d[2],  d[1]],
+                                      [ d[2],  0.0 , -d[0]],
+                                      [-d[1],  d[0],  0.0 ]])
            elif axis['type'] == 'translation':
               axis['index']= count
               count += 1

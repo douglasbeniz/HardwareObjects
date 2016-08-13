@@ -1053,6 +1053,10 @@ class PathTemplate(object):
     def set_path_template_style(synchotron_name):
         PathTemplate.synchotron_name = synchotron_name 
 
+    @staticmethod
+    def set_file_suffix(suffix):
+        PathTemplate.suffix = suffix
+
     def __init__(self):
         object.__init__(self)
 
@@ -1101,6 +1105,10 @@ class PathTemplate(object):
             prefix = prefix + '_' + self.wedge_prefix
 
         return prefix
+
+    def get_suffix(self):
+        suffix = self.suffix
+        return suffix
 
     def get_image_file_name(self, suffix=None):
         template = "%s_%s_%%" + self.precision + "d.%s"
@@ -1373,7 +1381,6 @@ class Workflow(TaskNode):
     def get_path_template(self):
         return self.path_template
 
-
 #
 # Collect hardware object utility function.
 #
@@ -1430,7 +1437,8 @@ def to_collect_dict(data_collection, session, sample, centred_pos=None):
                           'process_directory': acquisition.\
                           path_template.process_directory,
                           'template': acquisition.\
-                          path_template.get_image_file_name()},
+                          path_template.get_image_file_name(),
+                          'suffix': acquisition.path_template.get_suffix()},
              'in_queue': acq_params.in_queue,
              'in_interleave' : acq_params.in_interleave,
              'detector_mode': acq_params.detector_mode,

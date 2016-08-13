@@ -8,12 +8,13 @@ from time import sleep
 import gevent
 
 #------------------------------------------------------------------------------
-# Constant names from lnls-gonio_base.xml
-SLIT_VAL  = 'epicsMotor_val'
-SLIT_RLV  = 'epicsMotor_rlv'
-SLIT_RBV  = 'epicsMotor_rbv'
-SLIT_DMOV = 'epicsMotor_dmov'
-SLIT_STOP = 'epicsMotor_stop'
+# Constant names from lnls-motor.xml
+MOTOR_VAL  = 'epicsMotor_val'
+MOTOR_RLV  = 'epicsMotor_rlv'
+MOTOR_RBV  = 'epicsMotor_rbv'
+MOTOR_DMOV = 'epicsMotor_dmov'
+MOTOR_STOP = 'epicsMotor_stop'
+MOTOR_VELO = 'epicsMotor_velo'
 
 #------------------------------------------------------------------------------
 class LNLSMotor(AbstractMotor, Device):      
@@ -38,15 +39,25 @@ class LNLSMotor(AbstractMotor, Device):
 
         self.monitorgen = None
 
+        self.chan_motor_rbv = self.getChannelObject(MOTOR_RBV)
+        if self.chan_motor_rbv is not None: 
+            self.chan_motor_rbv.connectSignal('update', self.positionChanged)
+
+        self.chan_motor_dmov = self.getChannelObject(MOTOR_DMOV)
+        if self.chan_motor_dmov is not None: 
+            self.chan_motor_dmov.connectSignal('update', self.statusChanged)
+
     def monitor(self, monitor):
-        if (monitor):
-            self.monitorgen = gevent.spawn(self.monitorMovement)
-        else:
-            try:
-                self.monitorgen.kill()
-            except:
-                print("ERROR! Trying to kill gevent of motor-monitoring....")
-                pass
+        pass
+        # if (monitor):
+        #     self.monitorgen = gevent.spawn(self.monitorMovement)
+        # else:
+        #     if (self.monitorgen):
+        #         try:
+        #             self.monitorgen.kill()
+        #         except:
+        #             print("ERROR! Trying to kill gevent of motor-monitoring....")
+        #             pass
 
     def connectNotify(self, signal):
         if signal == 'positionChanged':
@@ -67,6 +78,9 @@ class LNLSMotor(AbstractMotor, Device):
 
     def getState(self):
         return self.motorState
+
+    def isReady(self):
+        return (self.motorState == LNLSMotor.READY)
     
     def motorLimitsChanged(self):
         self.emit('limitsChanged', (self.getLimits(), ))
@@ -75,32 +89,50 @@ class LNLSMotor(AbstractMotor, Device):
         return (-1E4,1E4)
  
     def getPosition(self):
-        return self.getValue(SLIT_RBV)
+        return self.getValue(MOTOR_RBV)
+
+    def setVelocity(self, value):
+        self.setValue(MOTOR_VELO, value)
+
+    def getVelocity(self):
+        return self.getValue(MOTOR_VELO)
 
     def getDialPosition(self):
         return self.getPosition()
 
     def move(self, absolutePosition):
-        self.setValue(SLIT_VAL, absolutePosition)
+        self.setValue(MOTOR_VAL, absolutePosition)
         self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
 
     def moveRelative(self, relativePosition):
-        self.setValue(SLIT_RLV, relativePosition)
+        self.setValue(MOTOR_RLV, relativePosition)
         self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
 
-    def monitorMovement(self):
-        while True:
-            if (self.getValue(SLIT_DMOV) == 0):
-                self.waitEndOfMove(5)
-            sleep(0.1)
+    # def monitorMovement(self):
+    #     while True:
+    #         if (self.isConnected(MOTOR_DMOV) and self.getValue(MOTOR_DMOV) == 0):
+    #             self.waitEndOfMove(5)
+    #         sleep(0.1)
+
+    def positionChanged(self, value):
+        self.motorPosition = value
+        self.emit('positionChanged', (value))
+
+    def statusChanged(self, value):
+        if (value == 0):
+            self.motorState = LNLSMotor.MOVING
+        elif (value == 1):
+            self.motorState = LNLSMotor.READY
+
+        self.emit('stateChanged', (self.motorState))
 
     def waitEndOfMove(self, timeout=None):
         sleep(0.1)
-        if (self.getValue(SLIT_DMOV) == 0):
+        if (self.getValue(MOTOR_DMOV) == 0):
             self.motorState = LNLSMotor.MOVING
             self.emit('stateChanged', (self.motorState))
 
-        while (self.getValue(SLIT_DMOV) == 0):
+        while (self.getValue(MOTOR_DMOV) == 0):
             self.motorPosition = self.getPosition()
             self.emit('positionChanged', (self.motorPosition))
             sleep(0.1)
@@ -116,12 +148,16 @@ class LNLSMotor(AbstractMotor, Device):
         self.motorPosition = position
 
     def motorIsMoving(self):
-        return (self.getValue(SLIT_DMOV) == 0)
+        return (self.getValue(MOTOR_DMOV) == 0)
 
     def getMotorMnemonic(self):
         return self.motor_name
 
     def stop(self):
-        self.setValue(SLIT_STOP, 1)
+        self.setValue(MOTOR_STOP, 1)
         sleep(0.2)
-        self.setValue(SLIT_STOP, 0)
+        self.setValue(MOTOR_STOP, 0)
+
+    def __del__(self):
+        print("LNLSMotor __del__")
+        self.monitor(False)

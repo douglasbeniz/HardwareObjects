@@ -96,7 +96,7 @@ class LNLSBeamCentering(Equipment):
         sleep(0.05)
         while(self.getValue(motor_dmov) == 0):
             self.emit(signal_pos_changed, (self.getValue(motor_rbv), ))
-            self.emit(signal_int_changed, (abs(self.getValue(counter)), ))
+            self.emit(signal_int_changed, (float(self.getValue(counter)), ))
             sleep(0.1)
 
     def _moveBaseCheckingPosition(self, motor_rbv, motor_rlv, motor_dmov, counter_val, step, initial_position, max_distance, full_path, signal_set_tab, signal_plot_clear, signal_pos_changed, signal_int_changed, signal_plot):
@@ -136,7 +136,7 @@ class LNLSBeamCentering(Equipment):
                 continue
 
             self.emit(signal_pos_changed, (newRBV, ))
-            intensity = abs(self.getValue(counter_val))
+            intensity = float(self.getValue(counter_val))
             self.emit(signal_int_changed, (intensity, ))
 
             self.emit(signal_plot, (newRBV, intensity,))
@@ -148,7 +148,7 @@ class LNLSBeamCentering(Equipment):
 
     def _centerProcedure(self, timeout=None):
 
-        try:
+        #try:
             for slit in range(2):
                 # Check if should center this slit
                 if (self._centerSlit[slit]):
@@ -183,9 +183,9 @@ class LNLSBeamCentering(Equipment):
                             self.setValue(BASE_SLIT[slit][axis][0], pos_max_int)
                             self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
             self.emit('centeringConcluded')
-        except TypeError:
-            self.emit('errorCentering')
-            pass
+        #except TypeError:
+        #    self.emit('errorCentering')
+        #    pass
 
 
     def start(self):

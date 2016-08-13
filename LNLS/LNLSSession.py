@@ -6,11 +6,12 @@ access and manipulate this information.
 """
 import os
 import time
+import glob
 
 from HardwareRepository.BaseHardwareObjects import HardwareObject
 import queue_model_objects_v1 as queue_model_objects
 
-class Session(HardwareObject):
+class LNLSSession(HardwareObject):
     def __init__(self, name):
         HardwareObject.__init__(self, name)
         self.session_id = None
@@ -58,6 +59,7 @@ class Session(HardwareObject):
 
         queue_model_objects.PathTemplate.set_path_template_style(self.synchrotron_name) 
         queue_model_objects.PathTemplate.set_data_base_path(self.base_directory)
+        queue_model_objects.PathTemplate.set_file_suffix(self.suffix)
         queue_model_objects.PathTemplate.set_archive_path(self['file_info'].getProperty('archive_base_directory'),
                                                           self['file_info'].getProperty('archive_folder'))
         queue_model_objects.PathTemplate.set_path_template_style(self.getProperty('synchrotron_name'))
@@ -83,6 +85,20 @@ class Session(HardwareObject):
                 user = os.getenv("USER")
             directory = os.path.join(self.base_directory, str(os.getuid()) + '_'\
                                      + str(os.getgid()), user, start_time)
+        elif self.synchrotron_name == "LNLS":
+            start_time = time.strftime("%Y%m%d")
+            user = os.getenv("USER")
+            
+            last_value = 0
+            for folder in glob.glob(os.path.join(self.base_directory, user, start_time, "*")):
+                try:
+                    value = int(folder[folder.rfind('/')+1:])
+                    if (value > last_value):
+                        last_value = value
+                except ValueError:
+                    pass
+
+            directory = os.path.join(self.base_directory, user, start_time, str(last_value+1).zfill(3))
         else: 
             if self.session_start_date:
                 start_time = self.session_start_date.split(' ')[0].replace('-', '')

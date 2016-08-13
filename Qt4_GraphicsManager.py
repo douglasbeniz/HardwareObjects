@@ -44,7 +44,6 @@ import Qt4_GraphicsLib as GraphicsLib
 import queue_model_objects_v1 as queue_model_objects
 from HardwareRepository.BaseHardwareObjects import HardwareObject
 
-
 class Qt4_GraphicsManager(HardwareObject):
     """
     Descript. : Keeps track of the current shapes the user has created. The
@@ -286,10 +285,11 @@ class Qt4_GraphicsManager(HardwareObject):
         :type pixmap_image: QtGui.QPixmapImage
         """
         if self.image_scale:
+            #print("self.image_scale %d" % (self.image_scale))
             pixmap_image = pixmap_image.scaled(QtCore.QSize(\
                pixmap_image.width() * self.image_scale,
                pixmap_image.height() * self.image_scale))
-        self.graphics_camera_frame.setPixmap(pixmap_image) 
+        self.graphics_camera_frame.setPixmap(pixmap_image)
 
     def beam_position_changed(self, position):
         """Method called when beam position on the screen changed.
@@ -1359,3 +1359,7 @@ class Qt4_GraphicsManager(HardwareObject):
                 shape.set_beam_info(self.beam_info_dict)
                 shape.set_pixels_per_mm(self.pixels_per_mm)
                 shape.set_display_overlay(state > 0)
+
+    def __del__(self):
+        print("Qt4_GraphicsManager __del__")
+        self.camera_hwobj.stop_camera()

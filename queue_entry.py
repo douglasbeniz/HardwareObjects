@@ -640,7 +640,7 @@ class SampleCentringQueueEntry(BaseQueueEntry):
         kappa = self._data_model.get_kappa()
         phi = self._data_model.get_kappa_phi()
 
-        self.diffractometer_hwobj.moveMotors({"kappa": kappa, "kappa_phi":phi})
+        self.diffractometer_hwobj.moveMotors({"kappa": kappa, "kappa_phi": phi})
 
         #TODO agree on correct message
         log.warning("Please center a new point, and press continue.")

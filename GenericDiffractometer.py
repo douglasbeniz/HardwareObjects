@@ -228,7 +228,7 @@ class GenericDiffractometer(HardwareObject):
                        'not defined continuing with the middle: %s" % self.zoom_centre)
             else:
                 logging.getLogger("HWR").warning("Diffractometer: " + \
-                   "Neither zoom centre nor camera size iz defined")
+                   "Neither zoom centre nor camera size is defined")
 
         self.reversing_rotation = self.getProperty("reversing_rotation")
         try:
@@ -505,6 +505,9 @@ class GenericDiffractometer(HardwareObject):
                 #if 3 click centring move -180 
                 if not self.in_plate_mode():
                     self.phi_motor_hwobj.syncMoveRelative(-180)
+                # LNLS
+                else:
+                    self.motor_hwobj_dict["omega"].moveRelative(90)
             #logging.info("EMITTING CENTRING SUCCESSFUL")
             self.centring_time = time.time()
             self.emit_centring_successful()
@@ -539,6 +542,7 @@ class GenericDiffractometer(HardwareObject):
         """
         for motor in list(motor_positions.keys()):
             position = motor_positions[motor]
+
             if type(motor) in (str, str):
                 motor_role = motor
                 motor = self.motor_hwobj_dict[motor_role]

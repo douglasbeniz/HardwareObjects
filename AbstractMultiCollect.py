@@ -8,7 +8,6 @@ import abc
 import collections
 import gevent
 import autoprocessing
-import gevent
 from HardwareRepository.TaskUtils import *
 
 BeamlineControl = collections.namedtuple('BeamlineControl',
@@ -516,7 +515,7 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
 
         self.move_motors(motors_to_move_before_collect)
         # take snapshots, then assign centring status (which contains images) to centring_info variable
-        logging.getLogger("user_level_log").info("Taking sample snapshosts")
+        logging.getLogger("user_level_log").info("Taking sample snapshots")
         self._take_crystal_snapshots(data_collect_parameters.get("take_snapshots", False))
         centring_info = self.bl_control.diffractometer.getCentringStatus()
         # move *again* motors, since taking snapshots may change positions
@@ -767,7 +766,7 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
                               try:
                                   self.bl_control.lims.store_image(lims_image)
                               except:
-                                  logging.getLogger("HWR").exception("Could not store store image in LIMS")
+                                  logging.getLogger("HWR").exception("Could not store image in LIMS")
                           
                               self.generate_image_jpeg(str(file_path), str(jpeg_full_path), str(jpeg_thumbnail_full_path),wait=False)
                           if data_collect_parameters.get("processing", False)=="True":
@@ -778,7 +777,8 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
                                                          data_collect_parameters["residues"],
                                                          data_collect_parameters["do_inducedraddam"],
                                                          data_collect_parameters.get("sample_reference", {}).get("spacegroup", ""),
-                                                         data_collect_parameters.get("sample_reference", {}).get("cell", ""))
+                                                         data_collect_parameters.get("sample_reference", {}).get("cell", ""),
+                                                         frame)
 
                           if data_collect_parameters.get("shutterless"):
                               with gevent.Timeout(10, RuntimeError("Timeout waiting for detector trigger, no image taken")):
@@ -920,7 +920,7 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
         Description    : executes a script after the data collection has finished
         Type           : method
     """
-    def trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir=None, anomalous=None, residues=200, do_inducedraddam=False, spacegroup=None, cell=None):
+    def trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir=None, anomalous=None, residues=200, do_inducedraddam=False, spacegroup=None, cell=None, frame=None):
       # quick fix for anomalous, do_inducedraddam... passed as a string!!!
       # (comes from the queue)
       if type(anomalous) == bytes:

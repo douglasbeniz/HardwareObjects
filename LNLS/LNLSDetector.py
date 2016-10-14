@@ -72,6 +72,17 @@ class LNLSDetector(Equipment):
         self.detector_pilatus = Pilatus('Pilatus', self.pilatusEpicsAddress)
         self.shutter_pilatus = SimpleShutter('ShutterPilatus', self.shutterEpicsAddress, invert=True)
 
+        # Connect signals to related objects
+        if (self.distance_motor_hwobj):
+            self.distance_motor_hwobj.connect('positionChanged', self.detectorDistanceChanged)
+            self.distance_motor_hwobj.connect('stateChanged', self.detectorStateChanged)
+
+    def get_radius(self):
+        """
+        Descript. : Parameter specific to Detector, from XML
+        """
+        return self.pilatusHalfOfHeight
+
     def get_collect_name(self):
         """
         Descript. :
@@ -80,7 +91,7 @@ class LNLSDetector(Equipment):
 
     def get_shutter_name(self):
         """
-        Desccript. :
+        Descript. :
         """
         return self.detector_shutter_name
         
@@ -90,6 +101,21 @@ class LNLSDetector(Equipment):
         """
         if self.distance_motor_hwobj:
             return self.distance_motor_hwobj.getPosition()
+
+    def detectorDistanceChanged(self, value):
+        self.emit('positionChanged', (value))
+
+    def detectorStateChanged(self, value):
+        self.emit('stateChanged', (value))
+
+    def move_detector_distance(self, distance, wait=False):
+        if self.distance_motor_hwobj:
+            try:
+                self.distance_motor_hwobj.move(absolutePosition=distance, wait=wait)
+            except:
+                logging.getLogger().exception("error while moving detector distance")
+        else:
+            logging.getLogger().exception("no distance motor configure in detector object!")
 
     def set_detector_mode(self, mode):
         """
@@ -141,6 +167,12 @@ class LNLSDetector(Equipment):
         Description. :  Set Acquire PV of Pilatus AreaDetector to 1, then start to acquire
         """
         self.detector_pilatus.startCount()
+
+    def stop(self):
+        """
+        Description. : Stop the acquisition on Pilatus
+        """
+        self.detector_pilatus.stopCount()
 
     def set_file_path(self, path):
         self.detector_pilatus.setFilePath(path)
@@ -250,4 +282,8 @@ class LNLSDetector(Equipment):
             stdin, stdout, stderr = ssh.exec_command("rm -rf " + str(folder))
             ssh.close()
         except:
-            print("ERROR trying to cleanup temporary folder in pilatus server...")
+            logging.getLogger().exception("Error when trying to cleanup temporary folder in pilatus server...")
+
+    def update_values(self):
+        # Call the update of Detector
+        self.distance_motor_hwobj.update_values()

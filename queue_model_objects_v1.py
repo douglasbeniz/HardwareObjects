@@ -1144,9 +1144,12 @@ class PathTemplate(object):
                                              PathTemplate.archive_folder)
             archive_directory = os.path.join(archive_directory,
                                              *folders[3:])
+        elif (PathTemplate.synchotron_name == "LNLS"):
+            archive_directory = self.directory
         else:
             directory = self.directory[len(PathTemplate.base_directory):]
             folders = directory.split('/')
+
             if 'visitor' in folders:
                 endstation_name = folders[3]
                 folders[1] = PathTemplate.archive_folder

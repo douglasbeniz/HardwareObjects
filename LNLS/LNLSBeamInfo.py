@@ -30,7 +30,7 @@ class LNLSBeamInfo(Equipment):
         self.beam_size_slits = [9999, 9999]
         self.beam_size_aperture = [0.01, 0.01]
         self.beam_size_definer = [9999, 9999]
-        self.beam_position = [205, 256]
+        self.beam_position = [221, 289]
         self.beam_info_dict = {}
 
     def init(self):

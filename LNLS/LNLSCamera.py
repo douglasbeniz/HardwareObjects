@@ -60,10 +60,13 @@ class LNLSCamera(BaseHardwareObjects.Device):
         # Get the image from uEye camera IOC
         self.imgArray = self.getValue(CAMERA_DATA)
 
-        if ((self.imgArray == None) or (len(self.imgArray) != ARRAY_SIZE)):
-            print(" error in array lenght! %d" % len(self.imgArray))
+        if ((self.imgArray is None) or (len(self.imgArray) != ARRAY_SIZE)):
+            logging.getLogger().exception("%s - Error in array lenght!" % (self.__class__.__name__))
+            # Stop camera to be in live mode
+            self.liveState = False
             return -1
 
+        # self.qImage has 1280 x 1024 size (width x height)
         self.qImage = QtGui.QImage(self.imgArray, 1280, 1024, 1280*32/8, QtGui.QImage.Format_RGB32)
         self.imgArray = None
 
@@ -71,34 +74,41 @@ class LNLSCamera(BaseHardwareObjects.Device):
             self.qTransform = QtGui.QTransform()
             self.qTransform.rotate(90)
 
+            # self.qImage now has 1024 x 1280 size (width x height)
             self.qImage = self.qImage.transformed(self.qTransform)
 
-            self.qImageHalf = self.qImage.scaledToHeight(512);
-            #self.qImageHalf = self.qImage.scaledToWidth(640);
+            # self.qImage now has 640 x 800 size (width x height)
+            self.qImageHalf = self.qImage.scaledToWidth(640);
+
+            # Clear memory
+            self.qImage = None
+
+            #self.qImageHalf = self.qImage.scaled(640, 512, QtCore.Qt.KeepAspectRatioByExpanding)
+
+            # Crop image, position (x, y) = 0, 144; (w, h) =  640, 512
+            # the size of image rectangle in UI
+            self.qImageCropped = self.qImageHalf.copy(0, 144, 640, 512)
+
+            # Clear memory
+            self.qImageHalf = None
 
         except:
-            print("LNLSCamera - Except in scale and rotate!!!")
+            logging.getLogger().exception("%s - Except in scale and rotate!" % (self.__class__.__name__))
             return -1
-        self.qImage = None
 
-        self.qtPixMap = QtGui.QPixmap(self.qImageHalf)
-        self.qImageHalf = None
+        self.qtPixMap = QtGui.QPixmap(self.qImageCropped)
+        self.qImageCropped = None
 
         self.emit("imageReceived", self.qtPixMap)
-        self.qtPixMap = None
+
+        # Keep qtPixMap available for snapshot...
+        #self.qtPixMap = None
         
         return 0
 
     def getStaticImage(self):
         qtPixMap = QtGui.QPixmap(self.source, "1")
         self.emit("imageReceived", qtPixMap)
-
-    def getOneImage(self):
-        self.imgArray = self.getValue(CAMERA_DATA)
-        im_out = Image.fromarray(self.imgArray.astype('uint8')).convert('RGBA')
-        buf = io.StringIO()
-        im_out.save(buf,"JPEG")
-        return buf
 
     def get_image_dimensions(self):
         return (640*512)
@@ -125,10 +135,6 @@ class LNLSCamera(BaseHardwareObjects.Device):
         self.setValue(CAMERA_EN_BACK, 1)
         self.setValue(CAMERA_ACQ_STOP, 0)
         self.setValue(CAMERA_ACQ_START, 1)
-        #
-        #self.getCameraImage()
-        #self.getStaticImage()
-        #self.setLive(True)
 
     def stop_camera(self):
         self.setValue(CAMERA_ACQ_START, 0)
@@ -153,12 +159,12 @@ class LNLSCamera(BaseHardwareObjects.Device):
         return None
 
     def takeSnapshot(self, *args):
-      jpeg_data=self.getOneImage()
-      f = open(*(args + ("w",)))
-      f.write("".join(map(chr, jpeg_data)))
-      f.close()
+        imgFile = QtCore.QFile(args[0])
+        imgFile.open(QtCore.QIODevice.WriteOnly)
+        self.qtPixMap.save(imgFile,"PNG")
+        imgFile.close()
 
     def __del__(self):
-        print("LNLSCamera __del__")
+        logging.getLogger().exception("%s - __del__()!" % (self.__class__.__name__))
         self.stop_camera()
         self.setLive(False)

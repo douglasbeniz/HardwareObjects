@@ -20,6 +20,7 @@
 import os
 import copy
 import time
+import math
 import logging
 import tempfile
 import gevent
@@ -38,36 +39,7 @@ from gevent.event import AsyncResult
 
 last_centred_position = [200, 200]
 
-omega_velo_centring = 1.5
-
-#--------------------------------------------------------------------------------
-#
-class myimage:
-    """
-    Descript. :
-    """
-    def __init__(self, drawing):
-        """
-        Descript. :
-        """
-        self.drawing = drawing
-        matrix = self.drawing.matrix()
-        self.zoom = 1
-        if matrix is not None:
-            self.zoom = matrix.m11()
-        self.img = self.drawing.getPPP()
-        fd, name = tempfile.mkstemp()
-        os.close(fd)
-        QubImageSave.save(name, self.img, self.drawing.canvas(), self.zoom, "JPEG")
-        f = open(name, "r")
-        self.imgcopy = f.read()
-        f.close()
-        os.unlink(name)
-    def __str__(self):
-        """
-        Descript. :
-        """
-        return self.imgcopy
+OMEGA_VELO_CENTRING = 1.5
 
 #--------------------------------------------------------------------------------
 #
@@ -102,11 +74,9 @@ class LNLSGoniometer(GenericDiffractometer):
         Descript. :
         """
         GenericDiffractometer.init(self)
-        self.x_calib = 0.012346     #  81 pixels / 1 mm
-        self.y_calib = 0.012048     #  83 pixels / 1 mm
-         
-        self.pixels_per_mm_x = 1.0 / self.x_calib
-        self.pixels_per_mm_y = 1.0 / self.y_calib
+
+        self.pixels_per_mm_x = 85       # 85 pixels / 1mm for 0.5 zoom
+        self.pixels_per_mm_y = 85       # 85 pixels / 1mm for 0.5 zoom
         
         self.cancel_centring_methods = {}
         self.current_positions_dict = {'phiy'  : 0, 'phiz' : 0, 'sampx' : 0,
@@ -117,18 +87,24 @@ class LNLSGoniometer(GenericDiffractometer):
         self.centring_status = {"valid": False}
         self.centring_time = 0
 
-        self.image_width = 640
-        self.image_height = 512
+        # Parameters from XML configuration
+        self.image_width = self.defaultImageWidth
+        self.image_height = self.defaultImageHeight
 
         self.equipmentReady()
 
+        # ---------------------------------------------------------------------
         # Beam-info
         self.beam_info_hwobj = self.getObjectByRole("beam_info")
 
         if (self.beam_info_hwobj):
             self.beam_position = self.beam_info_hwobj.get_beam_position()
         else:
-            self.beam_position = [320, 256]
+            self.beam_position = [self.image_width/2, self.image_height/2]
+
+        # ---------------------------------------------------------------------
+        # Camera
+        self.camera_hwobj = self.getObjectByRole("camera")
 
         # ---------------------------------------------------------------------
         # Motors
@@ -136,6 +112,8 @@ class LNLSGoniometer(GenericDiffractometer):
         self.motor_goniox_hwobj = self.getObjectByRole("goniox")
         self.motor_sampx_hwobj = self.getObjectByRole("sampx")
         self.motor_sampy_hwobj = self.getObjectByRole("sampy")
+        # Zoom
+        self.motor_zoom_hwobj = self.getObjectByRole("zoom")
 
         self.reversing_rotation = self.getProperty("reversingRotation")
         try:
@@ -148,14 +126,28 @@ class LNLSGoniometer(GenericDiffractometer):
         except:
             self.phase_list = ['demo']
 
+        # Attributes used by snapshot
+        self.snapshotFilePath = None
+        self.snapshotFilePrefix = None
+        self.collectStartOscillation = None
+        self.collectEndOscillation = None
+
         # Methods exported
         self.takeSnapshots = self.take_snapshots
         self.getPositions = self.get_positions
 
     def set_drawing(self, drawing):
-        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        print("LNLSGoniometer - set_drawing... ", drawing)
         self._drawing = drawing
+
+    def set_snapshot_file_path(self, path):
+        self.snapshotFilePath = path
+
+    def set_snapshot_file_prefix(self, prefix):
+        self.snapshotFilePrefix = prefix
+
+    def set_collect_oscillation_interval(self, start, end):
+        self.collectStartOscillation = start
+        self.collectEndOscillation = end
 
     def getStatus(self):
         """
@@ -178,6 +170,20 @@ class LNLSGoniometer(GenericDiffractometer):
     def move_omega_absolute(self, absolute_position):
         self.motor_omega_hwobj.move(absolute_position)
 
+    # initial_angle in degrees
+    def move_omega_initial_angle(self, initial_angle):
+        # Store previous Omega velocity
+        _previous_omega_velo = self.get_omega_velocity()
+
+        # Set velocity of omega to move during starting
+        self.set_omega_velocity(OMEGA_VELO_CENTRING)
+
+        # Move to initial angle
+        self.motor_omega_hwobj.move(initial_angle, wait=True)
+
+        # Restore previous velocity
+        self.set_omega_velocity(_previous_omega_velo)
+
     # Velocity in RPM
     def set_omega_velocity(self, velocity):
         self.motor_omega_hwobj.setVelocity(velocity)
@@ -190,7 +196,11 @@ class LNLSGoniometer(GenericDiffractometer):
         Descript. :
         """
         # Set velocity of omega to move during centring
-        self.set_omega_velocity(omega_velo_centring)
+        self.set_omega_velocity(OMEGA_VELO_CENTRING)
+
+        # Set scale of pixels per mm according to current zoom
+        self.pixels_per_mm_x = self.motor_zoom_hwobj.getPixelsPerMm(0)
+        self.pixels_per_mm_y = self.motor_zoom_hwobj.getPixelsPerMm(1)
 
         # Get clicked position of mouse pointer
         self.user_clicked_event = AsyncResult()
@@ -205,36 +215,26 @@ class LNLSGoniometer(GenericDiffractometer):
         sampyPos = self.motor_sampy_hwobj.getPosition()
 
         # Pixels to move axis X of whole goniometer
-        moveGonioX = (self.beam_position[0] - last_centred_position[0]) * -1
+        moveGonioX = (self.beam_position[0] - last_centred_position[0])
         # mm to move
         moveGonioX = moveGonioX / self.pixels_per_mm_x
+
         # Move absolute
         moveGonioX += gonioxPos
 
-        # Check the Omega position
-        if (round(omegaPos) in [0, 180]):
-            moveSampX = (self.beam_position[1] - last_centred_position[1])
-            if (round(omegaPos) == 180): moveSampX *= -1
-            moveSampX = moveSampX / self.pixels_per_mm_y
-            # Move absolute
-            moveSampX += sampxPos
-            # keep Y
-            moveSampY = sampyPos
-        elif (round(omegaPos) in [90, 270]):
-            moveSampY = (self.beam_position[1] - last_centred_position[1])
-            if (round(omegaPos) == 270): moveSampY *= -1
-            moveSampY = moveSampY / self.pixels_per_mm_y
-            # Move absolute
-            moveSampY += sampyPos
-            # keep X
-            moveSampX = sampxPos
-        else:
-            # keep Y
-            moveSampY = sampyPos
-            # keep X
-            moveSampX = sampyPos
+        # Calculate new position of X
+        moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
+        moveSampX = moveSampX / self.pixels_per_mm_x
+        # Move absolute
+        moveSampX += sampxPos
 
-        centred_pos_dir = {'goniox': moveGonioX, 'sampx': moveSampX, 'sampy': moveSampY}
+        # Calculate new position of Y
+        moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
+        moveSampY = moveSampY / self.pixels_per_mm_y
+        # Move absolute
+        moveSampY += sampyPos
+
+        centred_pos_dir = { 'goniox': moveGonioX, 'sampx': moveSampX, 'sampy': moveSampY }
 
         return centred_pos_dir
 
@@ -411,27 +411,63 @@ class LNLSGoniometer(GenericDiffractometer):
         #omega_ref = [205, 0]
         #self.emit('omegaReferenceChanged', omega_ref)
 
-    def take_snapshots_procedure(self, image_count, drawing):
+    def take_snapshots_procedure(self, image_count):
         """
         Descript. :
         """
-        centred_images = []
-        for index in range(image_count):
-            logging.getLogger("HWR").info("LNLSGoniometer: taking snapshot #%d", index + 1)
-            centred_images.append((0, str(myimage(drawing))))
-            centred_images.reverse() 
+        # Avoiding a processing of AbstractMultiCollect class for saving snapshots
+        #centred_images = []
+        centred_images = None
+        positions = []
+
+        if (self.camera_hwobj):
+            # Calculate goniometer positions where to take snapshots
+            if (self.collectEndOscillation is not None and self.collectStartOscillation is not None):
+                interval = (self.collectEndOscillation - self.collectStartOscillation)
+            else:
+                interval = 0
+
+            # To increment in angle increment
+            increment = 0 if ((image_count -1) == 0) else (interval / (image_count -1))
+
+            for incrementPos in range(image_count):
+                if (self.collectStartOscillation is not None):
+                    positions.append(self.collectStartOscillation + (incrementPos * increment))
+                else:
+                    positions.append(self.motor_omega_hwobj.getPosition())
+
+            for index in range(image_count):
+                logging.getLogger("HWR").info("%s - taking snapshot #%d" % (self.__class__.__name__, index + 1))
+
+                while (self.motor_omega_hwobj.getPosition() < positions[index]):
+                    gevent.sleep(0.02)
+
+                # Save snapshot image file
+                imageFileName = os.path.join(self.snapshotFilePath, self.snapshotFilePrefix + "_" + str(round(self.motor_omega_hwobj.getPosition(),2)) + "_degrees_snapshot.png")
+
+                imageInfo = self.camera_hwobj.takeSnapshot(imageFileName)
+
+                #centred_images.append((0, str(imageInfo)))
+                #centred_images.reverse() 
+        else:
+            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
+
         return centred_images
 
-    def take_snapshots(self, image_count, wait = False):
+    def take_snapshots(self, image_count, wait=False):
         """
         Descript. :
         """
         if image_count > 0:
-            snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count, self._drawing)
+            snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count)
+
             self.emit('centringSnapshots', (None,))
             self.emit_progress_message("Taking snapshots")
+
             self.centring_status["images"] = []
+
             snapshots_procedure.link(self.snapshots_done)
+
             if wait:
                 self.centring_status["images"] = snapshots_procedure.get()
 
@@ -442,7 +478,7 @@ class LNLSGoniometer(GenericDiffractometer):
         try:
             self.centring_status["images"] = snapshots_procedure.get()
         except:
-            logging.getLogger("HWR").exception("LNLSGoniometer: could not take crystal snapshots")
+            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
             self.emit('centringSnapshots', (False,))
             self.emit_progress_message("")
         else:

@@ -65,9 +65,12 @@ class LNLSEnergy(Equipment):
         self.getWavelengthLimits = self.get_wavelength_limits
         self.setEnergy = self.set_energy
         self.setWavelength = self.set_wavelength
+        self.getCurrentEnergy = self.get_current_energy
+        self.getCurrentWavelength = self.get_current_wavelength
 
     def update_values(self):
-        self.emit("energyChanged", self.energy_value, self.wavelength_value)
+        self.emit("energyChanged", (self.energy_value, self.wavelength_value))
+        self.emit('stateChanged', (self.motorState))
 
     def can_move_energy(self):
         return self.tunable
@@ -75,12 +78,12 @@ class LNLSEnergy(Equipment):
     def isConnected(self):
         return True
 
-    def getCurrentEnergy(self):
+    def get_current_energy(self):
         self.energy_value = round(self.getValue(MOTOR_RBV) / 1000, 4)
         return self.energy_value
 
-    def getCurrentWavelength(self):
-        current_en = self.getCurrentEnergy()
+    def get_current_wavelength(self):
+        current_en = self.get_current_energy()
         if current_en is not None:
             return (PLANCK_LIGHT_SPEED/current_en)
         return None
@@ -102,33 +105,12 @@ class LNLSEnergy(Equipment):
             self.energy_value = PLANCK_LIGHT_SPEED / value
 
         self.setValue(MOTOR_VAL, self.energy_value * 1000)
-        if (wait):
-            self.waitEndOfMove()
-        else:
-            self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
 
     def set_energy(self, value):
         self.start_move_energy(value, KEV_UNIT, wait=True)
 
     def set_wavelength(self, value):
         self.start_move_energy(value, ANG_UNIT, wait=True)
-
-    def waitEndOfMove(self, timeout=None):
-        sleep(0.1)
-        if (self.getValue(MOTOR_DMOV) == 0):
-            self.motorState = LNLSEnergy.MOVING
-            self.emit('stateChanged', (self.motorState))
-
-        while (self.getValue(MOTOR_DMOV) == 0):
-            self.energy_value = self.getCurrentEnergy()
-            self.wavelength_value = (PLANCK_LIGHT_SPEED/self.energy_value)
-            self.update_values()
-            sleep(0.1)
-        self.motorState = LNLSEnergy.READY
-        self.emit('stateChanged', (self.motorState))
-        self.energy_value = self.getCurrentEnergy()
-        self.wavelength_value = (PLANCK_LIGHT_SPEED/self.energy_value)
-        self.update_values()
 
     def positionChanged(self, value):
         if value is not None:
@@ -143,7 +125,10 @@ class LNLSEnergy(Equipment):
         elif (value == 1):
             self.motorState = LNLSEnergy.READY
 
-        self.emit('stateChanged', (self.motorState))
+        self.update_values()
+
+    def getState(self):
+        return self.motorState
 
     def stop(self):
         self.setValue(MOTOR_STOP, 1)

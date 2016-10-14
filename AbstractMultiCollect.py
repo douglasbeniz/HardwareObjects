@@ -771,14 +771,15 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
                               self.generate_image_jpeg(str(file_path), str(jpeg_full_path), str(jpeg_thumbnail_full_path),wait=False)
                           if data_collect_parameters.get("processing", False)=="True":
                             self.trigger_auto_processing("image",
-                                                         self.xds_directory, 
+                                                         self.xds_directory,
                                                          data_collect_parameters["EDNA_files_dir"],
                                                          data_collect_parameters["anomalous"],
                                                          data_collect_parameters["residues"],
                                                          data_collect_parameters["do_inducedraddam"],
                                                          data_collect_parameters.get("sample_reference", {}).get("spacegroup", ""),
                                                          data_collect_parameters.get("sample_reference", {}).get("cell", ""),
-                                                         frame)
+                                                         frame,
+                                                         data_collect_parameters['oscillation_sequence'][0]['number_of_images'])
 
                           if data_collect_parameters.get("shutterless"):
                               with gevent.Timeout(10, RuntimeError("Timeout waiting for detector trigger, no image taken")):

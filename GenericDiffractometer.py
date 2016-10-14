@@ -224,8 +224,8 @@ class GenericDiffractometer(HardwareObject):
             if self.image_width is not None and self.image_height is not None:
                 self.zoom_centre = {'x': self.image_width / 2,'y' : self.image_height / 2}
                 self.beam_position = [self.image_width / 2, self.image_height / 2]
-                logging.getLogger("HWR").warning("Diffractometer: Zoom center is ' +\
-                       'not defined continuing with the middle: %s" % self.zoom_centre)
+                logging.getLogger("HWR").warning("Diffractometer: Zoom center is " +\
+                       "not defined continuing with the middle: %s" % self.zoom_centre)
             else:
                 logging.getLogger("HWR").warning("Diffractometer: " + \
                    "Neither zoom centre nor camera size is defined")
@@ -505,9 +505,6 @@ class GenericDiffractometer(HardwareObject):
                 #if 3 click centring move -180 
                 if not self.in_plate_mode():
                     self.phi_motor_hwobj.syncMoveRelative(-180)
-                # LNLS
-                else:
-                    self.motor_hwobj_dict["omega"].moveRelative(90)
             #logging.info("EMITTING CENTRING SUCCESSFUL")
             self.centring_time = time.time()
             self.emit_centring_successful()

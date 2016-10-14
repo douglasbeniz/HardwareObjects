@@ -49,15 +49,6 @@ class LNLSMotor(AbstractMotor, Device):
 
     def monitor(self, monitor):
         pass
-        # if (monitor):
-        #     self.monitorgen = gevent.spawn(self.monitorMovement)
-        # else:
-        #     if (self.monitorgen):
-        #         try:
-        #             self.monitorgen.kill()
-        #         except:
-        #             print("ERROR! Trying to kill gevent of motor-monitoring....")
-        #             pass
 
     def connectNotify(self, signal):
         if signal == 'positionChanged':
@@ -97,22 +88,17 @@ class LNLSMotor(AbstractMotor, Device):
     def getVelocity(self):
         return self.getValue(MOTOR_VELO)
 
+    def isMoving(self):
+        return (self.getValue(MOTOR_DMOV) == 0)
+
     def getDialPosition(self):
         return self.getPosition()
 
-    def move(self, absolutePosition):
+    def move(self, absolutePosition, wait=False):
         self.setValue(MOTOR_VAL, absolutePosition)
-        self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
 
-    def moveRelative(self, relativePosition):
+    def moveRelative(self, relativePosition, wait=False):
         self.setValue(MOTOR_RLV, relativePosition)
-        self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
-
-    # def monitorMovement(self):
-    #     while True:
-    #         if (self.isConnected(MOTOR_DMOV) and self.getValue(MOTOR_DMOV) == 0):
-    #             self.waitEndOfMove(5)
-    #         sleep(0.1)
 
     def positionChanged(self, value):
         self.motorPosition = value
@@ -125,21 +111,6 @@ class LNLSMotor(AbstractMotor, Device):
             self.motorState = LNLSMotor.READY
 
         self.emit('stateChanged', (self.motorState))
-
-    def waitEndOfMove(self, timeout=None):
-        sleep(0.1)
-        if (self.getValue(MOTOR_DMOV) == 0):
-            self.motorState = LNLSMotor.MOVING
-            self.emit('stateChanged', (self.motorState))
-
-        while (self.getValue(MOTOR_DMOV) == 0):
-            self.motorPosition = self.getPosition()
-            self.emit('positionChanged', (self.motorPosition))
-            sleep(0.1)
-        self.motorState = LNLSMotor.READY
-        self.emit('stateChanged', (self.motorState))
-        self.motorPosition = self.getPosition()
-        self.emit('positionChanged', (self.motorPosition))
 
     def syncMoveRelative(self, relative_position, timeout=None):
         self.motorPosition = relative_position
@@ -157,6 +128,10 @@ class LNLSMotor(AbstractMotor, Device):
         self.setValue(MOTOR_STOP, 1)
         sleep(0.2)
         self.setValue(MOTOR_STOP, 0)
+
+    def update_values(self):
+        self.emit('positionChanged', (self.motorPosition))
+        self.emit('stateChanged', (self.motorState))
 
     def __del__(self):
         print("LNLSMotor __del__")

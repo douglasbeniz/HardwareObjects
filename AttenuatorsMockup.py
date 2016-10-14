@@ -15,3 +15,6 @@ class AttenuatorsMockup(Device):
 
     def set_value(self, value):
         return
+
+    def set_transmission(self, value):
+        self.set_value(value)

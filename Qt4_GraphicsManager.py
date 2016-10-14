@@ -285,7 +285,6 @@ class Qt4_GraphicsManager(HardwareObject):
         :type pixmap_image: QtGui.QPixmapImage
         """
         if self.image_scale:
-            #print("self.image_scale %d" % (self.image_scale))
             pixmap_image = pixmap_image.scaled(QtCore.QSize(\
                pixmap_image.width() * self.image_scale,
                pixmap_image.height() * self.image_scale))
@@ -876,6 +875,7 @@ class Qt4_GraphicsManager(HardwareObject):
             shape.show()
             #shape.setSelected(True)
             #self.select_shape_with_cpos(shape.get_centred_position())
+
         self.graphics_omega_reference_item.hide() 
 
         image = QtGui.QImage(self.graphics_view.graphics_scene.sceneRect().\
@@ -886,6 +886,7 @@ class Qt4_GraphicsManager(HardwareObject):
         image_painter.end()
         self.show_all_items()
         self.graphics_omega_reference_item.show()
+
         if return_as_array:
             pass         
         else:
@@ -897,8 +898,8 @@ class Qt4_GraphicsManager(HardwareObject):
         :param file_name: file name
         :type file_name: str 
         """
-
         logging.getLogger("user_level_log").debug("Saving scene snapshot: %s" % filename)
+
         snapshot = self.get_scene_snapshot()
         snapshot.save(filename)
 

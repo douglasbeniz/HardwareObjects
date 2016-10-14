@@ -22,10 +22,12 @@ class LNLSSession(HardwareObject):
         self.endstation_name = None
         self.session_start_date = None
         self.user_group = ''
+        self.last_session_folder_number = None
 
         self.default_precision = '05'
         self.suffix = None
         self.base_directory = None
+        self.base_image_dir = None
         self.base_process_directory = None
         self.raw_data_folder_name = None
         self.processed_data_folder_name = None
@@ -77,28 +79,17 @@ class LNLSSession(HardwareObject):
         user_category = ''
         directory = ''
 
-        if self.synchrotron_name == "EMBL-HH":
-            start_time = time.strftime("%Y%m%d")
-            if os.getenv("SUDO_USER"):
-                user = os.getenv("SUDO_USER")
-            else:
+        if self.synchrotron_name == "LNLS":
+            if (self.base_image_dir is None):
+                start_time = time.strftime("%Y%m%d")
                 user = os.getenv("USER")
-            directory = os.path.join(self.base_directory, str(os.getuid()) + '_'\
-                                     + str(os.getgid()), user, start_time)
-        elif self.synchrotron_name == "LNLS":
-            start_time = time.strftime("%Y%m%d")
-            user = os.getenv("USER")
-            
-            last_value = 0
-            for folder in glob.glob(os.path.join(self.base_directory, user, start_time, "*")):
-                try:
-                    value = int(folder[folder.rfind('/')+1:])
-                    if (value > last_value):
-                        last_value = value
-                except ValueError:
-                    pass
+                
+                if (self.last_session_folder_number is None):
+                    self.update_last_session_number(user, start_time)
 
-            directory = os.path.join(self.base_directory, user, start_time, str(last_value+1).zfill(3))
+                directory = os.path.join(self.base_directory, user, start_time, str(self.last_session_folder_number+1).zfill(3))
+            else:
+                directory = self.base_image_dir
         else: 
             if self.session_start_date:
                 start_time = self.session_start_date.split(' ')[0].replace('-', '')
@@ -118,21 +109,38 @@ class LNLSSession(HardwareObject):
 
         return directory
 
+    def update_last_session_number(self, user, start_time):
+
+        last_value = 0
+        for folder in glob.glob(os.path.join(self.base_directory, user, start_time, "*")):
+            try:
+                value = int(folder[folder.rfind('/')+1:])
+                if (value > last_value):
+                    last_value = value
+            except ValueError:
+                pass
+        self.last_session_folder_number = last_value
+
+    def set_base_image_directory(self, baseImageDir):
+
+        if ((baseImageDir is not None) and (baseImageDir.endswith(self.raw_data_folder_name))):
+            self.base_image_dir = baseImageDir[:(len(baseImageDir) - len(self.raw_data_folder_name)) -1]
+        else:
+            self.base_image_dir = baseImageDir
+
     def get_base_image_directory(self):
         """
         :returns: The base path for images.
         :rtype: str
         """
-        return os.path.join(self.get_base_data_directory(),
-                            self.raw_data_folder_name)
+        return os.path.join(self.get_base_data_directory(), self.raw_data_folder_name)
 
     def get_base_process_directory(self):
         """
         :returns: The base path for procesed data.
         :rtype: str
         """
-        return os.path.join(self.get_base_data_directory(),
-                            self.processed_data_folder_name)
+        return os.path.join(self.get_base_data_directory(), self.processed_data_folder_name)
 
     def get_image_directory(self, sub_dir=None):
         """
@@ -254,6 +262,11 @@ class LNLSSession(HardwareObject):
         :param start_date_str: The session start date
         :type start_date_str: str
         """
+        start_time = time.strftime("%Y%m%d")
+        user = os.getenv("USER")
+
+        self.update_last_session_number(user, start_time)
+
         self.session_start_date = start_date_str
 
     def get_session_start_date(self):

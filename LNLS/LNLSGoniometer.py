@@ -436,6 +436,13 @@ class LNLSGoniometer(GenericDiffractometer):
                 else:
                     positions.append(self.motor_omega_hwobj.getPosition())
 
+            # Create folder if not found
+            if (not os.path.exists(self.snapshotFilePath)):
+                try:
+                    os.makedirs(self.snapshotFilePath)
+                except OSError as diag:
+                    logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (self.snapshotFilePath, str(diag)))
+
             for index in range(image_count):
                 logging.getLogger("HWR").info("%s - taking snapshot #%d" % (self.__class__.__name__, index + 1))
 

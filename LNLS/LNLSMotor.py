@@ -96,9 +96,34 @@ class LNLSMotor(AbstractMotor, Device):
 
     def move(self, absolutePosition, wait=False):
         self.setValue(MOTOR_VAL, absolutePosition)
+        
+        if (wait):
+            self.waitEndOfMove(0.1)
+        else:
+            self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
 
     def moveRelative(self, relativePosition, wait=False):
         self.setValue(MOTOR_RLV, relativePosition)
+
+        if (wait):
+            self.waitEndOfMove(0.1)
+        else:
+            self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
+
+    def waitEndOfMove(self, timeout=None):
+        sleep(0.1)
+        if (self.getValue(MOTOR_DMOV) == 0):
+            self.motorState = LNLSMotor.MOVING
+            self.emit('stateChanged', (self.motorState))
+
+        while (self.getValue(MOTOR_DMOV) == 0):
+            self.motorPosition = self.getPosition()
+            self.emit('positionChanged', (self.motorPosition))
+            sleep(0.1)
+        self.motorState = LNLSMotor.READY
+        self.emit('stateChanged', (self.motorState))
+        self.motorPosition = self.getPosition()
+        self.emit('positionChanged', (self.motorPosition))
 
     def positionChanged(self, value):
         self.motorPosition = value
@@ -119,7 +144,7 @@ class LNLSMotor(AbstractMotor, Device):
         self.motorPosition = position
 
     def motorIsMoving(self):
-        return (self.getValue(MOTOR_DMOV) == 0)
+        return self.isMoving()
 
     def getMotorMnemonic(self):
         return self.motor_name

@@ -240,6 +240,7 @@ class LNLSResolution(BaseHardwareObjects.Equipment):
 
         # Update resolution calculanting it from current distance
         self.set_resolution(self.dist2res(self.getDetectorDistance()))
+
         # Emit updates to UI
         self.emit('stateChanged', (self.getDetectorState()))
         self.update_values()

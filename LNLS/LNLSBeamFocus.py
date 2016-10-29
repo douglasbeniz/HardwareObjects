@@ -6,27 +6,6 @@ from HardwareRepository.BaseHardwareObjects import Equipment
 from time import sleep
 
 #------------------------------------------------------------------------------
-# Constant names from lnls-beam-focus.xml
-# BASE SLIT X1
-BASE_SLIT_X1_VAL = 'epicsSlitBaseX1_val'
-BASE_SLIT_X1_RLV = 'epicsSlitBaseX1_rlv'
-BASE_SLIT_X1_RBV = 'epicsSlitBaseX1_rbv'
-BASE_SLIT_X1_DMOV = 'epicsSlitBaseX1_dmov'
-BASE_SLIT_X1_STOP = 'epicsSlitBaseX1_stop'
-BASE_SLIT_X1_HLS = 'epicsSlitBaseX1_hls'
-BASE_SLIT_X1_LLS = 'epicsSlitBaseX1_lls'
-# BASE SLIT X2
-BASE_SLIT_X2_VAL = 'epicsSlitBaseX2_val'
-BASE_SLIT_X2_RLV = 'epicsSlitBaseX2_rlv'
-BASE_SLIT_X2_RBV = 'epicsSlitBaseX2_rbv'
-BASE_SLIT_X2_DMOV = 'epicsSlitBaseX2_dmov'
-BASE_SLIT_X2_STOP = 'epicsSlitBaseX2_stop'
-BASE_SLIT_X2_HLS = 'epicsSlitBaseX2_hls'
-BASE_SLIT_X2_LLS = 'epicsSlitBaseX2_lls'
-# KEITHLEY 6517A
-K6517A_VAL = 'epicsKeithley6517A_measure'
-
-#------------------------------------------------------------------------------
 class LNLSBeamFocus(Equipment):
     """
     Descript. :
@@ -114,10 +93,6 @@ class LNLSBeamFocus(Equipment):
             if self.cmd_set_calibration_name and self.active_focus_mode:
                 self.cmd_set_calibration_name(self.active_focus_mode.lower())
 
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        print('motor_group_focus_mode_changed')
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-
     def get_focus_mode_names(self):
         """
         Descript. : returns defined focus modes names 
@@ -182,10 +157,6 @@ class LNLSBeamFocus(Equipment):
             for motor in self.motors_groups:
                 motor.set_motor_focus_mode(motor_name, focus_mode)
 
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        print('set_motor_focus_mode')
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-
     def set_focus_mode(self, focus_mode):
         """
         Descript. : sets focusing mode
@@ -202,81 +173,6 @@ class LNLSBeamFocus(Equipment):
         else:
             #No motors defined
             self.active_focus_mode = focus_mode
-
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        print('set_focus_mode')
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-
-        if (focus_mode == 'Focused'):
-            # Procedure to find position where intensity of beam is highest
-
-            max_intensity_horizontal = 0
-            pos_max_intensity_hor = 0
-
-            # Move until physical limit which block movement at one side
-            physicalLimit = False
-            while(not physicalLimit):
-                currentRBV = self.getValue(BASE_SLIT_X1_RBV)
-                self.setValue(BASE_SLIT_X1_RLV, -0.05)
-                sleep(0.2)
-                if (self.getValue(BASE_SLIT_X1_RBV) == currentRBV):
-                    physicalLimit = True
-                    continue
-                intensity = self.getValue(K6517A_VAL)
-                if (intensity > max_intensity_horizontal):
-                    pos_max_intensity_hor = self.getValue(BASE_SLIT_X1_RBV)
-
-            # Move until physical limit which block movement at other side
-            physicalLimit = False
-            while(not physicalLimit):
-                currentRBV = self.getValue(BASE_SLIT_X1_RBV)
-                self.setValue(BASE_SLIT_X1_RLV, 0.05)
-                sleep(0.2)
-                if (self.getValue(BASE_SLIT_X1_RBV) == currentRBV):
-                    physicalLimit = True
-                    continue
-                intensity = self.getValue(K6517A_VAL)
-                if (intensity > max_intensity_horizontal):
-                    pos_max_intensity_hor = self.getValue(BASE_SLIT_X1_RBV)
-
-            # Move to the position of maximum intensity
-            self.setValue(BASE_SLIT_X1_VAL, pos_max_intensity_hor)
-
-            # Doing the same at vertical...
-
-            max_intensity_vertical = 0
-            pos_max_intensity_ver = 0
-
-            # Move until physical limit which block movement at one side
-            physicalLimit = False
-            while(not physicalLimit):
-                currentRBV = self.getValue(BASE_SLIT_X2_RBV)
-                self.setValue(BASE_SLIT_X2_RLV, -0.05)
-                sleep(0.2)
-                if (self.getValue(BASE_SLIT_X2_RBV) == currentRBV):
-                    physicalLimit = True
-                    continue
-                intensity = self.getValue(K6517A_VAL)
-                if (intensity > max_intensity_horizontal):
-                    pos_max_intensity_hor = self.getValue(BASE_SLIT_X2_RBV)
-
-            # Move until physical limit which block movement at other side
-            physicalLimit = False
-            while(not physicalLimit):
-                currentRBV = self.getValue(BASE_SLIT_X2_RBV)
-                self.setValue(BASE_SLIT_X2_RLV, 0.05)
-                sleep(0.2)
-                if (self.getValue(BASE_SLIT_X2_RBV) == currentRBV):
-                    physicalLimit = True
-                    continue
-                intensity = self.getValue(K6517A_VAL)
-                if (intensity > max_intensity_horizontal):
-                    pos_max_intensity_hor = self.getValue(BASE_SLIT_X2_RBV)
-
-            # Move to the position of maximum intensity
-            self.setValue(BASE_SLIT_X2_VAL, pos_max_intensity_hor)
-
-            print("End of centering focus!")
 
     def get_divergence_hor(self):
         """

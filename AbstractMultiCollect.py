@@ -533,7 +533,8 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
 
         if centring_info.get('images'):
           # Save snapshots
-          snapshot_directory = self.get_archive_directory(file_parameters["directory"])
+          #snapshot_directory = self.get_archive_directory(file_parameters["directory"])
+          snapshot_directory = self.get_archive_directory(file_parameters["snapshot_directory"])
 
           try:
             logging.getLogger("user_level_log").info("Creating snapshosts directory: %r", snapshot_directory)

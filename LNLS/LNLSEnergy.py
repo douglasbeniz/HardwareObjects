@@ -106,6 +106,28 @@ class LNLSEnergy(Equipment):
 
         self.setValue(MOTOR_VAL, self.energy_value * 1000)
 
+        if (wait):
+            self.waitEndOfMove()
+        else:
+            self.motorgen = gevent.spawn(self.waitEndOfMove, 0.1)
+
+    def waitEndOfMove(self, timeout=None):
+        sleep(0.1)
+        if (self.getValue(MOTOR_DMOV) == 0):
+            self.motorState = LNLSEnergy.MOVING
+            self.emit('stateChanged', (self.motorState))
+
+        while (self.getValue(MOTOR_DMOV) == 0):
+            self.energy_value = self.get_current_energy()
+            self.wavelength_value = (PLANCK_LIGHT_SPEED/self.energy_value)
+            self.update_values()
+            sleep(0.1)
+        self.motorState = LNLSEnergy.READY
+        self.emit('stateChanged', (self.motorState))
+        self.energy_value = self.get_current_energy()
+        self.wavelength_value = (PLANCK_LIGHT_SPEED/self.energy_value)
+        self.update_values()
+
     def set_energy(self, value):
         self.start_move_energy(value, KEV_UNIT, wait=True)
 

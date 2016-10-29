@@ -30,6 +30,7 @@ class LNLSSession(HardwareObject):
         self.base_image_dir = None
         self.base_process_directory = None
         self.raw_data_folder_name = None
+        self.snapshot_folder_name = None
         self.processed_data_folder_name = None
 
     # Framework-2 method, inherited from HardwareObject and called
@@ -38,6 +39,7 @@ class LNLSSession(HardwareObject):
         self.synchrotron_name = self.getProperty('synchrotron_name')
         self.endstation_name = self.getProperty('endstation_name').lower()
         self.suffix = self["file_info"].getProperty('file_suffix')
+
         self.base_directory = self["file_info"].\
                               getProperty('base_directory')
 
@@ -46,6 +48,9 @@ class LNLSSession(HardwareObject):
 
         self.raw_data_folder_name = self["file_info"].\
             getProperty('raw_data_folder_name')
+
+        self.snapshot_folder_name = self["file_info"].\
+            getProperty('snapshot_folder_name')
 
         self.processed_data_folder_name = self["file_info"].\
             getProperty('processed_data_folder_name')
@@ -109,6 +114,7 @@ class LNLSSession(HardwareObject):
 
         return directory
 
+
     def update_last_session_number(self, user, start_time):
 
         last_value = 0
@@ -134,6 +140,13 @@ class LNLSSession(HardwareObject):
         :rtype: str
         """
         return os.path.join(self.get_base_data_directory(), self.raw_data_folder_name)
+
+    def get_base_snapshot_directory(self):
+        """
+        :returns: The base path for images.
+        :rtype: str
+        """
+        return os.path.join(self.get_base_data_directory(), self.snapshot_folder_name)
 
     def get_base_process_directory(self):
         """
@@ -162,6 +175,9 @@ class LNLSSession(HardwareObject):
             directory = os.path.join(directory, sub_dir) + os.path.sep
             
         return directory
+
+    def get_snapshot_folder_name(self):
+        return self.snapshot_folder_name
 
     def get_process_directory(self, sub_dir=None):
         """

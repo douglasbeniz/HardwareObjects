@@ -19,6 +19,13 @@ CAMERA_BACK      = "epicsCameraSample_back"
 CAMERA_EN_BACK   = "epicsCameraSample_en_back"
 CAMERA_ACQ_START = "epicsCameraSample_acq_start"
 CAMERA_ACQ_STOP  = "epicsCameraSample_acq_stop"
+CAMERA_GAIN          = "epicsCameraSample_gain"
+CAMERA_GAIN_RBV      = "epicsCameraSample_gain_rbv"
+CAMERA_AUTO_GAIN     = "epicsCameraSample_auto_gain"
+CAMERA_AUTO_GAIN_RBV = "epicsCameraSample_auto_gain_rbv"
+CAMERA_FPS_RBV       = "epicsCameraSample_frames_per_second_rbv"
+CAMERA_ACQ_TIME      = "epicsCameraSample_acq_time"
+CAMERA_ACQ_TIME_RBV  = "epicsCameraSample_acq_time_rbv"
 
 ARRAY_SIZE = 1280*1024*32/8
 #-----------------------------------------------------------------------------
@@ -128,7 +135,55 @@ class LNLSCamera(BaseHardwareObjects.Device):
         return False
 
     def gainExists(self):
-        return False
+        return True
+
+    def get_gain(self):
+        gain = None
+
+        try:
+            gain = self.getValue(CAMERA_GAIN_RBV)
+        except:
+            print("Error getting gain of camera...")
+
+        return gain
+
+    def set_gain(self, gain):
+        try:
+            self.setValue(CAMERA_GAIN, gain)
+        except:
+            print("Error setting gain of camera...")
+
+    def get_gain_auto(self):
+        auto = None
+
+        try:
+            auto = self.getValue(CAMERA_AUTO_GAIN_RBV)
+        except:
+            print("Error getting auto-gain of camera...")
+
+        return auto
+
+    def set_gain_auto(self, auto):
+        try:
+            self.setValue(CAMERA_AUTO_GAIN, auto)
+        except:
+            print("Error setting auto-gain of camera...")
+
+    def get_exposure_time(self):
+        exp = None
+
+        try:
+            exp = self.getValue(CAMERA_ACQ_TIME_RBV)
+        except:
+            print("Error getting exposure time of camera...")
+
+        return exp
+
+    def set_exposure_time(self, exp):
+        try:
+            self.setValue(CAMERA_ACQ_TIME, exp)
+        except:
+            print("Error setting exposure time of camera...")
 
     def start_camera(self):
         self.setValue(CAMERA_BACK, 1)

@@ -30,8 +30,10 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self._total_time_redout = None
         self._initial_angle = None
         self._file_directory = None
+        self._snapshot_directory = None
         self._file_prefix = None
         self._file_run_number = None
+        self._image_directory = None
 
         self.diffractometer_hwobj = self.getObjectByRole("diffractometer")
         self.lims_client_hwobj = self.getObjectByRole("lims_client")
@@ -42,6 +44,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.detector_hwobj = self.getObjectByRole("detector")
         self.beam_info_hwobj = self.getObjectByRole("beam_info")
         self.autoprocessing_hwobj = self.getObjectByRole("auto_processing")
+        self.shutter_hwobj = self.getObjectByRole("safety_shutter")
 
         self.setControlObjects(diffractometer = self.getObjectByRole("diffractometer"),
                                sample_changer = self.getObjectByRole("sample_changer"),
@@ -87,8 +90,11 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.emit("collectReady", (True, ))
 
     def do_collect(self, owner, data_collect_parameters):
+        # Close fast and safety shutters
         logging.getLogger("user_level_log").info("Closing fast shutter")
         self.close_fast_shutter()
+        # Now safety shutter
+        self.close_safety_shutter()
 
         # reset collection id on each data collect
         self.collection_id = None
@@ -317,7 +323,13 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
           logging.getLogger("user_level_log").info("Moving detector to %f", data_collect_parameters["detdistance"])
           self.move_detector(oscillation_parameters["detdistance"])
 
-        # data collection
+        # ----------------------------------------------------------------------------------------------
+        # Data collection
+        # ---------------
+        # Set main detector info (which will be stored in .CBF);
+        # Set omega velocity for experiment;
+        # Set detector to acquire state;
+        # ----------------------------------------------------------------------------------------------
         self.data_collection_hook(data_collect_parameters)
 
         # 0: software binned, 1: unbinned, 2:hw binned
@@ -326,7 +338,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         with cleanup(self.data_collection_cleanup):
             if not self.safety_shutter_opened():
                 logging.getLogger("user_level_log").info("Opening safety shutter")
-                self.open_safety_shutter(timeout=10)
+                self.open_safety_shutter(moveOmega=self._total_angle)
 
             logging.getLogger("user_level_log").info("Preparing intensity monitors")
             self.prepare_intensity_monitors()
@@ -493,6 +505,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
 
                 # Store file directory to be used by local auto_processing
                 self._file_directory = data_collect_parameters["fileinfo"]["directory"]
+                self._snapshot_directory = data_collect_parameters["fileinfo"]["snapshot_directory"]
                 self._file_prefix = data_collect_parameters["fileinfo"]["prefix"]
                 self._file_run_number = data_collect_parameters["fileinfo"]["run_number"]
 
@@ -565,7 +578,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                     
                     # Close shutter and move Omega to initial position
                     try:
-                        self.close_safety_shutter()
+                        self.close_safety_shutter(restoreOmegaPosition=True)
                     except:
                         logging.exception("Could not close safety shutter")
                     
@@ -592,7 +605,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         fileName = str(self._file_prefix) + "_" + str(self._file_run_number)
 
         # Store parameters needed by snapshot procedure
-        self.diffractometer_hwobj.set_snapshot_file_path(self._file_directory)
+        self.diffractometer_hwobj.set_snapshot_file_path(self._snapshot_directory)
         self.diffractometer_hwobj.set_snapshot_file_prefix(fileName)
         self.diffractometer_hwobj.set_collect_oscillation_interval(self._initial_angle, self._total_angle)
 
@@ -655,7 +668,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.detector_hwobj.set_trigger_mode(triggerMode)
 
         # Set Omega velocity (RPM) for acquisition
-        self.diffractometer_hwobj.set_omega_velocity(oscilationVeloRPM)
+        # FOR TESTS....
+        #self.diffractometer_hwobj.set_omega_velocity(oscilationVeloRPM)
+        self.diffractometer_hwobj.set_omega_velocity(oscilationVelo)
 
         # Send command to start acquisition
         self.detector_hwobj.acquire()
@@ -685,12 +700,8 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def set_resolution(self, new_resolution):
         logging.debug("%s - set_resolution: %f" % (self.__class__.__name__, new_resolution))
 
-        # Defining resolution and storing defined energy (in KeV) on resolution object
-        self.resolution_hwobj.set_resolution(new_resolution)
-        self.resolution_hwobj.set_energy(self.energy_hwobj.get_current_energy())
-        
         # Move detector distance to achieve such resolution
-        self.resolution_hwobj.move(wait=True)
+        self.resolution_hwobj.move(res=new_resolution, wait=True)
 
     @task
     def move_detector(self, detector_distance):
@@ -714,28 +725,39 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         return
 
     @task
-    def open_safety_shutter(self):
+    def open_safety_shutter(self, moveOmega=None):
+        logging.getLogger("user_level_log").info("Openning shutter: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
+
         # Open detector shutter
         self.detector_hwobj.open_shutter()
 
-        logging.getLogger("user_level_log").info("Openning shutter: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
+        # Disable UI controls to operate shutter
+        if (self.shutter_hwobj):
+            self.shutter_hwobj.enableControls(enable=False)
 
-        # Send a comand to move omega
-        self.diffractometer_hwobj.move_omega_absolute(self._total_angle)
+        if (moveOmega):
+            # Send a comand to move omega
+            self.diffractometer_hwobj.move_omega_absolute(moveOmega)
 
     def safety_shutter_opened(self):
         return self.detector_hwobj.shutter_opened()
 
     @task
-    def close_safety_shutter(self):
+    def close_safety_shutter(self, restoreOmegaPosition=False):
         logging.getLogger("user_level_log").info("Closing safety shutter at: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
 
         # Close detector shutter
         self.detector_hwobj.close_shutter()
-        # Restore omega motor velocity
-        self.diffractometer_hwobj.set_omega_velocity(self._previous_omega_velo)
-        # Send a comand to move omega back to its initial position
-        self.diffractometer_hwobj.move_omega_absolute(self._initial_angle)
+
+        # Enable UI controls to operate shutter
+        if (self.shutter_hwobj):
+            self.shutter_hwobj.enableControls()
+
+        if (restoreOmegaPosition):
+            # Restore omega motor velocity
+            self.diffractometer_hwobj.set_omega_velocity(self._previous_omega_velo)
+            # Send a comand to move omega back to its initial position
+            self.diffractometer_hwobj.move_omega_absolute(self._initial_angle)
 
     @task
     def prepare_intensity_monitors(self):
@@ -770,7 +792,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         logging.getLogger("user_level_log").info("User recquired the end of collection!")
 
         # Close the detector shutter and move Omega to initial position
-        self.close_safety_shutter()
+        self.close_safety_shutter(restoreOmegaPosition=True)
         
         # Stop detector
         self.detector_hwobj.stop()
@@ -870,10 +892,11 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
 
     def get_beam_centre(self):
         if self.beam_info_hwobj is not None:
-            return self.beam_info_hwobj.get_beam_position()
+            #return self.beam_info_hwobj.get_beam_position()
+            return self.beam_info_hwobj.get_beam_det_position()
         else:
-            return None, None 
-    
+            return None, None
+
     def getBeamlineConfiguration(self, *args):
         return self.bl_config._asdict()
 
@@ -941,50 +964,60 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         Type           : method
     """
     def trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir=None, anomalous=None, residues=200, do_inducedraddam=False, spacegroup=None, cell=None, frame=None, number_of_images=None):
-        # Perform the copy of CBF file from temporary to definite place in storage
-        try:
-            if (frame):
-                filePathDest = self._file_directory
+        cbfFileName = None
 
-                if (self.detector_hwobj.get_pilatus_server_storage() in self._file_directory):
-                    filePathOrig = filePathDest.replace(self.detector_hwobj.get_pilatus_server_storage(), self.detector_hwobj.get_pilatus_server_storage_temp())
-                else:
-                    filePathOrig = os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), self._file_directory[1:])
+        if (process_event == "image"):
+            # Perform the copy of CBF file from temporary to definite place in storage
+            try:
+                if (frame):
+                    filePathDest = self._file_directory
 
-                copied = False
-                copyingLogFile = False
-                tries = 0
+                    if (self.detector_hwobj.get_pilatus_server_storage() in self._file_directory):
+                        filePathOrig = filePathDest.replace(self.detector_hwobj.get_pilatus_server_storage(), self.detector_hwobj.get_pilatus_server_storage_temp())
+                    else:
+                        filePathOrig = os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), self._file_directory[1:])
 
-                cbfFileCriteria =  str(self._file_prefix) + "_"
-                cbfFileCriteria += str(self._file_run_number) + "*"
-                if (number_of_images and (number_of_images > 1)):
-                    cbfFileCriteria += str(frame -1).zfill(5)
-                cbfFileCriteria += "."
-                cbfFileCriteria += str(self.fileSuffix())
+                    copied = False
+                    copyingLogFile = False
+                    tries = 0
 
-                while ((copied == False) and (tries < MAXIMUM_TRIES_COPY_CBF)):
+                    cbfFileCriteria =  str(self._file_prefix) + "_"
+                    cbfFileCriteria += str(self._file_run_number) + "*"
+                    if (number_of_images and (number_of_images > 1)):
+                        cbfFileCriteria += str(frame -1).zfill(5)
+                    cbfFileCriteria += "."
+                    cbfFileCriteria += str(self.fileSuffix())
 
-                    for cbfFile in glob.glob(os.path.join(filePathOrig, cbfFileCriteria)):
-                        #
-                        shutil.copy(cbfFile, filePathDest)
-                        copied = True
+                    while ((copied == False) and (tries < MAXIMUM_TRIES_COPY_CBF)):
 
-                        # If it is the last image to copy, also wait for LOG file
-                        if ((not copyingLogFile) and (frame == number_of_images)):
-                            cbfFileCriteria =  str(self._file_prefix) + "_" 
-                            cbfFileCriteria += str(self._file_run_number) + ".log"
+                        for cbfFile in glob.glob(os.path.join(filePathOrig, cbfFileCriteria)):
+                            # To use if error
+                            cbfFileName = cbfFile
+                            # 
+                            shutil.copy(cbfFile, filePathDest)
+                            copied = True
 
-                            copyingLogFile = True
+                            # If it is the last image to copy, also wait for LOG file
+                            if ((not copyingLogFile) and (frame == number_of_images)):
+                                cbfFileCriteria =  str(self._file_prefix) + "_" 
+                                cbfFileCriteria += str(self._file_run_number) + ".log"
 
-                            copied = False
-                            tries = 0
+                                copyingLogFile = True
 
-                    if (not copied):
-                        tries += 1
-                        # A short sleep to be sure the files will be there
-                        gevent.sleep(0.01)
-        except:
-            logging.getLogger("HWR").exception("Error when copying CBF files")
+                                copied = False
+                                tries = 0
+
+                        if (not copied):
+                            tries += 1
+                            # A short sleep to be sure the files will be there
+                            gevent.sleep(0.01)
+            except:
+                logging.getLogger("HWR").exception("Error when copying CBF files: %s" % cbfFileName)
+                logging.getLogger("user_level_log").error("Error when copying CBF files: %s" % cbfFileName)
+
+            if (cbfFileName is None):
+                logging.getLogger("HWR").exception("No CBF file copied! Check Storage and Pilatus...")
+                logging.getLogger("user_level_log").error("No CBF file copied! Check Storage and Pilatus...")
 
         # Call parent method
         AbstractMultiCollect.trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir, anomalous, residues, do_inducedraddam, spacegroup, cell, frame)

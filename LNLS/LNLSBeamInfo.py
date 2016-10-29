@@ -30,19 +30,30 @@ class LNLSBeamInfo(Equipment):
         self.beam_size_slits = [9999, 9999]
         self.beam_size_aperture = [0.01, 0.01]
         self.beam_size_definer = [9999, 9999]
-        self.beam_position = [221, 289]
+        self.beam_crystal_position = [269, 296]
+        self.beam_det_position = [218, 289]
         self.beam_info_dict = {}
 
     def init(self):
         self.aperture_hwobj = self.getObjectByRole("aperture")
-        self.emit("beamPositionChanged", (self.beam_position, ))
-  
-    def get_beam_position(self):
-        return self.beam_position        
+        self.emit("beamPositionChanged", (self.beam_crystal_position, ))
 
-    def set_beam_position(self, beam_x, beam_y):
-        self.beam_position = [beam_x, beam_y]
-        self.emit("beamPositionChanged", (self.beam_position, ))
+        # Alias
+        self.get_beam_position = self.get_beam_crystal_position
+        self.set_beam_position = self.set_beam_crystal_position
+
+    def get_beam_crystal_position(self):
+        return self.beam_crystal_position
+
+    def get_beam_det_position(self):
+        return self.beam_det_position
+
+    def set_beam_crystal_position(self, beam_x, beam_y):
+        self.beam_crystal_position = [beam_x, beam_y]
+        self.emit("beamPositionChanged", (self.beam_crystal_position, ))
+
+    def set_beam_det_position(self, beam_x, beam_y):
+        self.beam_det_position = [beam_x, beam_y]
 
     def get_beam_info(self):
         return self.evaluate_beam_info()

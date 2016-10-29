@@ -1,5 +1,5 @@
 """
-LNLSBeamFocus.py
+LNLSBeamCentering.py
 """
 import logging
 from HardwareRepository.BaseHardwareObjects import Equipment
@@ -7,7 +7,7 @@ from time import sleep
 import gevent
 
 #------------------------------------------------------------------------------
-# Constant names from lnls-beam-focus.xml
+# Constant names from lnls-beam_center.xml
 # [0][0][0]: Slit1 - X1 - VAL
 # [0][0][1]: Slit1 - X1 - RLV
 # [0][0][2]: Slit1 - X1 - RBV

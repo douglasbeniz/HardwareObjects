@@ -205,7 +205,10 @@ class LNLSSlitBox(Equipment):
         Return    : Hor gap value in mm 
         """
         if (self.slit_gap_hor_hwobj):
-            gap = float("%.5f" % self.slit_gap_hor_hwobj.getPosition())
+            try:
+                gap = float("%.5f" % self.slit_gap_hor_hwobj.getPosition())
+            except TypeError:
+                gap = 0
         else:
             gap = 0
 
@@ -232,7 +235,10 @@ class LNLSSlitBox(Equipment):
         Return    : Ver gap value in mm
         """
         if (self.slit_gap_ver_hwobj):
-            gap =  float("%.5f" % self.slit_gap_ver_hwobj.getPosition())
+            try:
+                gap =  float("%.5f" % self.slit_gap_ver_hwobj.getPosition())
+            except TypeError:
+                gap = 0
         else:
             gap = 0
 

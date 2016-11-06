@@ -11,8 +11,8 @@ from time import sleep
 #------------------------------------------------------------------------------
 # h: Planck constant, h = 6.626 x 10^-34 J s
 # c: speed of light, c = 2.9979 10^+8 m/s
-# hc: 12.3984 A keV
-PLANCK_LIGHT_SPEED = 12.3984
+# hc: 12.39858 A keV
+PLANCK_LIGHT_SPEED = 12.39858
 
 class LNLSResolution(BaseHardwareObjects.Equipment):
     def _init(self):
@@ -75,7 +75,10 @@ class LNLSResolution(BaseHardwareObjects.Equipment):
 
         if (wavelength is None):
             # Update wavelength
-            self.wavelengthChanged(PLANCK_LIGHT_SPEED / energy)
+            if (energy is not None):
+                self.wavelengthChanged(PLANCK_LIGHT_SPEED / energy)
+            else:
+                self.wavelengthChanged(None)
         else:
             self.wavelengthChanged(wavelength)
 

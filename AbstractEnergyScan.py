@@ -58,7 +58,7 @@ class AbstractEnergyScan(object, metaclass=abc.ABCMeta):
         specific like the lower/upper ROI limits of the fluorescence detector.
         Usually these parameters are pre-defined in a file, but can also be
         calculated.
-        The function should return a distionary with at least defined
+        The function should return a dictionary with at least defined
         {'edgeEnergy': peak_energy} member, where 'edgeEnergy' is a
         compulsory key.
         It is convinient to put in the same dictionary the remote energy,

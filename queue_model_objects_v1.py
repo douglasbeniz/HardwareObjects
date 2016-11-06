@@ -1218,18 +1218,6 @@ class PathTemplate(object):
         return file_locations
 
 
-    def __eq__(self, path_template):
-        result = False
-        lh_dir = os.path.normpath(self.directory)
-        rh_dir = os.path.normpath(path_template.directory)
-
-        if self.get_prefix() == path_template.get_prefix() and \
-                lh_dir == rh_dir:
-            result = True
-
-        return result
-
-
     def is_part_of(self, path_template):
         result = False
         

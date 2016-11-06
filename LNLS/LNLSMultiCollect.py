@@ -27,7 +27,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self._previous_omega_velo = None
         self._total_angle = None
         self._total_time = None
-        self._total_time_redout = None
+        self._total_time_readout = None
         self._initial_angle = None
         self._file_directory = None
         self._snapshot_directory = None
@@ -645,8 +645,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # Calculated parameters
         self._total_angle   = (angleIncr * numImages)
         self._total_time    = (acquireTime * numImages)
-        self._total_time_redout = ((acquireTime + 0.0023) * numImages)
-        oscilationVelo      = (self._total_angle / self._total_time)     # degrees per second
+        self._total_time_readout = ((acquireTime + 0.0023) * numImages)
+        #oscilationVelo      = (self._total_angle / self._total_time)           # degrees per second (without readout)
+        oscilationVelo      = (self._total_angle / self._total_time_redout)     # degrees per second (with readout)
         oscilationVeloRPM   = (oscilationVelo * 60 / 360)                # RPM
         # Total angle absolute, including the inicial angle (already moved)
         self._total_angle   += startAngle

@@ -1224,6 +1224,7 @@ class EnergyScanQueueEntry(BaseQueueEntry):
         energy_scan.result.chooch_graph_y1 = chooch_graph_y1
         energy_scan.result.chooch_graph_y2 = chooch_graph_y2
         energy_scan.result.title = title
+
         try:
             energy_scan.result.data = self.energy_scan_hwobj.get_scan_data()
         except:

@@ -35,7 +35,14 @@ class LNLSBeamInfo(Equipment):
         self.beam_info_dict = {}
 
     def init(self):
-        self.aperture_hwobj = self.getObjectByRole("aperture")
+        # ------------------------------------------------------------------------
+        # HardwareObjects
+        #self.aperture_hwobj = self.getObjectByRole("aperture")
+        self.slit_gap_hor_hwobj = self.getObjectByRole("slit_gap_hor")
+        self.slit_gap_ver_hwobj = self.getObjectByRole("slit_gap_ver")
+
+        # ------------------------------------------------------------------------
+        # Signals
         self.emit("beamPositionChanged", (self.beam_crystal_position, ))
 
         # Alias
@@ -80,12 +87,25 @@ class LNLSBeamInfo(Equipment):
         Description: called if aperture, slits or focusing has been changed
         Returns: dictionary, {size_x: 0.1, size_y: 0.1, shape: "rectangular"}
         """
-        size_x = min(self.beam_size_aperture[0],
-                        self.beam_size_slits[0],
-                     self.beam_size_definer[0]) 
-        size_y = min(self.beam_size_aperture[1],
-                       self.beam_size_slits[1], 
-                     self.beam_size_definer[1]) 
+        if (self.slit_gap_hor_hwobj):
+            self.beam_size_slits[0] = self.slit_gap_hor_hwobj.getPosition()
+            size_x = self.beam_size_slits[0]
+        else:
+            size_x = self.beam_size_aperture[0]
+
+        # size_x = min(self.beam_size_aperture[0],
+        #                 self.beam_size_slits[0],
+        #              self.beam_size_definer[0]) 
+
+        if (self.slit_gap_ver_hwobj):
+            self.beam_size_slits[1] = self.slit_gap_ver_hwobj.getPosition()
+            size_y = self.beam_size_slits[1]
+        else:
+            size_y = self.beam_size_aperture[1]
+        
+        # size_y = min(self.beam_size_aperture[1],
+        #                self.beam_size_slits[1], 
+        #              self.beam_size_definer[1]) 
         
         self.beam_info_dict["size_x"] = size_x
         self.beam_info_dict["size_y"] = size_y
@@ -94,6 +114,7 @@ class LNLSBeamInfo(Equipment):
             self.beam_info_dict["shape"] = "ellipse"
         else:
             self.beam_info_dict["shape"] = "rectangular"
+
         return self.beam_info_dict        
 
     def emit_beam_info_change(self): 
@@ -109,6 +130,6 @@ class LNLSBeamInfo(Equipment):
     def get_beam_divergence_ver(self):
         return 0
 
-    def get_aperture_pos_name(self):
-        if self.aperture_hwobj:
-            return self.aperture_hwobj.get_current_pos_name()
+    # def get_aperture_pos_name(self):
+    #     if self.aperture_hwobj:
+    #         return self.aperture_hwobj.get_current_pos_name()

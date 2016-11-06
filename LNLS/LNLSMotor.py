@@ -15,6 +15,8 @@ MOTOR_RBV  = 'epicsMotor_rbv'
 MOTOR_DMOV = 'epicsMotor_dmov'
 MOTOR_STOP = 'epicsMotor_stop'
 MOTOR_VELO = 'epicsMotor_velo'
+MOTOR_DLLM = 'epicsMotor_dllm'
+MOTOR_DHLM = 'epicsMotor_dhlm'
 
 #------------------------------------------------------------------------------
 class LNLSMotor(AbstractMotor, Device):      
@@ -77,7 +79,15 @@ class LNLSMotor(AbstractMotor, Device):
         self.emit('limitsChanged', (self.getLimits(), ))
                      
     def getLimits(self):
-        return (-1E4,1E4)
+        try:
+            limits = (self.getValue(MOTOR_DLLM), self.getValue(MOTOR_DHLM))
+        except:
+            logging.getLogger("HWR").error('Error getting motor limits for: %s' % self.motor_name)
+            # Set a default limit
+            limits = (-1E4,1E4)
+            pass
+
+        return limits
  
     def getPosition(self):
         return self.getValue(MOTOR_RBV)

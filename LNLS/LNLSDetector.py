@@ -64,9 +64,9 @@ class LNLSDetector(Equipment):
         self.hum_treshold = self.getProperty("humidityThreshold")
 
         try:
-           self.detector_modes_dict = eval(self.getProperty("detectorModes"))
+            self.detector_modes_dict = eval(self.getProperty("detectorModes"))
         except:
-           pass
+            pass
 
         # Instantiating a Pilatus device
         self.detector_pilatus = Pilatus('Pilatus', self.pilatusEpicsAddress)

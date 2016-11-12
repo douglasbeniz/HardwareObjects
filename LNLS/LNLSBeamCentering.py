@@ -20,20 +20,22 @@ import gevent
 # [0][1]   : Slit1 - Z1
 # [1]      : Slit2
 
-BASE_SLIT = [[['slit1BaseX1_val', 'slit1BaseX1_rlv', 'slit1BaseX1_rbv', 'slit1BaseX1_dmov', 'slit1BaseX1_stop', 'slit1BaseX1_hls', 'slit1BaseX1_lls', 'slit1BaseX1_hlm', 'slit1BaseX1_llm'],
+BASE_SLIT = [[['mono2ndXtal_val', 'mono2ndXtal_rlv', 'mono2ndXtal_rbv', 'mono2ndXtal_dmov', 'mono2ndXtal_stop', 'mono2ndXtal_hls', 'mono2ndXtal_lls', 'mono2ndXtal_hlm', 'mono2ndXtal_llm'],
+              [ None,              None,              None,              None,               None,               None,              None,              None,              None            ]],
+             [['slit1BaseX1_val', 'slit1BaseX1_rlv', 'slit1BaseX1_rbv', 'slit1BaseX1_dmov', 'slit1BaseX1_stop', 'slit1BaseX1_hls', 'slit1BaseX1_lls', 'slit1BaseX1_hlm', 'slit1BaseX1_llm'],
               ['slit1BaseZ1_val', 'slit1BaseZ1_rlv', 'slit1BaseZ1_rbv', 'slit1BaseZ1_dmov', 'slit1BaseZ1_stop', 'slit1BaseZ1_hls', 'slit1BaseZ1_lls', 'slit1BaseZ1_hlm', 'slit1BaseZ1_llm']],
              [['slit2BaseX1_val', 'slit2BaseX1_rlv', 'slit2BaseX1_rbv', 'slit2BaseX1_dmov', 'slit2BaseX1_stop', 'slit2BaseX1_hls', 'slit1BaseX1_lls', 'slit2BaseX1_hlm', 'slit1BaseX1_llm'],
               ['slit2BaseZ1_val', 'slit2BaseZ1_rlv', 'slit2BaseZ1_rbv', 'slit2BaseZ1_dmov', 'slit2BaseZ1_stop', 'slit2BaseZ1_hls', 'slit1BaseZ1_lls', 'slit2BaseZ1_hlm', 'slit1BaseZ1_llm']]]
-# KEITHLEY 6517A for while
-COUNTER_VAL = ['counter1_val', 'counter2_val']
+
+COUNTER_VAL = ['counterInt_val', 'counter1_val', 'counter2_val']
 
 # Horizontal = X
 # Vertical   = Z
-POS_CHANGED_SIGN = [['positionHorSlit1Changed','positionVerSlit1Changed'], ['positionHorSlit2Changed','positionVerSlit2Changed']]
-CLEAR_SIGN = [['plotClearHorSlit1','plotClearVerSlit1'], ['plotClearHorSlit2','plotClearVerSlit2']]
-PLOT_SIGN = [['plotNewPointHorSlit1','plotNewPointVerSlit1'], ['plotNewPointHorSlit2','plotNewPointVerSlit2']]
-INT_CHANGED_SIGN = ['intensitySlit1Changed','intensitySlit2Changed']
-SET_TAB_SIGN = [['setTabHorSlit1','setTabVerSlit1'], ['setTabHorSlit2','setTabVerSlit2']]
+POS_CHANGED_SIGN = [['position2ndXtalChanged', None], ['positionHorSlit1Changed', 'positionVerSlit1Changed'], ['positionHorSlit2Changed', 'positionVerSlit2Changed']]
+CLEAR_SIGN = [['plotClear2ndXtal', None], ['plotClearHorSlit1', 'plotClearVerSlit1'], ['plotClearHorSlit2', 'plotClearVerSlit2']]
+PLOT_SIGN = [['plotNewPoint2ndXtal', None], ['plotNewPointHorSlit1', 'plotNewPointVerSlit1'], ['plotNewPointHorSlit2', 'plotNewPointVerSlit2']]
+INT_CHANGED_SIGN = ['intensity2ndXtalChanged', 'intensitySlit1Changed', 'intensitySlit2Changed']
+SET_TAB_SIGN = [['setTab2ndXtal', None], ['setTabHorSlit1', 'setTabVerSlit1'], ['setTabHorSlit2', 'setTabVerSlit2']]
 
 #------------------------------------------------------------------------------
 class LNLSBeamCentering(Equipment):
@@ -51,21 +53,34 @@ class LNLSBeamCentering(Equipment):
         # _paramSlit[0][0]: slit 1 - distance horizontal
         # _paramSlit[0][1]: slit 1 - distance vertical
         # _paramSlit[0][2]: slit 1 - step
-        self._paramSlit = [[None, None, None], [None, None, None]]
+        self._paramSlit = [[None, None, None], [None, None, None], [None, None, None]]
 
         # If should center each slit
         # _centerSlit[0]: slit 1
-        self._centerSlit = [False, False]
+        self._centerSlit = [False, False, False]
 
         # If should scan all the path allowed by each motor axis
         # _fullPathSlit[0]: slit 1
-        self._fullPathSlit = [False, False]
+        self._fullPathSlit = [False, False, False]
 
     def init(self):
         """
         Descript. :
         """
         self.beamcenter_gen = None
+
+    def setDefaultParams(self):
+        # Set default parameters based on XML data
+        try:
+            self.emit('setDefaultPitchParams', (self.default_angle_pitch, self.default_step_pitch, ))
+        except:
+            logging.getLogger("HWR").error('LNLSBeamCentering - Error getting some default parameters for Pitch, please check!')
+
+        try:
+            for slitNum in range(2):
+                self.emit('setDefaultSlitParams', (self.default_hor_distance_slits, self.default_ver_distance_slits, self.default_step_slits, slitNum, ))
+        except:
+            logging.getLogger("HWR").error('LNLSBeamCentering - Error getting some default parameters for Slits, please check!')
 
     def setDistanceHorizontal(self, distance_hor, slit):
         try:
@@ -171,48 +186,51 @@ class LNLSBeamCentering(Equipment):
                 reachedLimit = True
                 continue
 
-        return (max_intensity, pos_max_intensity, physicalLimit)
+        return (max_intensity, pos_max_intensity, (False if full_path else physicalLimit))
 
     def _centerProcedure(self, timeout=None):
 
         try:
-            for slit in range(2):
+            for slit in range(3):
                 # Check if should center this slit
                 if (self._centerSlit[slit]):
                     for axis in range(2):
-                        if (self._paramSlit[slit][axis] is not None and self._paramSlit[slit][axis] != 0):
-                            # Procedure to find position where intensity of beam is highest
-                            initialPosition = self.getValue(BASE_SLIT[slit][axis][2])
+                        if (self._fullPathSlit[slit] or (self._paramSlit[slit][axis] is not None and self._paramSlit[slit][axis] != 0)):
+                            if (BASE_SLIT[slit][axis][2] is not None):
+                                # Procedure to find position where intensity of beam is highest
+                                initialPosition = self.getValue(BASE_SLIT[slit][axis][2])
 
-                            if (not self._fullPathSlit[slit]):
-                                self.setValue(BASE_SLIT[slit][axis][0], (initialPosition - abs(self._paramSlit[slit][axis])))
-                            else:
-                                self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8]) + 0.1))
-                            # Wait until movement is done and emit signals to update interface
-                            self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
+                                if (not self._fullPathSlit[slit]):
+                                    self.setValue(BASE_SLIT[slit][axis][0], (initialPosition - abs(self._paramSlit[slit][axis])))
+                                else:
+                                    #self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8]) + 0.1))
+                                    self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8])))
 
-                            # Going to distance after initial position...
-                            (max_int, pos_max_int, phys_limit) = self._moveBaseCheckingPosition(BASE_SLIT[slit][axis][2],
-                                BASE_SLIT[slit][axis][1],
-                                BASE_SLIT[slit][axis][3],
-                                COUNTER_VAL[slit],
-                                self._paramSlit[slit][2],
-                                initialPosition,
-                                abs(self._paramSlit[slit][axis]),
-                                self._fullPathSlit[slit],
-                                SET_TAB_SIGN[slit][axis],
-                                CLEAR_SIGN[slit][axis],
-                                POS_CHANGED_SIGN[slit][axis],
-                                INT_CHANGED_SIGN[slit],
-                                PLOT_SIGN[slit][axis])
-
-                            if (phys_limit):
-                                self.emit('limitReached')
-
-                            # Move to the position of maximum intensity
-                            if (pos_max_int != None):
-                                self.setValue(BASE_SLIT[slit][axis][0], pos_max_int)
+                                # Wait until movement is done and emit signals to update interface
                                 self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
+
+                                # Going to distance after initial position...
+                                (max_int, pos_max_int, phys_limit) = self._moveBaseCheckingPosition(BASE_SLIT[slit][axis][2],
+                                    BASE_SLIT[slit][axis][1],
+                                    BASE_SLIT[slit][axis][3],
+                                    COUNTER_VAL[slit],
+                                    self._paramSlit[slit][2],
+                                    initialPosition,
+                                    0 if self._paramSlit[slit][axis] is None else abs(self._paramSlit[slit][axis]),
+                                    self._fullPathSlit[slit],
+                                    SET_TAB_SIGN[slit][axis],
+                                    CLEAR_SIGN[slit][axis],
+                                    POS_CHANGED_SIGN[slit][axis],
+                                    INT_CHANGED_SIGN[slit],
+                                    PLOT_SIGN[slit][axis])
+
+                                if (phys_limit):
+                                    self.emit('limitReached')
+
+                                # Move to the position of maximum intensity
+                                if (pos_max_int != None):
+                                    self.setValue(BASE_SLIT[slit][axis][0], pos_max_int)
+                                    self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
             self.emit('centeringConcluded')
         except TypeError:
             self.emit('errorCentering')
@@ -226,7 +244,7 @@ class LNLSBeamCentering(Equipment):
         validStep = True
 
         # Check if steps are valids
-        for slit in range(2):
+        for slit in range(3):
             if (self._centerSlit[slit] and not self._paramSlit[slit][2]):
                 validStep = False
 
@@ -251,7 +269,7 @@ class LNLSBeamCentering(Equipment):
                 # Firstly stop the procedure to center beam
                 self.beamcenter_gen.kill()
                 # Then stop the motor movement
-                for slit in range(2):
+                for slit in range(3):
                     for axis in range(2):
                         self.setValue(BASE_SLIT[slit][axis][4], 1)
             except:

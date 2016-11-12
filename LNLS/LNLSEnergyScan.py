@@ -94,10 +94,6 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.transmission_hwob = None
         self.beam_info_hwobj = None
 
-        # self.chan_scan_start = None
-        # self.chan_scan_status = None
-        # self.cmd_scan_abort = None
-
     def init(self):
         """
         Descript. :
@@ -133,24 +129,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         except:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Error when instantiating a scaler')
 
-        # try:  
-        #     self.chan_scan_start = self.getChannelObject('energyScanStart')
-        #     self.chan_scan_start.connectSignal('update', self.scan_start_update)
-        #     self.chan_scan_status = self.getChannelObject('energyScanStatus')
-        #     self.chan_scan_status.connectSignal('update', self.scan_status_update)
-        #     self.cmd_scan_abort = self.getCommandObject('energyScanAbort')
-
-        #     self.can_scan = True
-        # except:
-        #     logging.getLogger("HWR").warning('LNLSEnergyScan: unable to connect to scan channel(s)')
          
-    def scan_start_update(self, values):
-        """
-        Descript. :
-        """
-        if self.scanning:
-            self.emitNewDataPoint(values)
-
     def scan_status_update(self, status):
         """
         Descript. :
@@ -176,8 +155,6 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         """ 
         if len(values) > 0:
             try:
-                # x = values[-1][0]
-                # y = values[-1][1]
                 x = values[0]
                 y = values[1]
 
@@ -282,15 +259,16 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.scan_status_update("scanning")
 
         try:
-
             print("---------------------------------------------------------------------")
-            print(" -:- ENERGY SCAN -:-")
-            print("---------------------------------------------------------------------")            
+            print(" -:- ENERGY SCAN -:- ")
+            print("---------------------------------------------------------------------")
             print("element; edge: ", self.scanInfo['element'], self.scanInfo['edgeEnergy'])
             elementEdgeEnergy = float(LNLSEnergyScan.ENERGY_EDGES[elementEdge])
             self.scanInfo['elementEdgeEnergy'] = elementEdgeEnergy
             print("energy: ", elementEdgeEnergy)
             print("---------------------------------------------------------------------")
+            # Inform user
+            logging.getLogger("user_level_log").info('Selected element, edge and energy on that edge: %s-%s, %.2f.' % (self.scanInfo['element'], self.scanInfo['edgeEnergy'], elementEdgeEnergy))
         except KeyError:
             logging.getLogger("user_level_log").error('Unknown energy for element-edge: %s.' % elementEdge)
             self.scanCommandFailed()
@@ -388,6 +366,9 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         Descript. :
         """
         self.scanning = False
+        # Stop the energy modification, movement of monochromator
+        self.energy_hwobj.stop()
+        # Emit a signal to inform user
         self.emit('energyScanFailed', ())
         self.ready_event.set()
 
@@ -523,6 +504,10 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.scanInfo["inflectionFPrime"] = fpInfl
         self.scanInfo["inflectionFDoublePrime"] = fppInfl
         self.scanInfo["comments"] = comm
+
+        # Moving to Peak
+        logging.getLogger("user_level_log").info("Moving to peack of energy: %.3f." % (pk))
+        self.energy_hwobj.set_energy(pk)
 
         chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)

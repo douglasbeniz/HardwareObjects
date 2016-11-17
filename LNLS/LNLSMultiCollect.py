@@ -36,6 +36,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self._image_directory = None
 
         self.diffractometer_hwobj = self.getObjectByRole("diffractometer")
+        self.camera_hwobj = self.getObjectByRole("camera")
         self.lims_client_hwobj = self.getObjectByRole("lims_client")
         self.machine_current_hwobj = self.getObjectByRole("machine_current")
         self.energy_hwobj = self.getObjectByRole("energy")
@@ -45,6 +46,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.beam_info_hwobj = self.getObjectByRole("beam_info")
         self.autoprocessing_hwobj = self.getObjectByRole("auto_processing")
         self.shutter_hwobj = self.getObjectByRole("safety_shutter")
+        self.motor_omega_hwobj = self.getObjectByRole("omega")
 
         self.setControlObjects(diffractometer = self.getObjectByRole("diffractometer"),
                                sample_changer = self.getObjectByRole("sample_changer"),
@@ -604,13 +606,11 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # Parameters read from user interface
         fileName = str(self._file_prefix) + "_" + str(self._file_run_number)
 
-        # Store parameters needed by snapshot procedure
-        self.diffractometer_hwobj.set_snapshot_file_path(self._snapshot_directory)
-        self.diffractometer_hwobj.set_snapshot_file_prefix(fileName)
-        self.diffractometer_hwobj.set_collect_oscillation_interval(self._initial_angle, self._total_angle)
-
-        # Start snapshot procedure
-        self.diffractometer_hwobj.takeSnapshots(number_of_snapshots, wait=False)
+        # Call snapshot procedure from Camera hardware object
+        try:
+            self.camera_hwobj.take_snapshots(image_count=number_of_snapshots, snapshotFilePath=self._snapshot_directory, snapshotFilePrefix=fileName, collectStart=self._initial_angle, collectEnd=self._total_angle, motorHwobj=self.motor_omega_hwobj)
+        except:
+            logging.getLogger("HWR").error("LNLSEnergyScan: Problem to take snapshots!")
 
     @task
     def data_collection_hook(self, data_collect_parameters):
@@ -647,7 +647,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self._total_time    = (acquireTime * numImages)
         self._total_time_readout = ((acquireTime + 0.0023) * numImages)
         #oscilationVelo      = (self._total_angle / self._total_time)           # degrees per second (without readout)
-        oscilationVelo      = (self._total_angle / self._total_time_redout)     # degrees per second (with readout)
+        oscilationVelo      = (self._total_angle / self._total_time_readout)     # degrees per second (with readout)
         oscilationVeloRPM   = (oscilationVelo * 60 / 360)                # RPM
         # Total angle absolute, including the inicial angle (already moved)
         self._total_angle   += startAngle
@@ -748,7 +748,8 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         logging.getLogger("user_level_log").info("Closing safety shutter at: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
 
         # Close detector shutter
-        self.detector_hwobj.close_shutter()
+        if self.detector_hwobj:
+            self.detector_hwobj.close_shutter()
 
         # Enable UI controls to operate shutter
         if (self.shutter_hwobj):
@@ -796,7 +797,12 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.close_safety_shutter(restoreOmegaPosition=True)
         
         # Stop detector
-        self.detector_hwobj.stop()
+        if self.detector_hwobj is not None:
+            self.detector_hwobj.stop()
+
+        # Cancel snapshots
+        if self.camera_hwobj is not None:
+            self.camera_hwobj.cancel_snapshot()
 
         # Calling parent method
         logging.debug("%s - calling AbstractMultiCollect.stopCollect()" % (self.__class__.__name__))

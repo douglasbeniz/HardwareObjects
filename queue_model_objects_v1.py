@@ -781,6 +781,7 @@ class EnergyScan(TaskNode):
         self.edge = None
         self.set_requires_centring(True)
         self.centred_position = cpos
+        self.take_snapshots = None
 
         if not sample:
             self.sample = Sample()
@@ -793,6 +794,12 @@ class EnergyScan(TaskNode):
             self.path_template = path_template
 
         self.result = EnergyScanResult()
+
+    def set_take_snapshots(self, num_images=0):
+        self.take_snapshots = num_images
+
+    def get_take_snapshots(self):
+        return (self.take_snapshots if self.take_snapshots is not None else 0)
 
     def get_run_number(self):
         return self.path_template.run_number

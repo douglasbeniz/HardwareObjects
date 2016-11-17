@@ -59,7 +59,7 @@ class Qt4_GraphicsManager(HardwareObject):
         self.diffractometer_hwobj = None
         self.camera_hwobj = None
         self.beam_info_hwobj = None
-     
+
         self.pixels_per_mm = [0, 0]
         self.beam_position = [0, 0]
         self.beam_info_dict = {}
@@ -101,7 +101,8 @@ class Qt4_GraphicsManager(HardwareObject):
         self.graphics_move_beam_mark_item = None
         self.graphics_select_tool_item = None
         self.graphics_beam_define_item = None
- 
+
+
     def init(self):
         """Main init function. Initiates all graphics items, hwobjs and 
            connects all qt signals to slots.
@@ -205,7 +206,10 @@ class Qt4_GraphicsManager(HardwareObject):
             self.set_graphics_scene_size(self.graphics_scene_size, False)
             self.connect(self.camera_hwobj, 
                          "imageReceived", 
-                         self.camera_image_received) 
+                         self.camera_image_received)
+            self.connect(self.camera_hwobj, 
+                         "savaSnapshot", 
+                         self.save_scene_snapshot)
             self.camera_hwobj.start_camera()
         else:         
             logging.getLogger("HWR").error("GraphicsManager: Camera hwobj not defined")
@@ -289,6 +293,11 @@ class Qt4_GraphicsManager(HardwareObject):
                pixmap_image.width() * self.image_scale,
                pixmap_image.height() * self.image_scale))
         self.graphics_camera_frame.setPixmap(pixmap_image)
+
+        # ---------------------------------------------------------------------
+        # LNLS
+        self.graphics_view.graphics_scene.update()
+        # ---------------------------------------------------------------------
 
     def beam_position_changed(self, position):
         """Method called when beam position on the screen changed.
@@ -704,7 +713,7 @@ class Qt4_GraphicsManager(HardwareObject):
             if type(shape) in (GraphicsLib.GraphicsItemPoint, 
                                GraphicsLib.GraphicsItemLine, 
                                GraphicsLib.GraphicsItemGrid):
-                shapes_list.append(shape)                 
+                shapes_list.append(shape)
         return shapes_list
 
     def get_points(self):
@@ -878,8 +887,15 @@ class Qt4_GraphicsManager(HardwareObject):
 
         self.graphics_omega_reference_item.hide() 
 
+        # ------------------------------------------------------------
+        # LNLS
+        #imageFormat = QtGui.QImage.Format_ARGB32
+        imageFormat = QtGui.QImage.Format_RGB32
+
         image = QtGui.QImage(self.graphics_view.graphics_scene.sceneRect().\
-            size().toSize(), QtGui.QImage.Format_ARGB32)
+            size().toSize(), imageFormat)
+        # ------------------------------------------------------------
+
         image.fill(QtCore.Qt.transparent)
         image_painter = QtGui.QPainter(image)
         self.graphics_view.render(image_painter)

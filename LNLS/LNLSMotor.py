@@ -17,6 +17,7 @@ MOTOR_STOP = 'epicsMotor_stop'
 MOTOR_VELO = 'epicsMotor_velo'
 MOTOR_DLLM = 'epicsMotor_dllm'
 MOTOR_DHLM = 'epicsMotor_dhlm'
+MOTOR_EGU  = 'epicsMotor_egu'
 
 #------------------------------------------------------------------------------
 class LNLSMotor(AbstractMotor, Device):      
@@ -158,6 +159,12 @@ class LNLSMotor(AbstractMotor, Device):
 
     def getMotorMnemonic(self):
         return self.motor_name
+
+    def getEgu(self):
+        try:
+            return self.getValue(MOTOR_EGU)
+        except:
+            return "Unknown"
 
     def stop(self):
         self.setValue(MOTOR_STOP, 1)

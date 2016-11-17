@@ -58,6 +58,10 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         self.setLive(True)
 
+        # Snapshot
+        self.centring_status = {"valid": False}
+        self.snapshots_procedure = None
+
     def imageGenerator(self, delay):
         while self.liveState:
             self.getCameraImage()
@@ -218,6 +222,92 @@ class LNLSCamera(BaseHardwareObjects.Device):
         imgFile.open(QtCore.QIODevice.WriteOnly)
         self.qtPixMap.save(imgFile,"PNG")
         imgFile.close()
+
+
+    def take_snapshots_procedure(self, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj):
+        """
+        Descript. :
+        """
+        # Avoiding a processing of AbstractMultiCollect class for saving snapshots
+        #centred_images = []
+        centred_images = None
+        positions = []
+
+        try:
+            # Calculate goniometer positions where to take snapshots
+            if (collectEnd is not None and collectStart is not None):
+                interval = (collectEnd - collectStart)
+            else:
+                interval = 0
+
+            # To increment in angle increment
+            increment = 0 if ((image_count -1) == 0) else (interval / (image_count -1))
+
+            for incrementPos in range(image_count):
+                if (collectStart is not None):
+                    positions.append(collectStart + (incrementPos * increment))
+                else:
+                    positions.append(motorHwobj.getPosition())
+
+            # Create folder if not found
+            if (not os.path.exists(snapshotFilePath)):
+                try:
+                    os.makedirs(snapshotFilePath)
+                except OSError as diag:
+                    logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (snapshotFilePath, str(diag)))
+
+            for index in range(image_count):
+                while (motorHwobj.getPosition() < positions[index]):
+                    gevent.sleep(0.02)
+
+                logging.getLogger("HWR").info("%s - taking snapshot #%d" % (self.__class__.__name__, index + 1))
+
+                # Save snapshot image file
+                imageFileName = os.path.join(snapshotFilePath, snapshotFilePrefix + "_" + str(round(motorHwobj.getPosition(),2)) + "_" + motorHwobj.getEgu() + "_snapshot.png")
+
+                #imageInfo = self.takeSnapshot(imageFileName)
+
+                # This way all shapes will be also saved...
+                self.emit("savaSnapshot", imageFileName)
+
+                #centred_images.append((0, str(imageInfo)))
+                #centred_images.reverse() 
+        except:
+            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
+
+        return centred_images
+
+
+    def take_snapshots(self, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj, wait=False):
+        """
+        Descript. :
+        """
+        if image_count > 0:
+            self.snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj)
+
+            self.centring_status["images"] = []
+
+            self.snapshots_procedure.link(self.snapshots_done)
+
+            if wait:
+                self.centring_status["images"] = self.snapshots_procedure.get()
+
+
+    def snapshots_done(self, snapshots_procedure):
+        """
+        Descript. :
+        """
+        try:
+            self.centring_status["images"] = snapshots_procedure.get()
+        except:
+            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
+
+
+    def cancel_snapshot(self):
+        try:
+            self.snapshots_procedure.kill()
+        except:
+            pass
 
     def __del__(self):
         logging.getLogger().exception("%s - __del__()!" % (self.__class__.__name__))

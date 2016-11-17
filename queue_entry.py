@@ -1120,14 +1120,19 @@ class EnergyScanQueueEntry(BaseQueueEntry):
             if sample_lims_id == -1:
                 sample_lims_id = None
 
+            # ----------------------------------------------------------------------
+            # LNLS
             self.energy_scan_task = \
                 gevent.spawn(self.energy_scan_hwobj.startEnergyScan,
                              energy_scan.element_symbol,
                              energy_scan.edge,
+                             energy_scan.get_take_snapshots(),
+                             energy_scan.path_template.snapshot_directory,
                              energy_scan.path_template.directory,
-                             energy_scan.path_template.get_prefix(),
+                             energy_scan.path_template.get_prefix() + "_" + str(energy_scan.get_run_number()),
                              self.session_hwobj.session_id,
                              sample_lims_id)
+            # ----------------------------------------------------------------------
 
         self.energy_scan_hwobj.ready_event.wait()
         self.energy_scan_hwobj.ready_event.clear()

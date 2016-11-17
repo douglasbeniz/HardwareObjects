@@ -64,8 +64,6 @@ class LNLSGoniometer(GenericDiffractometer):
         self.camera = None
         self._drawing = None
 
-        self.takeSnapshots = self.take_snapshots
-
         self.connect(self, 'equipmentReady', self.equipmentReady)
         self.connect(self, 'equipmentNotReady', self.equipmentNotReady)
 
@@ -126,28 +124,11 @@ class LNLSGoniometer(GenericDiffractometer):
         except:
             self.phase_list = ['demo']
 
-        # Attributes used by snapshot
-        self.snapshotFilePath = None
-        self.snapshotFilePrefix = None
-        self.collectStartOscillation = None
-        self.collectEndOscillation = None
-
         # Methods exported
-        self.takeSnapshots = self.take_snapshots
         self.getPositions = self.get_positions
 
     def set_drawing(self, drawing):
         self._drawing = drawing
-
-    def set_snapshot_file_path(self, path):
-        self.snapshotFilePath = path
-
-    def set_snapshot_file_prefix(self, prefix):
-        self.snapshotFilePrefix = prefix
-
-    def set_collect_oscillation_interval(self, start, end):
-        self.collectStartOscillation = start
-        self.collectEndOscillation = end
 
     def getStatus(self):
         """
@@ -392,9 +373,9 @@ class LNLSGoniometer(GenericDiffractometer):
         """
         self.centring_time = time.time()
         curr_time = time.strftime("%Y-%m-%d %H:%M:%S")
-        self.centring_status = {"valid": True,
-                                "startTime": curr_time,
-                                "endTime": curr_time} 
+        self.centring_status = { "valid": True,
+                                 "startTime": curr_time,
+                                 "endTime": curr_time }
         motors = self.get_positions()
         motors["beam_x"] = 0.1
         motors["beam_y"] = 0.1
@@ -410,85 +391,3 @@ class LNLSGoniometer(GenericDiffractometer):
         self.emit('zoomMotorPredefinedPositionChanged', None, None)
         #omega_ref = [205, 0]
         #self.emit('omegaReferenceChanged', omega_ref)
-
-    def take_snapshots_procedure(self, image_count):
-        """
-        Descript. :
-        """
-        # Avoiding a processing of AbstractMultiCollect class for saving snapshots
-        #centred_images = []
-        centred_images = None
-        positions = []
-
-        if (self.camera_hwobj):
-            # Calculate goniometer positions where to take snapshots
-            if (self.collectEndOscillation is not None and self.collectStartOscillation is not None):
-                interval = (self.collectEndOscillation - self.collectStartOscillation)
-            else:
-                interval = 0
-
-            # To increment in angle increment
-            increment = 0 if ((image_count -1) == 0) else (interval / (image_count -1))
-
-            for incrementPos in range(image_count):
-                if (self.collectStartOscillation is not None):
-                    positions.append(self.collectStartOscillation + (incrementPos * increment))
-                else:
-                    positions.append(self.motor_omega_hwobj.getPosition())
-
-            # Create folder if not found
-            if (not os.path.exists(self.snapshotFilePath)):
-                try:
-                    os.makedirs(self.snapshotFilePath)
-                except OSError as diag:
-                    logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (self.snapshotFilePath, str(diag)))
-
-            for index in range(image_count):
-                logging.getLogger("HWR").info("%s - taking snapshot #%d" % (self.__class__.__name__, index + 1))
-
-                while (self.motor_omega_hwobj.getPosition() < positions[index]):
-                    gevent.sleep(0.02)
-
-                # Save snapshot image file
-                imageFileName = os.path.join(self.snapshotFilePath, self.snapshotFilePrefix + "_" + str(round(self.motor_omega_hwobj.getPosition(),2)) + "_degrees_snapshot.png")
-
-                imageInfo = self.camera_hwobj.takeSnapshot(imageFileName)
-
-                #centred_images.append((0, str(imageInfo)))
-                #centred_images.reverse() 
-        else:
-            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
-
-        return centred_images
-
-    def take_snapshots(self, image_count, wait=False):
-        """
-        Descript. :
-        """
-        if image_count > 0:
-            snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count)
-
-            self.emit('centringSnapshots', (None,))
-            self.emit_progress_message("Taking snapshots")
-
-            self.centring_status["images"] = []
-
-            snapshots_procedure.link(self.snapshots_done)
-
-            if wait:
-                self.centring_status["images"] = snapshots_procedure.get()
-
-    def snapshots_done(self, snapshots_procedure):
-        """
-        Descript. :
-        """
-        try:
-            self.centring_status["images"] = snapshots_procedure.get()
-        except:
-            logging.getLogger("HWR").exception("%s - could not take crystal snapshots" % (self.__class__.__name__))
-            self.emit('centringSnapshots', (False,))
-            self.emit_progress_message("")
-        else:
-            self.emit('centringSnapshots', (True,))
-            self.emit_progress_message("")
-        self.emit_progress_message("Sample is centred!")

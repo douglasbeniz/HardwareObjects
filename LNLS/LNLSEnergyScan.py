@@ -120,6 +120,11 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.transmission_hwobj = self.getObjectByRole("transmission")
         if self.transmission_hwobj is None:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Transmission hwobj not defined')
+        # ---------------------------------------------------------------------
+        # Camera
+        self.camera_hwobj = self.getObjectByRole("camera")
+        if self.camera_hwobj is None:
+            logging.getLogger("HWR").warning('LNLSEnergyScan: Camera hwobj not defined')
 
         # ----------------------------------------------------------------------
         # Py4Syn objects
@@ -129,7 +134,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         except:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Error when instantiating a scaler')
 
-         
+
     def scan_status_update(self, status):
         """
         Descript. :
@@ -162,11 +167,8 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
                     # if x is in keV, transform into eV otherwise let it like it is
                     # if point larger than previous point (for chooch)
                     if len(self.scanData) > 0: 
-                        #print("x ::: ", x)
-                        #print("self.scanData[-1][0] ::: ", self.scanData[-1][0])
                         if x > self.scanData[-1][0]:
                             self.scanData.append([(x < 1000 and round(float(x*1000.0), 2) or x), y])
-                            #print("APPENDED ::: self.scanData[-1][0] ::: ", self.scanData[-1][0])
                     else:
                         self.scanData.append([(x < 1000 and round(float(x*1000.0), 2) or x), y])
                     self.emit('scanNewPoint', ((x < 1000 and round(float(x*1000.0), 2) or x), y, ))
@@ -185,7 +187,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         """
         return self.isConnected()
 
-    def startEnergyScan(self, element, edge, directory, prefix, \
+    def startEnergyScan(self, element, edge, img_count, snapshot_dir, directory, prefix, \
                  session_id = None, blsample_id = None, exptime = 2):
         """
         Descript. :
@@ -195,10 +197,14 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
             self.scanCommandAborted() 
             return
 
-        self.scanInfo = { "sessionId":  session_id, 
-                          "blSampleId": blsample_id,
-                          "element":    element,
-                          "edgeEnergy": edge }
+        self.scanInfo = { "sessionId":      session_id, 
+                          "blSampleId":     blsample_id,
+                          "element":        element,
+                          "edgeEnergy":     edge,
+                          "imgCount":       img_count,
+                          "directory":      directory,
+                          "snapshotDir":    snapshot_dir,
+                          "prefix":         prefix }
         self.scanData = []
 
         if not os.path.isdir(directory):
@@ -282,12 +288,19 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
             # Internal limits (typical step of 0.2 eV)
             self.scanInfo['startInternalLimit'] = elementEdgeEnergy - float(self.internal_energy_limits)
             self.scanInfo['endInternalLimit'] = elementEdgeEnergy + float(self.internal_energy_limits)
-            print("Ranges: [ %f :: %f :: eV :: %f :: %f" % (self.scanInfo['startEnergy'], self.scanInfo['startInternalLimit'], self.scanInfo['endInternalLimit'], self.scanInfo['endEnergy']))
+            print("Ranges: [ %.1f :: %.1f :: eV :: %.1f :: %.1f" % (self.scanInfo['startEnergy'], self.scanInfo['startInternalLimit'], self.scanInfo['endInternalLimit'], self.scanInfo['endEnergy']))
         except NameError:
             logging.getLogger("user_level_log").error('Missing necessary parameters in lnls-energy_scan.xml...')
             self.scanCommandFailed()
             return
 
+        # Start procedure to take snapshots...
+        try:
+            self.camera_hwobj.take_snapshots(image_count=int(self.scanInfo['imgCount']), snapshotFilePath=self.scanInfo['snapshotDir'], snapshotFilePrefix=self.scanInfo['prefix'], collectStart=self.scanInfo['startEnergy']/1000, collectEnd=self.scanInfo['endEnergy']/1000, motorHwobj=self.energy_hwobj)
+        except:
+            logging.getLogger("HWR").error("LNLSEnergyScan: Problem to take snapshots!")
+
+        # Start procedure to move energy and scan it
         if (self.energy_hwobj):
             # Set start energy in KeV
             self.energy_hwobj.set_energy(round(float(self.scanInfo['startEnergy']) / 1000, 5))
@@ -357,6 +370,11 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         """
         self.scanInfo['endTime'] = time.strftime("%Y-%m-%d %H:%M:%S")
         self.scanning = False
+
+        # Cancel snapshot procedure
+        if self.camera_hwobj is not None:
+            self.camera_hwobj.cancel_snapshot()
+
         self.store_energy_scan()
         self.emit('energyScanFailed', ())
         self.ready_event.set()
@@ -367,7 +385,13 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         """
         self.scanning = False
         # Stop the energy modification, movement of monochromator
-        self.energy_hwobj.stop()
+        if self.energy_hwobj is not None:
+            self.energy_hwobj.stop()
+
+        # Cancel snapshot procedure
+        if self.camera_hwobj is not None:
+            self.camera_hwobj.cancel_snapshot()
+
         # Emit a signal to inform user
         self.emit('energyScanFailed', ())
         self.ready_event.set()
@@ -473,15 +497,19 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
 
         #should be better, but OK for time being
         self.thEdgeThreshold = 0.02
-        if math.fabs(self.thEdge - ip) > self.thEdgeThreshold:
-          pk = 0
-          ip = 0
-          rm = self.thEdge + 0.03
-          comm = 'Calculated peak (%f) is more that 20eV away from the theoretical value (%f). Please check your scan' % \
+        # LNLS
+        #if math.fabs(self.thEdge - ip) > self.thEdgeThreshold:
+        if math.fabs(self.thEdge - pk) > self.thEdgeThreshold:
+            pk = 0
+            ip = 0
+            rm = self.thEdge + 0.03
+            comm = 'Calculated peak (%f) is more that 20eV away from the theoretical value (%f). Please check your scan' % \
                  (savpk, self.thEdge)
 
-          logging.getLogger("HWR").warning('EnergyScan: calculated peak (%f) is more that 20eV %s the theoretical value (%f). Please check your scan and choose the energies manually' % \
-                   (savpk, (self.thEdge - ip) > 0.02 and "below" or "above", self.thEdge))
+            logging.getLogger("HWR").warning('EnergyScan: calculated peak (%f) is more that 20eV %s the theoretical value (%f). Please check your scan and choose the energies manually' % \
+                   (savpk, (self.thEdge - savpk) > 0.02 and "below" or "above", self.thEdge))
+            logging.getLogger("user_level_log").warning('EnergyScan: calculated peak (%f) is more that 20eV %s the theoretical value (%f). Please check your scan and choose the energies manually' % \
+                   (savpk, (self.thEdge - savpk) > 0.02 and "below" or "above", self.thEdge))
 
         # LNLS
         # try:
@@ -615,3 +643,4 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
                 else:
                     asoc = {'blSampleId':blsampleid, 'energyScanId': energyscanid}
                     self.db_connection_hwobj.associateBLSampleAndEnergyScan(asoc)
+

@@ -65,6 +65,7 @@ class LNLSEnergy(Equipment):
         self.getWavelengthLimits = self.get_wavelength_limits
         self.setEnergy = self.set_energy
         self.setWavelength = self.set_wavelength
+        self.getPosition = self.get_current_energy
         self.getCurrentEnergy = self.get_current_energy
         self.getCurrentWavelength = self.get_current_wavelength
 
@@ -172,7 +173,7 @@ class LNLSEnergy(Equipment):
                 if (self.mono_second_xtal_hwobj):
                     self.mono_second_xtal_hwobj.move(targetPositionSecondXtal, wait=wait)
 
-            except ValueError:
+            except (ValueError, ZeroDivisionError):
                 logging.getLogger("user_level_log").error('Error calculating target angle...')
         else:
             logging.getLogger("HWR").error('Missing parameters that define the crystal in lnls-energy.xml...')
@@ -182,6 +183,9 @@ class LNLSEnergy(Equipment):
 
     def set_wavelength(self, value):
         self.start_move_energy(value, ANG_UNIT, wait=True)
+
+    def getEgu(self):
+        return "KeV"
 
     def positionChanged(self, value):
         if value is not None:

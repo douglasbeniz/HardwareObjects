@@ -748,6 +748,9 @@ class DataCollectionQueueEntry(BaseQueueEntry):
                    self.collect_finished)
         qc.connect(self.collect_hwobj, 'collectImageTaken',
                    self.image_taken)
+        # LNLS
+        qc.connect(self.collect_hwobj, 'collectHasCbfToView',
+                   self.has_cbf_to_view)
         qc.connect(self.collect_hwobj, 'collectNumberOfFrames',
                    self.collect_number_of_frames)
 
@@ -773,6 +776,9 @@ class DataCollectionQueueEntry(BaseQueueEntry):
                      self.collect_finished)
         qc.disconnect(self.collect_hwobj, 'collectImageTaken',
                      self.image_taken)
+        # LNLS
+        qc.disconnect(self.collect_hwobj, 'collectHasCbfToView',
+                     self.has_cbf_to_view)
         qc.disconnect(self.collect_hwobj, 'collectNumberOfFrames',
                      self.collect_number_of_frames)
 
@@ -911,6 +917,12 @@ class DataCollectionQueueEntry(BaseQueueEntry):
         dispatcher.send("collect_finished")
 
         raise QueueAbortedException('Queue stopped', self)
+
+    # ---------------------------------------
+    # LNLS
+    def has_cbf_to_view(self, hasCbf=False):
+        self.get_data_model().set_has_cbf_to_view(hasCbf)
+    # ---------------------------------------
 
 
 class CharacterisationGroupQueueEntry(BaseQueueEntry):

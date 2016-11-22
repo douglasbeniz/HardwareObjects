@@ -991,7 +991,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                     cbfFileCriteria =  str(self._file_prefix) + "_"
                     cbfFileCriteria += str(self._file_run_number) + "*"
                     if (number_of_images and (number_of_images > 1)):
-                        cbfFileCriteria += str(frame -1).zfill(5)
+                        cbfFileCriteria += str(frame -1).zfill(4)
                     cbfFileCriteria += "."
                     cbfFileCriteria += str(self.fileSuffix())
 
@@ -1018,6 +1018,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                             tries += 1
                             # A short sleep to be sure the files will be there
                             gevent.sleep(0.01)
+
             except:
                 logging.getLogger("HWR").exception("Error when copying CBF files: %s" % cbfFileName)
                 logging.getLogger("user_level_log").error("Error when copying CBF files: %s" % cbfFileName)
@@ -1025,6 +1026,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             if (cbfFileName is None):
                 logging.getLogger("HWR").exception("No CBF file copied! Check Storage and Pilatus...")
                 logging.getLogger("user_level_log").error("No CBF file copied! Check Storage and Pilatus...")
+            else:
+                # Success copying CBF file... inform interface to allow navigation (view) of it (them)
+                self.emit("collectHasCbfToView", True)
 
         # Call parent method
         AbstractMultiCollect.trigger_auto_processing(self, process_event, xds_dir, EDNA_files_dir, anomalous, residues, do_inducedraddam, spacegroup, cell, frame)

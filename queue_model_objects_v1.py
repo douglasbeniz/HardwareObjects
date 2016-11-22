@@ -455,6 +455,11 @@ class DataCollection(TaskNode):
         self.lims_start_pos_id = None
         self.lims_end_pos_id = None
 
+        # LNLS
+        self.has_cbf_to_view = False
+        self.set_requires_centring(False)
+        # ----
+
     def as_dict(self):
 
         acq = self.acquisitions[0]
@@ -592,6 +597,15 @@ class DataCollection(TaskNode):
                 index = "not defined"
             display_name = "%s (Point - %s)" %(self.get_name(), index)
         return display_name
+
+    # --------------------------------
+    # LNLS
+    def get_has_cbf_to_view(self):
+        return self.has_cbf_to_view
+
+    def set_has_cbf_to_view(self, hasCbf=False):
+        self.has_cbf_to_view = hasCbf
+    # --------------------------------
 
 
 class ProcessingParameters():
@@ -779,7 +793,10 @@ class EnergyScan(TaskNode):
         TaskNode.__init__(self)
         self.element_symbol = None
         self.edge = None
-        self.set_requires_centring(True)
+        # LNLS
+        #self.set_requires_centring(True)
+        self.set_requires_centring(False)
+        # ----
         self.centred_position = cpos
         self.take_snapshots = None
 

@@ -213,7 +213,9 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
                 os.makedirs(directory)
             except OSError as diag:
                 logging.getLogger("HWR").error("EnergyScan: error creating directory %s (%s)" % (directory, str(diag)))
+                logging.getLogger("user_level_log").error("EnergyScan: error creating directory %s (%s)" % (directory, str(diag)))
                 self.emit('energyScanStatusChanged', ("Error creating directory",))
+                self.scanCommandFailed()
                 return False
         try:
             #if self.chan_scan_status.getValue() in ['ready', 'unknown', 'error']:    
@@ -534,7 +536,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.scanInfo["comments"] = comm
 
         # Moving to Peak
-        logging.getLogger("user_level_log").info("Moving to peack of energy: %.3f." % (pk))
+        logging.getLogger("user_level_log").info("Moving to peak of energy: %.3f." % (pk))
         self.energy_hwobj.set_energy(pk)
 
         chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))

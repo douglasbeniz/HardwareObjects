@@ -277,12 +277,13 @@ class LNLSDetector(Equipment):
             # If server is not in knowm_hosts it will be included
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # Conncet
-            ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword)
+            ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword, timeout=10)
             # Send a command to remove entire folder
             stdin, stdout, stderr = ssh.exec_command("rm -rf " + str(folder))
             ssh.close()
         except:
-            logging.getLogger().exception("Error when trying to cleanup temporary folder in pilatus server...")
+            logging.getLogger().exception("Error when trying to cleanup temporary folder on pilatus server...")
+            logging.getLogger("user_level_log").error("Error when trying to cleanup temporary folder on pilatus server...")
 
     def update_values(self):
         # Call the update of Detector

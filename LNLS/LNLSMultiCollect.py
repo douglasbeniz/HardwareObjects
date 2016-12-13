@@ -287,7 +287,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         #Extra time for each collection needs to be added (in this case 0.04)
         self.emit("collectNumberOfFrames", nframes, oscillation_parameters["exposure_time"] + 0.04)
 
-        start_image_number = oscillation_parameters["start_image_number"]    
+        start_image_number = oscillation_parameters["start_image_number"]
         last_frame = start_image_number + nframes - 1
         if data_collect_parameters["skip_images"]:
             for start, wedge_size in wedges_to_collect[:]:
@@ -626,7 +626,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         else:
             filePath = os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), str(p["fileinfo"]["directory"])[1:])
 
-        fileName = str(p["fileinfo"]["prefix"]) + "_" + str(p["fileinfo"]["run_number"]) + "." + str(self.fileSuffix()) + "\0"
+        fileName = str(p["fileinfo"]["prefix"]) + "_" + str(p["fileinfo"]["run_number"]) + "_" + str(p["oscillation_sequence"][0]["start_image_number"]).zfill(5) + "." + str(self.fileSuffix()) + "\0"
         #fileTemplate = str(p['fileinfo']['template']) + "\0"
         # e.g.: test9_mx1_1_%04d.cbf
         fileTemplate = str("%s%s." + self.fileSuffix() + "\0")
@@ -648,7 +648,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self._total_time_readout = ((acquireTime + 0.0023) * numImages)
         #oscilationVelo      = (self._total_angle / self._total_time)           # degrees per second (without readout)
         oscilationVelo      = (self._total_angle / self._total_time_readout)     # degrees per second (with readout)
-        oscilationVeloRPM   = (oscilationVelo * 60 / 360)                # RPM
+        oscilationVeloRPM   = (oscilationVelo * 60 / 360)
         # Total angle absolute, including the inicial angle (already moved)
         self._total_angle   += startAngle
 
@@ -669,9 +669,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.detector_hwobj.set_trigger_mode(triggerMode)
 
         # Set Omega velocity (RPM) for acquisition
-        # FOR TESTS....
-        #self.diffractometer_hwobj.set_omega_velocity(oscilationVeloRPM)
-        self.diffractometer_hwobj.set_omega_velocity(oscilationVelo)
+        self.diffractometer_hwobj.set_omega_velocity(oscilationVeloRPM)
 
         # Send command to start acquisition
         self.detector_hwobj.acquire()
@@ -793,16 +791,34 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def stopCollect(self, owner):
         logging.getLogger("user_level_log").info("User recquired the end of collection!")
 
-        # Close the detector shutter and move Omega to initial position
-        self.close_safety_shutter(restoreOmegaPosition=True)
+        # Close shutter and move Omega to initial position
+        try:
+            self.close_safety_shutter(restoreOmegaPosition=True)
+        except:
+            logging.exception("Could not close safety shutter")
         
         # Stop detector
         if self.detector_hwobj is not None:
+            # XXX
+            # Just for guarantee... this should be investigated!
+            self.detector_hwobj.acquire()
+            time.sleep(2)
             self.detector_hwobj.stop()
 
         # Cancel snapshots
         if self.camera_hwobj is not None:
             self.camera_hwobj.cancel_snapshot()
+
+        # Cleanup of temporary folder
+        if (self.detector_hwobj.get_pilatus_server_storage() in self._file_directory):
+            self.detector_hwobj.cleanup_remote_folder(os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), os.getenv("USER")))
+        else:
+            # it is not saved in '/storage', but some other local place, like '/home/ABTLUS/douglas.beniz/Documents'
+            folder = self._file_directory[1:self._file_directory[1:].find('/')+1]
+            if (folder == ''):
+                folder = "*.cbf"
+
+            self.detector_hwobj.cleanup_remote_folder(os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), folder))
 
         # Calling parent method
         logging.debug("%s - calling AbstractMultiCollect.stopCollect()" % (self.__class__.__name__))
@@ -991,7 +1007,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                     cbfFileCriteria =  str(self._file_prefix) + "_"
                     cbfFileCriteria += str(self._file_run_number) + "*"
                     if (number_of_images and (number_of_images > 1)):
-                        cbfFileCriteria += str(frame -1).zfill(4)
+                        cbfFileCriteria += str(frame).zfill(5)
                     cbfFileCriteria += "."
                     cbfFileCriteria += str(self.fileSuffix())
 

@@ -349,7 +349,7 @@ class BeamlineSetup(HardwareObject):
         path_template.run_number = self[parent_key].getProperty('run_number')
         path_template.suffix = self.session_hwobj["file_info"].getProperty('file_suffix')
 
-        path_template.precision = '04'
+        path_template.precision = '05'
         try:
            if self.session_hwobj["file_info"].getProperty('precision'):
                path_template.precision = eval(self.session_hwobj["file_info"].getProperty('precision'))

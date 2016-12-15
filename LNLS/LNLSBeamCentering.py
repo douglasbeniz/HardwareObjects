@@ -107,19 +107,19 @@ class LNLSBeamCentering(Equipment):
         self._fullPathSlit[(slit -1)] = fullPath
 
 
-    def _waitEndMovingAndUPdate(self, motor_dmov, motor_rbv, counter, signal_pos_changed, signal_int_changed):
+    def _waitEndMovingAndUPdate(self, motor_dmov, motor_rbv, counter, counter_factor, signal_pos_changed, signal_int_changed):
         sleep(0.05)
 
         while(self.getValue(motor_dmov) == 0):
             self.emit(signal_pos_changed, (self.getValue(motor_rbv), ))
-            self.emit(signal_int_changed, ('%.3E' % float(self.getValue(counter)), ))
+            self.emit(signal_int_changed, ('%.3E' % (float(self.getValue(counter)) * counter_factor), ))
             sleep(0.1)
 
         # Just to be sure we will present the latest valid value....
         self.emit(signal_pos_changed, (self.getValue(motor_rbv), ))
-        self.emit(signal_int_changed, ('%.3E' % float(self.getValue(counter)), ))
+        self.emit(signal_int_changed, ('%.3E' % (float(self.getValue(counter)) * counter_factor), ))
 
-    def _moveBaseCheckingPosition(self, motor_rbv, motor_rlv, motor_dmov, counter_val, step, initial_position, max_distance, full_path, signal_set_tab, signal_plot_clear, signal_pos_changed, signal_int_changed, signal_plot):
+    def _moveBaseCheckingPosition(self, motor_rbv, motor_rlv, motor_dmov, counter_val, counter_factor, step, initial_position, max_distance, full_path, signal_set_tab, signal_plot_clear, signal_pos_changed, signal_int_changed, signal_plot):
         # Initialize internal parameters
         max_intensity = None
         pos_max_intensity = None
@@ -132,8 +132,8 @@ class LNLSBeamCentering(Equipment):
         # This is to consider the first point...
         currentRBV = self.getValue(motor_rbv)
         self.emit(signal_pos_changed, (currentRBV, ))
-        intensity_show = '%.3E' % float(self.getValue(counter_val))
-        intensity = float(self.getValue(counter_val))
+        intensity_show = '%.3E' % (float(self.getValue(counter_val)) * counter_factor)
+        intensity = float(self.getValue(counter_val)) * counter_factor
         self.emit(signal_int_changed, (intensity_show, ))
         self.emit(signal_plot, (currentRBV, intensity,))
 
@@ -148,7 +148,6 @@ class LNLSBeamCentering(Equipment):
         while(not reachedLimit):
 
             currentRBV = self.getValue(motor_rbv)
-
             # Move motor by relative position
             self.setValue(motor_rlv, step)
 
@@ -173,8 +172,8 @@ class LNLSBeamCentering(Equipment):
             physicalLimit = (newRBV == currentRBV)
 
             self.emit(signal_pos_changed, (newRBV, ))
-            intensity_show = '%.3E' % float(self.getValue(counter_val))
-            intensity = float(self.getValue(counter_val))
+            intensity_show = '%.3E' % (float(self.getValue(counter_val)) * counter_factor)
+            intensity = float(self.getValue(counter_val)) * counter_factor
             self.emit(signal_int_changed, (intensity_show, ))
             self.emit(signal_plot, (newRBV, intensity,))
 
@@ -207,13 +206,14 @@ class LNLSBeamCentering(Equipment):
                                     self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8])))
 
                                 # Wait until movement is done and emit signals to update interface
-                                self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
+                                self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], (-1 if (slit == 0) else 1), POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
 
                                 # Going to distance after initial position...
                                 (max_int, pos_max_int, phys_limit) = self._moveBaseCheckingPosition(BASE_SLIT[slit][axis][2],
                                     BASE_SLIT[slit][axis][1],
                                     BASE_SLIT[slit][axis][3],
                                     COUNTER_VAL[slit],
+                                    -1 if (slit == 0) else 1,       # Bias voltage of counter for Rocking is inverted
                                     self._paramSlit[slit][2],
                                     initialPosition,
                                     0 if self._paramSlit[slit][axis] is None else abs(self._paramSlit[slit][axis]),
@@ -230,7 +230,7 @@ class LNLSBeamCentering(Equipment):
                                 # Move to the position of maximum intensity
                                 if (pos_max_int != None):
                                     self.setValue(BASE_SLIT[slit][axis][0], pos_max_int)
-                                    self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
+                                    self._waitEndMovingAndUPdate(BASE_SLIT[slit][axis][3], BASE_SLIT[slit][axis][2], COUNTER_VAL[slit], (-1 if (slit == 0) else 1), POS_CHANGED_SIGN[slit][axis], INT_CHANGED_SIGN[slit])
             self.emit('centeringConcluded')
         except TypeError:
             self.emit('errorCentering')

@@ -7,6 +7,7 @@ import math
 import logging
 
 from time import sleep
+from datetime import datetime
 
 from HardwareRepository.BaseHardwareObjects import Equipment
 
@@ -39,12 +40,15 @@ class LNLSEnergy(Equipment):
         self.energy_value = None
         self.wavelength_value = None
         self.default_en = 12
+        #self.wait_threshold = 30        # time to wait for camServer to set Pilatus Threshold
+        self.wait_threshold = 60        # time to wait for camServer to set Pilatus Threshold
         self.motorState = LNLSEnergy.READY
 
         # ----------------------------------------------------------------------
         # Hardware objects
         self.mono_first_xtal_hwobj = self.getObjectByRole("mono_first_xtal")
         self.mono_second_xtal_hwobj = self.getObjectByRole("mono_second_xtal")
+        self.detector_hwobj = self.getObjectByRole("detector")
 
         # Connect signals to related objects
         if (self.mono_first_xtal_hwobj):
@@ -145,10 +149,19 @@ class LNLSEnergy(Equipment):
     def start_move_energy(self, value, unit, wait=False):
         # Check if needed parameters are set
         if (hasattr(self, 'crystal_param_si_111') and hasattr(self, 'crystal_offset')):
+            # Check the necessity to convert energy from resolution
             if (unit == KEV_UNIT):
                 self.energy_value = value
             elif (unit == ANG_UNIT):
                 self.energy_value = PLANCK_LIGHT_SPEED / value
+
+            # 
+            startToChangeThreshold = datetime.now()
+
+            # Set threshold of Pilatus
+            if (self.detector_hwobj):
+                # Energy in eV
+                self.detector_hwobj.set_threshold(self.energy_value/2)
 
             # Formula to convert energy2theta (1st Crystal):
             #     E: energy in eV
@@ -172,6 +185,17 @@ class LNLSEnergy(Equipment):
                 targetPositionSecondXtal = 0.5 * self.crystal_offset / math.cos(targetAngleInRadian)
                 if (self.mono_second_xtal_hwobj):
                     self.mono_second_xtal_hwobj.move(targetPositionSecondXtal, wait=wait)
+
+                # 
+                endToChangeThreshold = datetime.now()
+                # 
+                deltaTimeThreshold = endToChangeThreshold - startToChangeThreshold
+                deltaTimeThreshold = deltaTimeThreshold.total_seconds()
+                # 
+                remainingTimeToWait = self.wait_threshold - deltaTimeThreshold
+                # 
+                if (remainingTimeToWait > 0):
+                    sleep(remainingTimeToWait)
 
             except (ValueError, ZeroDivisionError):
                 logging.getLogger("user_level_log").error('Error calculating target angle...')

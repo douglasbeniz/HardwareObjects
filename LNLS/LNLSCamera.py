@@ -224,9 +224,9 @@ class LNLSCamera(BaseHardwareObjects.Device):
         imgFile.close()
 
 
-    def take_snapshots_procedure(self, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj):
+    def take_snapshots_procedure(self, image_count, snapshotFilePath, snapshotFilePrefix, logFilePath, runNumber, collectStart, collectEnd, motorHwobj, detectorHwobj):
         """
-        Descript. :
+        Descript. : It takes snapshots of sample camera and camserver execution.
         """
         # Avoiding a processing of AbstractMultiCollect class for saving snapshots
         #centred_images = []
@@ -249,13 +249,13 @@ class LNLSCamera(BaseHardwareObjects.Device):
                 else:
                     positions.append(motorHwobj.getPosition())
 
-            # Create folder if not found
+            # Create folders if not found
             if (not os.path.exists(snapshotFilePath)):
                 try:
                     os.makedirs(snapshotFilePath)
                 except OSError as diag:
                     logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (snapshotFilePath, str(diag)))
-
+            
             for index in range(image_count):
                 while (motorHwobj.getPosition() < positions[index]):
                     gevent.sleep(0.02)
@@ -270,6 +270,9 @@ class LNLSCamera(BaseHardwareObjects.Device):
                 # This way all shapes will be also saved...
                 self.emit("savaSnapshot", imageFileName)
 
+                # Send a command to detector hardware-object to take snapshot of camserver execution...
+                detectorHwobj.takeScreenshotOfXpraRunningProcess(image_path=logFilePath, run_number=runNumber)
+
                 #centred_images.append((0, str(imageInfo)))
                 #centred_images.reverse() 
         except:
@@ -278,12 +281,12 @@ class LNLSCamera(BaseHardwareObjects.Device):
         return centred_images
 
 
-    def take_snapshots(self, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj, wait=False):
+    def take_snapshots(self, image_count, snapshotFilePath, snapshotFilePrefix, logFilePath, runNumber, collectStart, collectEnd, motorHwobj, detectorHwobj, wait=False):
         """
-        Descript. :
+        Descript. :  It takes snapshots of sample camera and camserver execution.
         """
         if image_count > 0:
-            self.snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count, snapshotFilePath, snapshotFilePrefix, collectStart, collectEnd, motorHwobj)
+            self.snapshots_procedure = gevent.spawn(self.take_snapshots_procedure, image_count, snapshotFilePath, snapshotFilePrefix, logFilePath, runNumber, collectStart, collectEnd, motorHwobj, detectorHwobj)
 
             self.centring_status["images"] = []
 

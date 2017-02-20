@@ -2,15 +2,23 @@
 Detector hwobj maintains information about detector.
 """
 from HardwareRepository.BaseHardwareObjects import Equipment
+import os
+import re
 import logging 
 import paramiko
+import pexpect
+import subprocess
+
 from gevent import monkey
+from time import sleep
 
 # This was necessary because of paramiko.ssh_exception.SSHException when running the procedure of cleanup
 monkey.patch_all()
 
 from py4syn.epics.PilatusClass import Pilatus
 from py4syn.epics.ShutterClass import SimpleShutter
+
+TIMEOUT_CAMSERVER_CONNECTION = 120
 
 class LNLSDetector(Equipment):
     TRIGGER_MODE = { "Internal":        0,
@@ -271,19 +279,339 @@ class LNLSDetector(Equipment):
     def get_pilatus_server_storage(self):
         return self.pilatusServerStorage
 
+    def get_camserver_screenshot_name(self):
+        return self.camserverScreenshotName
+
+    def is_camserver_connected(self):
+        return self.detector_pilatus.isCamserverConnected()
+
+
     def cleanup_remote_folder(self, folder):
         try:
-            ssh = paramiko.SSHClient()
-            # If server is not in knowm_hosts it will be included
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            # Conncet
-            ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword, timeout=10)
+            # Connect to Pilatus server using defined parameters
+            ssh = self.stablishSSHConnection()
             # Send a command to remove entire folder
             stdin, stdout, stderr = ssh.exec_command("rm -rf " + str(folder))
             ssh.close()
         except:
-            logging.getLogger().exception("Error when trying to cleanup temporary folder on pilatus server...")
-            logging.getLogger("user_level_log").error("Error when trying to cleanup temporary folder on pilatus server...")
+            error_message = "Error when trying to cleanup temporary folder on pilatus server..."
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error(error_message)
+
+
+    def start_camserver_if_not_connected(self):
+        camserverIsRunning = True
+
+        try:
+            # Check if Pilatus IOC is not connected before to proceed
+            if (not self.is_camserver_connected()):
+                # Connect to Pilatus server using defined parameters
+                ssh = self.stablishSSHConnection()
+
+                # --------------------------------------------------------------
+                # Stop previous running 'camserver' through 'xpra'
+                # --------------------------------------------------------------
+                # First, try to access the camserver and send 'exit' command through 'xpra'
+                stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverXpraProgram))
+
+                # Wait ps command to complete
+                while not stdout.channel.exit_status_ready():
+                    sleep(0.1)
+
+                # Check if no error occurred, what means that an 'xpra' process was found
+                if (not stdout.channel.recv_exit_status()):
+                    # Call the method to try stop 'camserver' using 'xpra'...
+                    self.stop_camserver()
+
+                # --------------------------------------------------------------
+                # If trying of stop 'camserver' (self.camserverUniqueName) through 'xpra' failed, then kill the processes, if still any
+                # --------------------------------------------------------------
+                # No 'xpra' process found, or it was not able to send 'exit' command to camserver.
+                # Check if no 'camserver' is still running...
+                stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverUniqueName))
+
+                # Wait ps command to complete
+                while not stdout.channel.exit_status_ready():
+                    sleep(0.1)
+
+                # Check that no error occurred, what means that a 'camserver' process was found
+                if (not stdout.channel.recv_exit_status()):
+                    # Parse returned processes
+                    process_list = stdout.read().decode('ascii').split('\n')
+
+                    # If exist any processing 'camserver', force stopping all of them using 'kill'
+                    if (len(process_list) > 1):
+                        stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep | awk {\'print $2\'} | xargs kill -s 2" % (self.camserverUniqueName))
+                        # Wait ps command to complete
+                        while not stdout.channel.exit_status_ready():
+                            sleep(0.1)
+
+                        # Check if some error occurred
+                        if (stdout.channel.recv_exit_status()):
+                            error_message = "Error when trying to kill \'%s\' processes! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
+                            logging.getLogger().exception(error_message)
+                            logging.getLogger("user_level_log").error(error_message)
+                else:
+                    error_message = "No existing \'%s\' process running! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
+                    logging.getLogger().exception(error_message)
+
+                # --------------------------------------------------------------
+                # Stop previous running 'xpra' (self.camserverXpraProgram), if any
+                # --------------------------------------------------------------
+                self.stopXpra(ssh=ssh)
+
+                # --------------------------------------------------------------
+                # Finally, start a new 'xpra' instance controlling 'camserver' program
+                # --------------------------------------------------------------
+                # Send a command to start Xpra with camonly script
+                #stdin, stdout, stderr = ssh.exec_command("dbus-launch xpra --bind-tcp=0.0.0.0:%s --no-daemon --start-child=%s start :%s" % (self.camserverXpraPort, self.camserverCamonlyProgram, self.camserverXpraDisplay))
+                stdin, stdout, stderr = ssh.exec_command("dbus-launch xpra --bind-tcp=0.0.0.0:%s --start-child=%s start :%s" % (self.camserverXpraPort, self.camserverCamonlyProgram, self.camserverXpraDisplay))
+
+                # Check if xpra was started...
+                stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverXpraProgram))
+
+                # Wait ps command to complete
+                while not stdout.channel.exit_status_ready():
+                    sleep(0.1)
+
+                # Check that an error OCCURRED, what means that a 'xpra' process was NOT found
+                if (stdout.channel.recv_exit_status()):
+                    camserverIsRunning = False
+                    # Inform the problem...
+                    error_message = "Error when trying to start \'%s\' on pilatus server... %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
+                    logging.getLogger().exception(error_message)
+                    logging.getLogger("user_level_log").error("-------------------------------------------------------------------")
+                    logging.getLogger("user_level_log").error(error_message)
+                    logging.getLogger("user_level_log").error("-------------------------------------------------------------------")
+                else:
+                    # Confirm thad Pilatus AreaDetector connected to CamServer...
+                    tries = 0
+                    while (not self.is_camserver_connected() and (tries < TIMEOUT_CAMSERVER_CONNECTION)):
+                        sleep(1)
+
+                    if (self.is_camserver_connected()):
+                        # Inform user that CamServer has been started!
+                        info_message = "Successfully started \'%s\' process!" % (self.camserverUniqueName)
+                        logging.getLogger("user_level_log").info("-------------------------------------------------------------------")
+                        logging.getLogger("user_level_log").info(info_message)
+                        logging.getLogger("user_level_log").info("-------------------------------------------------------------------")
+
+                # Then close the connection
+                ssh.close()
+        except:
+            if ssh:
+                # Stop SSH connection
+                ssh.close()
+
+            camserverIsRunning = False
+
+            error_message = ("Error when trying to start \'%s\' on pilatus server..." % (self.camserverUniqueName))
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error("-------------------------------------------------------------------")
+            logging.getLogger("user_level_log").error(error_message)
+            logging.getLogger("user_level_log").error("-------------------------------------------------------------------")
+
+        # -------------------------------------------------
+        # Return if successfully started, it was already running, camserver
+        return (camserverIsRunning and self.is_camserver_connected())
+
+    def stop_camserver(self, image_path="."):
+        stopped = False
+
+        try:
+            # Getting the execution of camserver on remote Pilatus server to be displayed locally
+            pexpt_xpra = pexpect.spawn("xpra attach tcp:%s:%s" % (self.pilatusServerIP, self.camserverXpraPort))
+            # Using Wmctrl command to get display where camserver is running locally
+            display = subprocess.check_output("wmctrl -lp | grep \'%s\' | awk \'{print $1}\'" % (self.camserverUniqueName), shell=True)
+            display = display.decode('ascii').split('\n')[0]
+
+            # Check that a display was found...
+            if (display):
+                # Write the exit command on camserver terminal
+                os.system("xdotool windowfocus --sync %s; xdotool type \'%s\'; xdotool key KP_Enter" % (display, self.camserverExitCommand))
+                # Take a screenshot...
+                self.takeScreenshotOfXpraRunningProcess(image_path=image_path)
+                # Wait a while and retry the exit command, because more than one terminal could be running
+                sleep(0.1)
+                os.system("xdotool windowfocus --sync %s; xdotool type \'%s\'; xdotool key KP_Enter" % (display, self.camserverExitCommand))
+
+                stopped = True
+
+            # Send Ctrl+C to Xpra and detach from remote display
+            pexpt_xpra.send("\003")
+            # Stop Pexpect connection
+            pexpt_xpra.close()
+
+            # --------------------------------------------------------------
+            # Try to stop xpra running on Pilatus server
+            # --------------------------------------------------------------
+            # Connect to Pilatus server using defined parameters
+            ssh = self.stablishSSHConnection()
+            # Call a procedure to stop xpra...
+            self.stopXpra(ssh=ssh)
+            # Then close the connection
+            ssh.close()
+
+        except:
+            if pexpt_xpra:
+                # Stop Pexpect connection
+                pexpt_xpra.close()
+
+            if ssh:
+                # Stop SSH connection
+                ssh.close()
+
+            error_message = "Error when trying to stop camserver on pilatus server..."
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error(error_message)
+
+        # Inform if had a chance to send 'exit' command through the display
+        return stopped
+
+
+    def stopXpra(self, ssh):
+        # --------------------------------------------------------------
+        # Stop previous running 'xpra' (self.camserverXpraProgram), if any
+        # --------------------------------------------------------------
+        # Check if no 'xpra' is running
+        stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverXpraProgram))
+
+        # Wait ps command to complete
+        while not stdout.channel.exit_status_ready():
+            sleep(0.1)
+
+        # Check that no error occurred, what means that a 'xpra'process was found
+        if (not stdout.channel.recv_exit_status()):
+            # Send a command to stop Xpra sessions
+            stdin, stdout, stderr = ssh.exec_command("xpra stop")
+
+            # Wait ps command to complete
+            while not stdout.channel.exit_status_ready():
+                sleep(0.1)
+
+            # Check if any error occurred...
+            if (stdout.channel.recv_exit_status()):
+                # Check if any xpra is still running...
+                stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverXpraProgram))
+
+                # Wait ps command to complete
+                while not stdout.channel.exit_status_ready():
+                    sleep(0.1)
+
+                # Check that no error occurred, what means that a 'xpra' process was found
+                if (not stdout.channel.recv_exit_status()):
+                    # Force 'xpra' to stop through 'kill'...
+                    stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep | awk {\'print $2\'} | xargs kill -s 2" % (self.camserverXpraProgram))
+
+                    # Wait ps command to complete
+                    while not stdout.channel.exit_status_ready():
+                        sleep(0.1)
+
+                    # Check if some error beam_crystal_position
+                    if (stdout.channel.recv_exit_status()):
+                        error_message = "Error when trying to kill running \'%s\' processes! %s" % (self.camserverXpraProgram, stderr.read().decode('ascii'))
+                        logging.getLogger().exception(error_message)
+                        logging.getLogger("user_level_log").error(error_message)
+            else:
+                error_message = "Previous \'%s\' process was successfully stopped!" % (self.camserverXpraProgram)
+                logging.getLogger().exception(error_message)
+        else:
+            error_message = "No existing \'%s\' process running! %s" % (self.camserverXpraProgram, stderr.read().decode('ascii'))
+            logging.getLogger().exception(error_message)
+
+
+    def takeScreenshotOfXpraRunningProcess(self, image_path='.', run_number="1", image_extension='.png'):
+        try:
+            # Connect to Pilatus server using defined parameters
+            ssh = self.stablishSSHConnection()
+
+            # Guarantee unique names of images
+            fileName = self.createUniqueFileName(name=os.path.join(image_path, self.camserverScreenshotName + "_" + str(run_number) + image_extension))
+            print("# ********")
+            print("Camserver screenshot: ", fileName)
+            print("# ********")
+
+            # Check locally maped MX2Temp storage folder which should be the same as remote mapping on Pilatus server
+            if (not os.path.exists(image_path)):
+                try:
+                    # Send a command to remove entire folder
+                    stdin, stdout, stderr = ssh.exec_command("mkdir -p %s" % (image_path))
+
+                    # Wait ps command to complete
+                    while not stdout.channel.exit_status_ready():
+                        sleep(0.1)
+
+                    # Check if an error occurred
+                    if (stdout.channel.recv_exit_status()):
+                        logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (logFilePath, str(diag)))
+
+                    # # Wait a while to guarantee the folder is accessible
+                    # sleep(1)
+
+                except OSError as diag:
+                    logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (logFilePath, str(diag)))
+
+            # Send a command to remove entire folder
+            stdin, stdout, stderr = ssh.exec_command("xpra screenshot %s" % (fileName))
+
+            # Wait ps command to complete
+            while not stdout.channel.exit_status_ready():
+                sleep(0.1)
+
+            # Check if an error occurred
+            if (stdout.channel.recv_exit_status()):
+                error_message = "Error when trying to take a snapshot of running camserver process..." + stderr.read().decode('ascii')
+                logging.getLogger().exception(error_message)
+                logging.getLogger("user_level_log").error(error_message)
+
+            ssh.close()
+        except:
+            if ssh:
+                # Stop SSH connection
+                ssh.close()
+
+            error_message = "Error when trying to take a snapshot of running camserver process..."
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error(error_message)
+
+
+    def createUniqueFileName(self, name):
+        leadingZeros = 4
+
+        fileName, fileExtension = os.path.splitext(name)
+        filePath, fileName = os.path.split(fileName)
+
+        # check if fileName contains the number part and if so ignores it to
+        # generate the next part
+        expression = r'_\d{'+str(leadingZeros)+'}'
+        fileName = re.sub(expression,'', fileName, count=1)
+        fileName = os.path.join(filePath, fileName)
+
+        newName = ""
+        cont = 0
+
+        while(True):
+            cont += 1
+            newName = fileName + "_" + str(cont).zfill(leadingZeros) + fileExtension
+
+            if(os.path.isfile(newName)):
+                continue
+            else:
+                break
+
+        return newName
+
+
+    def stablishSSHConnection(self):
+        # Instantiate a paramiko object
+        ssh = paramiko.SSHClient()
+        # If server is not in knowm_hosts it will be included
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # Connect
+        ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword, timeout=10)
+
+        return ssh
+
 
     def update_values(self):
         # Call the update of Detector

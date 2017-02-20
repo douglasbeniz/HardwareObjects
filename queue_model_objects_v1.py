@@ -1088,6 +1088,7 @@ class PathTemplate(object):
         self.process_directory = str()
         # LNLS
         self.snapshot_directory = str()
+        self.log_directory = str()
         self.xds_dir = str()
         self.base_prefix = str()
         self.mad_prefix = str()
@@ -1104,6 +1105,7 @@ class PathTemplate(object):
                 "process_directory" : self.process_directory,
                 # LNLS
                 "snapshot_directory" : self.snapshot_directory,
+                "log_directory" : self.log_directory,
                 "xds_dir" : self.xds_dir,
                 "base_prefix" : self.base_prefix,
                 "mad_prefix" : self.mad_prefix,
@@ -1458,6 +1460,8 @@ def to_collect_dict(data_collection, session, sample, centred_pos=None):
                           # LNLS
                           'snapshot_directory': acquisition.\
                           path_template.snapshot_directory,
+                          'log_directory': acquisition.\
+                          path_template.log_directory,
                           'template': acquisition.\
                           path_template.get_image_file_name(),
                           'suffix': acquisition.path_template.get_suffix()},

@@ -8,6 +8,7 @@ import logging
 import paramiko
 import pexpect
 import subprocess
+import gevent
 
 from gevent import monkey
 from time import sleep
@@ -18,7 +19,10 @@ monkey.patch_all()
 from py4syn.epics.PilatusClass import Pilatus
 from py4syn.epics.ShutterClass import SimpleShutter
 
-TIMEOUT_CAMSERVER_CONNECTION = 120
+
+TIMEOUT_CAMSERVER_CONNECTION    = 120
+TOLERANCE_THRESHOLD             = 0.01      # 10 eV
+
 
 class LNLSDetector(Equipment):
     TRIGGER_MODE = { "Internal":        0,
@@ -212,8 +216,14 @@ class LNLSDetector(Equipment):
     def get_acquire_period(self):
         return self.detector_pilatus.getAcquirePeriod()
 
-    def set_threshold(self, threshold):
-        self.detector_pilatus.setThreshold(threshold)
+    def set_threshold(self, threshold, wait=True, force=False):
+        changed = False
+
+        if (force or (threshold < (self.get_threshold() - TOLERANCE_THRESHOLD)) or (threshold > (self.get_threshold() + TOLERANCE_THRESHOLD))):
+            self.detector_pilatus.setThreshold(threshold, wait=wait)
+            changed = True
+
+        return changed
 
     def get_threshold(self):
         return self.detector_pilatus.getThreshold()
@@ -298,8 +308,11 @@ class LNLSDetector(Equipment):
             logging.getLogger().exception(error_message)
             logging.getLogger("user_level_log").error(error_message)
 
-
     def start_camserver_if_not_connected(self):
+        gevent.spawn(self.process_start_camserver_if_not_connected)
+
+
+    def process_start_camserver_if_not_connected(self):
         camserverIsRunning = True
 
         try:
@@ -398,6 +411,10 @@ class LNLSDetector(Equipment):
 
                 # Then close the connection
                 ssh.close()
+
+                # (Re)set threshold on CamServer everytime it is (re)started
+                #self.energy_hwobj.setEnergy(self.energy_hwobj.getCurrentEnergy())
+                self.set_threshold(self.get_threshold(), wait=True, force=True)
         except:
             if ssh:
                 # Stop SSH connection
@@ -527,9 +544,9 @@ class LNLSDetector(Equipment):
 
             # Guarantee unique names of images
             fileName = self.createUniqueFileName(name=os.path.join(image_path, self.camserverScreenshotName + "_" + str(run_number) + image_extension))
-            print("# ********")
-            print("Camserver screenshot: ", fileName)
-            print("# ********")
+            # print("# ********")
+            # print("Camserver screenshot: ", fileName)
+            # print("# ********")
 
             # Check locally maped MX2Temp storage folder which should be the same as remote mapping on Pilatus server
             if (not os.path.exists(image_path)):

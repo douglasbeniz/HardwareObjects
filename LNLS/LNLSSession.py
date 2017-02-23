@@ -52,8 +52,17 @@ class LNLSSession(HardwareObject):
         self.snapshot_folder_name = self["file_info"].\
             getProperty('snapshot_folder_name')
 
+        self.log_folder_name = self["file_info"].\
+            getProperty('log_folder_name')
+
         self.processed_data_folder_name = self["file_info"].\
             getProperty('processed_data_folder_name')
+
+        # -------------------------------------------------------
+        # Related Hardware-Objects
+        # -------------------------------------------------------
+        self.detector_hwobj = self.getObjectByRole("detector")
+
 
         try:
            inhouse_proposals = self["inhouse_users"]["proposal"]
@@ -143,10 +152,17 @@ class LNLSSession(HardwareObject):
 
     def get_base_snapshot_directory(self):
         """
-        :returns: The base path for images.
+        :returns: The base path for snapshots.
         :rtype: str
         """
         return os.path.join(self.get_base_data_directory(), self.snapshot_folder_name)
+
+    def get_base_log_directory(self):
+        """
+        :returns: The base path for logs.
+        :rtype: str
+        """
+        return os.path.join(self.get_base_data_directory(), self.log_folder_name)
 
     def get_base_process_directory(self):
         """
@@ -178,6 +194,9 @@ class LNLSSession(HardwareObject):
 
     def get_snapshot_folder_name(self):
         return self.snapshot_folder_name
+
+    def get_log_folder_name(self):
+        return self.log_folder_name
 
     def get_process_directory(self, sub_dir=None):
         """
@@ -284,6 +303,11 @@ class LNLSSession(HardwareObject):
         self.update_last_session_number(user, start_time)
 
         self.session_start_date = start_date_str
+
+        # -----------------------------------------------------------------
+        # When a session is started, we check if CamServer is running, trying to start it otherwise...
+        # -----------------------------------------------------------------
+        self.detector_hwobj.start_camserver_if_not_connected()
 
     def get_session_start_date(self):
         """

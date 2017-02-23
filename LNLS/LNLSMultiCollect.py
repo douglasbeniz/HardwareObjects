@@ -8,10 +8,11 @@ import http.client
 import math
 import gevent
 import glob
-import shutil
+#import shutil
+from sh import rsync
 
 
-MAXIMUM_TRIES_COPY_CBF = 100    # 500 * 0.01 seg = 5.00 seg (at most) waiting for CBF criation
+MAXIMUM_TRIES_COPY_CBF = 500    # 500 * 0.01 seg = 5.00 seg (at most) waiting for CBF criation
 #MAXIMUM_TRIES_COPY_CBF = 50
 
 class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
@@ -99,7 +100,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # ----------------------------------------------------------------------
         # First of all, check if CamServer is running, otherwise try to start it
         # ----------------------------------------------------------------------
-        if (not self.detector_hwobj.start_camserver_if_not_connected()):
+        if (not self.detector_hwobj.is_camserver_connected()):
             error_message =  "It is impossible to perform an acquisition without \'camserver\' running! Try again or contact beamline staff!"
             logging.getLogger("user_level_log").error(error_message)
 
@@ -340,6 +341,10 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         elif 'energy' in data_collect_parameters:
           logging.getLogger("user_level_log").info("Setting energy to %f", data_collect_parameters["energy"])
           self.set_energy(data_collect_parameters["energy"])
+
+        # Wait unting energy and threshold are set...
+        while ((not self.energy_hwobj.energyIsReady()) or (self.energy_hwobj.isSettingThreshold())):
+            gevent.sleep(0.5)
 
         if 'resolution' in data_collect_parameters:
           resolution = data_collect_parameters["resolution"]["upper"]
@@ -1072,21 +1077,17 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                     cbfFileCriteria += "."
                     cbfFileCriteria += str(self.fileSuffix())
 
-                    print("#---------------------------------------")
-                    print(" cbfFileCriteria :: ", cbfFileCriteria)
-                    print(" full name :: ", os.path.join(filePathOrig, cbfFileCriteria))
-                    print("#---------------------------------------")
-
                     while ((copied == False) and (tries < MAXIMUM_TRIES_COPY_CBF)):
                         for cbfFile in glob.glob(os.path.join(filePathOrig, cbfFileCriteria)):
                             # To use if error
                             cbfFileName = cbfFile
                             # 
-                            shutil.copy(cbfFile, filePathDest)
+                            #shutil.copy(cbfFile, filePathDest)
+                            rsync(cbfFile, filePathDest)
                             copied = True
 
                             # If it is the last image to copy, also wait for LOG file
-                            if ((not copyingLogFile) and (frame == number_of_images)):
+                            if ((not copyingLogFile) and (number_of_images > 1) and (frame == number_of_images)):
                                 cbfFileCriteria =  str(self._file_prefix) + "_" 
                                 cbfFileCriteria += str(self._file_run_number) + "*.log"
 
@@ -1100,23 +1101,24 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                         # -----------------------------------------------------------------
                         try:
                             if (frame):
-                                filePathDest = self._log_directory
+                                filePathDestLog = self._log_directory
 
-                                if (self.detector_hwobj.get_pilatus_server_storage() in filePathDest):
-                                    filePathOrig = filePathDest.replace(self.detector_hwobj.get_pilatus_server_storage(), self.detector_hwobj.get_pilatus_server_storage_temp())
+                                if (self.detector_hwobj.get_pilatus_server_storage() in filePathDestLog):
+                                    filePathOrigLog = filePathDestLog.replace(self.detector_hwobj.get_pilatus_server_storage(), self.detector_hwobj.get_pilatus_server_storage_temp())
                                 else:
-                                    filePathOrig = os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), filePathDest[1:])
+                                    filePathOrigLog = os.path.join(self.detector_hwobj.get_pilatus_server_storage_temp(), filePathDestLog[1:])
 
                                 pngFileCriteria =  str(self.detector_hwobj.get_camserver_screenshot_name()) + "_"
                                 pngFileCriteria += str(self._file_run_number) + "_"
                                 pngFileCriteria += str(self._snapshot_camserver_number).zfill(4)
                                 pngFileCriteria += ".png"
 
-                                for pngFile in glob.glob(os.path.join(filePathOrig, pngFileCriteria)):
+                                for pngFile in glob.glob(os.path.join(filePathOrigLog, pngFileCriteria)):
                                     # To use if error
                                     pngFileName = pngFile
                                     # 
-                                    shutil.copy(pngFile, filePathDest)
+                                    #shutil.copy(pngFile, filePathDestLog)
+                                    rsync(pngFile, filePathDestLog)
                                     #copied = True
                                     self._snapshot_camserver_number += 1
 

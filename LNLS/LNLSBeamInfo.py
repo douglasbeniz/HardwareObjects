@@ -30,9 +30,10 @@ class LNLSBeamInfo(Equipment):
         self.beam_size_slits = [9999, 9999]
         self.beam_size_aperture = [0.01, 0.01]
         self.beam_size_definer = [9999, 9999]
-        self.beam_crystal_position = [269, 296]
-        self.beam_det_position = [760, 847]
+        self.beam_crystal_position = [0, 0]         # see XML
+        self.beam_det_position = [0, 0]             # see XML
         self.beam_info_dict = {}
+
 
     def init(self):
         # ------------------------------------------------------------------------
@@ -40,6 +41,10 @@ class LNLSBeamInfo(Equipment):
         #self.aperture_hwobj = self.getObjectByRole("aperture")
         self.slit_gap_hor_hwobj = self.getObjectByRole("slit_gap_hor")
         self.slit_gap_ver_hwobj = self.getObjectByRole("slit_gap_ver")
+
+        # Set beam position from information on XML
+        self.set_beam_crystal_position(self.beam_crystal_position_x, self.beam_crystal_position_y)
+        self.set_beam_det_position(self.beam_det_position_x, self.beam_det_position_y)
 
         # ------------------------------------------------------------------------
         # Signals
@@ -49,22 +54,28 @@ class LNLSBeamInfo(Equipment):
         self.get_beam_position = self.get_beam_crystal_position
         self.set_beam_position = self.set_beam_crystal_position
 
+
     def get_beam_crystal_position(self):
         return self.beam_crystal_position
 
+
     def get_beam_det_position(self):
         return self.beam_det_position
+
 
     def set_beam_crystal_position(self, beam_x, beam_y):
         self.beam_crystal_position = [beam_x, beam_y]
         self.emit("beamPositionChanged", (self.beam_crystal_position, ))
 
+
     def set_beam_det_position(self, beam_x, beam_y):
         self.beam_det_position = [beam_x, beam_y]
 
+
     def get_beam_info(self):
         return self.evaluate_beam_info()
-        
+
+
     def get_beam_size(self):
         """
         Description: returns beam size in microns
@@ -74,13 +85,16 @@ class LNLSBeamInfo(Equipment):
         return float(self.beam_info_dict["size_x"]), \
                float(self.beam_info_dict["size_y"])
 
+
     def get_beam_shape(self):
         self.evaluate_beam_info()
         return self.beam_info_dict["shape"]
 
+
     def get_slits_gap(self):
         self.evaluate_beam_info()
         return self.beam_size_slits        
+
 
     def evaluate_beam_info(self):
         """
@@ -117,6 +131,7 @@ class LNLSBeamInfo(Equipment):
 
         return self.beam_info_dict        
 
+
     def emit_beam_info_change(self): 
         if self.beam_info_dict["size_x"] != 9999 and \
            self.beam_info_dict["size_y"] != 9999:                
@@ -124,11 +139,14 @@ class LNLSBeamInfo(Equipment):
                                            self.beam_info_dict["size_y"]), ))
             self.emit("beamInfoChanged", (self.beam_info_dict, ))
 
+
     def get_beam_divergence_hor(self):
         return 0
 
+
     def get_beam_divergence_ver(self):
         return 0
+
 
     # def get_aperture_pos_name(self):
     #     if self.aperture_hwobj:

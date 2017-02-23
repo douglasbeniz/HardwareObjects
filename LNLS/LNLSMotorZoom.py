@@ -10,9 +10,9 @@ from LNLSMotor import LNLSMotor
 ZOOM_MOTOR_POSITION = [0, 286, 400, 410, 492, 565, 626, 676]
 
 #PIXELS_PER_MM = [[x],[y]]
-#PIXELS_PER_MM = [[85.0, 202.4, 300.1, 307.6, 404.8, 510.1, 607.3, 720.2],[85.0, 202.4, 300.1, 307.6, 404.8, 510.1, 607.3, 720.2]]
+#PIXELS_PER_MM = [[85.0, 202.4, 300.1, 307.6, 404.8, 510.1, 607.3, 720.2], [85.0, 202.4, 300.1, 307.6, 404.8, 510.1, 607.3, 720.2]]
 # Only the PIXELS_PER_MM[[2],[2]] is calibrated!
-PIXELS_PER_MM = [[85.0, 202.4, 456, 307.6, 404.8, 510.1, 607.3, 720.2],[85.0, 202.4, 455, 307.6, 404.8, 510.1, 607.3, 720.2]]
+PIXELS_PER_MM = [[129.2, 307.5, 456, 467.4, 615.1, 775.1, 922.8, 1094.3], [128.9, 306.9, 455, 466.4, 613.7, 773.4, 920.8, 1091.9]]
 
 #------------------------------------------------------------------------------
 class LNLSMotorZoom(LNLSMotor):
@@ -24,8 +24,9 @@ class LNLSMotorZoom(LNLSMotor):
 
         self._last_position_name = None
 
+        self.predefinedPositions = { "Zoom 0.5": 0, "Zoom 1": 1, "Zoom 1.5": 3, "Zoom 2": 4, "Zoom 2.5": 5, "Zoom 3": 6, "Zoom 3.5": 7}
         #self.predefinedPositions = { "Zoom 0.5": 0, "Zoom 1": 1, "Zoom 1.46": 2, "Zoom 1.5": 3, "Zoom 2": 4, "Zoom 2.5": 5, "Zoom 3": 6, "Zoom 3.5": 7}
-        self.predefinedPositions = { "Zoom 1.46": 2}
+        #self.predefinedPositions = { "Zoom 1.46": 2}
         self.sortPredefinedPositionsList()
 
     def sortPredefinedPositionsList(self):

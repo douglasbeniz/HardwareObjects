@@ -73,9 +73,6 @@ class LNLSGoniometer(GenericDiffractometer):
         """
         GenericDiffractometer.init(self)
 
-        self.pixels_per_mm_x = 85       # 85 pixels / 1mm for 0.5 zoom
-        self.pixels_per_mm_y = 85       # 85 pixels / 1mm for 0.5 zoom
-        
         self.cancel_centring_methods = {}
         self.current_positions_dict = {'phiy'  : 0, 'phiz' : 0, 'sampx' : 0,
                                        'sampy' : 0, 'zoom' : 0, 'phi' : 17.6,
@@ -94,11 +91,8 @@ class LNLSGoniometer(GenericDiffractometer):
         # ---------------------------------------------------------------------
         # Beam-info
         self.beam_info_hwobj = self.getObjectByRole("beam_info")
-
-        if (self.beam_info_hwobj):
-            self.beam_position = self.beam_info_hwobj.get_beam_position()
-        else:
-            self.beam_position = [self.image_width/2, self.image_height/2]
+        # Update beam position
+        self.get_beam_position()
 
         # ---------------------------------------------------------------------
         # Camera
@@ -110,9 +104,19 @@ class LNLSGoniometer(GenericDiffractometer):
         self.motor_goniox_hwobj = self.getObjectByRole("goniox")
         self.motor_sampx_hwobj = self.getObjectByRole("sampx")
         self.motor_sampy_hwobj = self.getObjectByRole("sampy")
+
         # Zoom
         self.motor_zoom_hwobj = self.getObjectByRole("zoom")
 
+        # Connect signals to related objects
+        if (self.motor_zoom_hwobj):
+            self.motor_zoom_hwobj.connect('positionChanged', self.updatePixelsPerMM)
+
+        # Update scale of pixels per mm
+        self.pixels_per_mm_x = self.motor_zoom_hwobj.getPixelsPerMm(0)
+        self.pixels_per_mm_y = self.motor_zoom_hwobj.getPixelsPerMm(0)
+
+        #
         self.reversing_rotation = self.getProperty("reversingRotation")
         try:
             self.grid_direction = eval(self.getProperty("gridDirection"))
@@ -190,10 +194,13 @@ class LNLSGoniometer(GenericDiffractometer):
         last_centred_position[1] = y
 
         # Get current vallue of involved motors
-        omegaPos = self.motor_omega_hwobj.getPosition()
+        omegaPos  = self.motor_omega_hwobj.getPosition()
         gonioxPos = self.motor_goniox_hwobj.getPosition()
-        sampxPos = self.motor_sampx_hwobj.getPosition()
-        sampyPos = self.motor_sampy_hwobj.getPosition()
+        sampxPos  = self.motor_sampx_hwobj.getPosition()
+        sampyPos  = self.motor_sampy_hwobj.getPosition()
+
+        # Update beam position
+        self.get_beam_position()
 
         # Pixels to move axis X of whole goniometer
         moveGonioX = (self.beam_position[0] - last_centred_position[0])
@@ -205,15 +212,29 @@ class LNLSGoniometer(GenericDiffractometer):
 
         # Calculate new position of X
         moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
-        moveSampX = moveSampX / self.pixels_per_mm_x
+        print("math.cos(math.radians(omegaPos)): ", math.cos(math.radians(omegaPos)))
+        print("self.beam_position[1]: ", self.beam_position[1])
+        print("float(last_centred_position[1])", float(last_centred_position[1]))
+        print("moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampX)
+        #moveSampX = moveSampX / self.pixels_per_mm_x
+        moveSampX = (moveSampX / self.pixels_per_mm_x) * -1
+        print("moveSampX = moveSampX / self.pixels_per_mm_x: ", moveSampX)
         # Move absolute
         moveSampX += sampxPos
+        print("moveSampX += sampxPos: ", moveSampX)
 
         # Calculate new position of Y
         moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
-        moveSampY = moveSampY / self.pixels_per_mm_y
+        print("math.sin(math.radians(omegaPos)): ", math.sin(math.radians(omegaPos)))
+        print("self.beam_position[1]: ", self.beam_position[1])
+        print("float(last_centred_position[1])", float(last_centred_position[1]))
+        print("moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampY)
+        moveSampY = (moveSampY / self.pixels_per_mm_y) * -1
+        #moveSampY = moveSampY / self.pixels_per_mm_y
+        print("moveSampY = moveSampY / self.pixels_per_mm_y: ", moveSampY)
         # Move absolute
         moveSampY += sampyPos
+        print("moveSampY += sampyPos: ", moveSampY)
 
         centred_pos_dir = { 'goniox': moveGonioX, 'sampx': moveSampX, 'sampy': moveSampY }
 
@@ -345,6 +366,14 @@ class LNLSGoniometer(GenericDiffractometer):
 
         return { "omega": omegaPos, "goniox": gonioxPos, "sampx": sampxPos, "sampy": sampyPos }
 
+
+    def get_beam_position(self):
+        if (self.beam_info_hwobj):
+            self.beam_position = self.beam_info_hwobj.get_beam_position()
+        else:
+            self.beam_position = [self.image_width/2, self.image_height/2]
+
+
     def refresh_video(self):
         """
         Descript. :
@@ -391,3 +420,9 @@ class LNLSGoniometer(GenericDiffractometer):
         self.emit('zoomMotorPredefinedPositionChanged', None, None)
         #omega_ref = [205, 0]
         #self.emit('omegaReferenceChanged', omega_ref)
+
+
+    def updatePixelsPerMM(self, position=None):
+        if (self.motor_zoom_hwobj.getPixelsPerMm(0) and self.motor_zoom_hwobj.getPixelsPerMm(1)):
+            self.emit('pixelsPerMmChanged', [self.motor_zoom_hwobj.getPixelsPerMm(0), self.motor_zoom_hwobj.getPixelsPerMm(1)])
+

@@ -1748,4 +1748,3 @@ def create_interleave_sw(interleave_list, num_images, sw_size):
                                   sw_actual_size, sw_osc_start, sw_osc_range))
         sw_first_image += sw_actual_size 
     return subwedges
-            

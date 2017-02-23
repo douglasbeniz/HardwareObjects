@@ -129,8 +129,8 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         # ----------------------------------------------------------------------
         # Py4Syn objects
         try:
-            #self.scaler = Scaler(self.epics_scaler, int(self.epics_scaler_channel))    # REAL
-            self.scaler = SimCountable(self.epics_scaler, self.epics_scaler_name)       # Simulated
+            self.scaler = Scaler(self.epics_scaler, int(self.epics_scaler_channel))    # REAL
+            #self.scaler = SimCountable(self.epics_scaler, self.epics_scaler_name)       # Simulated
         except:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Error when instantiating a scaler')
 

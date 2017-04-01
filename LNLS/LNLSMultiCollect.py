@@ -392,7 +392,25 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # 0:software binned, 1:unbinned, 2:hw binned
         self.set_detector_mode(data_collect_parameters["detector_mode"])
 
+        # ------------------------------------------------------------------
+        # LNLS
+        # ------------------------------------------------------------------
+        # Start trigger by openning the shutter and start another thread 
+        # to take care of shutter clossing....
+        # ------------------------------------------------------------------
+        self._shutter_control_gen = gevent.spawn(self.do_shutter_control)
+        # ------------------------------------------------------------------
+
         with cleanup(self.data_collection_cleanup):
+            # ------------------------------------------------------------------
+            # LNLS - Just to guarantee...
+            # ------------------------------------------------------------------
+            tries = 0
+            while(self.detector_hwobj.is_counting() and tries < MAXIMUM_TRIES_AD_PILATUS):
+                gevent.sleep(0.5)
+                tries += 1
+            # ------------------------------------------------------------------
+
             if not self.safety_shutter_opened():
                 logging.getLogger("user_level_log").info("Opening safety shutter")
                 self.open_safety_shutter(moveOmega=self._total_angle)
@@ -470,17 +488,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                                              data_collect_parameters["comment"])
                     data_collect_parameters["dark"] = 0
 
-                    # ------------------------------------------------------------------
-                    # LNLS
-                    # ------------------------------------------------------------------
-                    # Start trigger by openning the shutter and start another thread 
-                    # to take care of shutter clossing....
-                    # ------------------------------------------------------------------
-                    self._shutter_control_gen = gevent.spawn(self.do_shutter_control)
-                    # ------------------------------------------------------------------
-
                     i = 0
                     j = wedge_size
+
                     while ((j > 0) and self._shutter_control_gen):
                       frame_start = start+i*osc_range
                       i+=1
@@ -803,6 +813,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             # Send a comand to move omega
             self.diffractometer_hwobj.move_omega_absolute(moveOmega)
 
+
     def safety_shutter_opened(self):
         return self.detector_hwobj.shutter_opened()
 
@@ -853,12 +864,18 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def start_acquisition(self, exptime, npass, first_frame):
         # Check if Pilatus is not still collecting...
         if (self.detector_hwobj.is_counting()):
-            logging.getLogger("user_level_log").info("Area detector of Pilatus inform that it is still in operation.  Waiting at most 3 minutes...")
+            logging.getLogger("user_level_log").info("Area detector of Pilatus inform that it is still in operation.  Waiting at most 2 minutes...")
 
         tries = 0
         while(self.detector_hwobj.is_counting() and tries < MAXIMUM_TRIES_AD_PILATUS):
-            gevent.sleep(1)
+            gevent.sleep(0.5)
             tries += 1
+
+        # If still "acquiring"... Try to stop previous pilatus (CamServer) acquisition
+        if (self.detector_hwobj.is_counting()):
+            logging.getLogger("user_level_log").info("Forcing previous Pilatus acquisition to stop...")
+            self.force_pilatus_stop()
+            gevent.sleep(2)
 
         # Send command to start acquisition (wait trigger)
         self.detector_hwobj.acquire()
@@ -894,14 +911,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
 
         return
 
-
-    def stop_procedure(self):
-        # If exist a thread to take care of shutter, kill it
-        self.stop_shutter_control()
-
-        # Close shutter and move Omega to initial position
-        self.close_safety_shutter(restoreOmegaPosition=True)
-
+    def force_pilatus_stop(self):
         # Try to stop pilatus (CamServer)
         try:
             # XXX
@@ -914,6 +924,16 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         except:
             logging.getLogger("user_level_log").error("Error when trying to stop Pilatus acquisition...")
             pass
+
+    def stop_procedure(self):
+        # If exist a thread to take care of shutter, kill it
+        self.stop_shutter_control()
+
+        # Close shutter and move Omega to initial position
+        self.close_safety_shutter(restoreOmegaPosition=True)
+
+        # Try to stop pilatus (CamServer)
+        self.force_pilatus_stop()
 
         try:
             # Cancel snapshots

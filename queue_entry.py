@@ -28,6 +28,9 @@ import queue_model_objects_v1 as queue_model_objects
 import os
 import autoprocessing
 
+# LNLS
+import Qt4_queue_item
+
 from collections import namedtuple
 from queue_model_enumerables_v1 import *
 from HardwareRepository.HardwareRepository import dispatcher
@@ -305,7 +308,11 @@ class BaseQueueEntry(QueueEntryContainer):
         view = self.get_view()
 
         view.setHighlighted(True)
-        view.setOn(False)
+        # LNLS
+        # To allow a multiple collect of "Standards"...
+        if (type(view) == Qt4_queue_item.SampleQueueItem):
+            view.setOn(False)
+
         self.get_data_model().set_executed(True)
         self._set_background_color()
 

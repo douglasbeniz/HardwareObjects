@@ -41,7 +41,7 @@ class LNLSEnergy(Equipment):
         self.wavelength_value = None
         self.default_en = 12
         self.setting_threshold = False
-        self.wait_threshold = 60        # time to wait for camServer to set Pilatus Threshold
+        self.wait_threshold = 40        # time to wait for camServer to set Pilatus Threshold
         self.motorState = LNLSEnergy.READY
 
         # ----------------------------------------------------------------------
@@ -151,7 +151,7 @@ class LNLSEnergy(Equipment):
         return lims
 
 
-    def start_move_energy(self, value, unit, wait=False):
+    def start_move_energy(self, value, unit, set_threshold=True, wait=False):
         # Check if needed parameters are set
         if (hasattr(self, 'crystal_param_si_111') and hasattr(self, 'crystal_offset')):
             # Check the necessity to convert energy from resolution
@@ -160,11 +160,11 @@ class LNLSEnergy(Equipment):
             elif (unit == ANG_UNIT):
                 self.energy_value = PLANCK_LIGHT_SPEED / value
 
-            # 
-            startToChangeThreshold = datetime.now()
-
             # Set threshold of Pilatus, if necessary
-            if (self.detector_hwobj):
+            if (self.detector_hwobj and set_threshold):
+                # 
+                startToChangeThreshold = datetime.now()
+
                 # Verify if we are still setting a previous energy...
                 if (self.isSettingThreshold()):
                     logging.getLogger("user_level_log").error('Still changing Pilatus threshold... please, wait a while...')
@@ -178,9 +178,7 @@ class LNLSEnergy(Equipment):
                 self.setting_threshold = True
 
                 changedThreshold = self.detector_hwobj.set_threshold(self.energy_value/2, wait=wait)
-                if (changedThreshold):
-                    logging.getLogger("user_level_log").error('Changing Pilatus threshold to %.3f, please, wait a while...' % (self.energy_value/2))
-                else:
+                if (not changedThreshold):
                     self.setting_threshold = False
 
             # Formula to convert energy2theta (1st Crystal):
@@ -206,19 +204,21 @@ class LNLSEnergy(Equipment):
 
                 if (self.mono_second_xtal_hwobj):
                     self.mono_second_xtal_hwobj.move(targetPositionSecondXtal, wait=wait)
-                # 
-                endToChangeThreshold = datetime.now()
-                # 
-                deltaTimeThreshold = endToChangeThreshold - startToChangeThreshold
-                deltaTimeThreshold = deltaTimeThreshold.total_seconds()
-                # 
-                remainingTimeToWait = (self.wait_threshold - deltaTimeThreshold) if changedThreshold else 0
-                # 
-                if (remainingTimeToWait > 0):
-                    if (wait):
-                        self.wait_setting_threshold(remainingTimeToWait)
-                    else:
-                        gevent.spawn(self.wait_setting_threshold, remainingTimeToWait)
+
+                # Check if should change threshold
+                if (set_threshold):
+                    endToChangeThreshold = datetime.now()
+                    # 
+                    deltaTimeThreshold = endToChangeThreshold - startToChangeThreshold
+                    deltaTimeThreshold = deltaTimeThreshold.total_seconds()
+                    # 
+                    remainingTimeToWait = (self.wait_threshold - deltaTimeThreshold) if changedThreshold else 0
+                    # 
+                    if (remainingTimeToWait > 0):
+                        if (wait):
+                            self.wait_setting_threshold(remainingTimeToWait)
+                        else:
+                            gevent.spawn(self.wait_setting_threshold, remainingTimeToWait)
 
             except (ValueError, ZeroDivisionError):
                 logging.getLogger("user_level_log").error('Error calculating target angle...')
@@ -230,16 +230,21 @@ class LNLSEnergy(Equipment):
         sleep(timeToWait)
         self.setting_threshold = False
         # Informing user we finished
-        logging.getLogger("user_level_log").error('New Pilatus threshold set to %.3f!' % (self.energy_value/2))
+        #logging.getLogger("user_level_log").info('New Pilatus threshold set to %.3f!' % (self.energy_value/2))
 
 
     def isSettingThreshold(self):
         return (self.setting_threshold)
 
 
-    def set_energy(self, value):
+    def set_energy(self, value, set_threshold=True):
         #self.start_move_energy(value, KEV_UNIT, wait=True)
-        self.start_move_energy(value, KEV_UNIT, wait=False)
+        self.start_move_energy(value, KEV_UNIT, set_threshold=set_threshold, wait=False)
+
+
+    def set_energy_and_wait(self, value, set_threshold=True):
+        #self.start_move_energy(value, KEV_UNIT, wait=True)
+        self.start_move_energy(value, KEV_UNIT, set_threshold=set_threshold, wait=True)
 
 
     def set_wavelength(self, value):

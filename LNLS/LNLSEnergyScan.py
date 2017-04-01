@@ -19,6 +19,8 @@ from HardwareRepository.BaseHardwareObjects import HardwareObject
 from py4syn.epics.ScalerClass import Scaler
 from py4syn.epics.SimCountableClass import SimCountable
 
+DEFAULT_MAXIMUM_TRIES = 50
+
 class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
     # Common absorption edges by element and edge:
     ENERGY_EDGES = {    "Ac-K":0,"Ac-L1":19840,"Ac-L2":19083,"Ac-L3":15871,
@@ -120,16 +122,23 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         self.transmission_hwobj = self.getObjectByRole("transmission")
         if self.transmission_hwobj is None:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Transmission hwobj not defined')
+
         # ---------------------------------------------------------------------
         # Camera
         self.camera_hwobj = self.getObjectByRole("camera")
         if self.camera_hwobj is None:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Camera hwobj not defined')
 
+        # ---------------------------------------------------------------------
+        # Shutter
+        self.shutter_hwobj = self.getObjectByRole("safety_shutter")
+        if self.shutter_hwobj is None:
+            logging.getLogger("HWR").warning('LNLSEnergyScan: Shutter hwobj not defined')
+
         # ----------------------------------------------------------------------
         # Py4Syn objects
         try:
-            self.scaler = Scaler(self.epics_scaler, int(self.epics_scaler_channel))    # REAL
+            self.scaler = Scaler(self.epics_scaler, int(self.epics_scaler_channel))      # REAL
             #self.scaler = SimCountable(self.epics_scaler, self.epics_scaler_name)       # Simulated
         except:
             logging.getLogger("HWR").warning('LNLSEnergyScan: Error when instantiating a scaler')
@@ -175,17 +184,20 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
             except:
                 pass
 
+
     def isConnected(self):
         """
         Descript. :
         """
         return True
 
+
     def canScanEnergy(self):
         """
         Descript. :
         """
         return self.isConnected()
+
 
     def startEnergyScan(self, element, edge, img_count, snapshot_dir, directory, prefix, \
                  session_id = None, blsample_id = None, exptime = 2):
@@ -258,6 +270,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
             return False
         return True
 
+
     def scanProcedure(self):
         # Combine element and edge
         elementEdge = '-'.join((self.scanInfo['element'], self.scanInfo['edgeEnergy']))
@@ -290,7 +303,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
             # Internal limits (typical step of 0.2 eV)
             self.scanInfo['startInternalLimit'] = elementEdgeEnergy - float(self.internal_energy_limits)
             self.scanInfo['endInternalLimit'] = elementEdgeEnergy + float(self.internal_energy_limits)
-            print("Ranges: [ %.1f :: %.1f :: eV :: %.1f :: %.1f" % (self.scanInfo['startEnergy'], self.scanInfo['startInternalLimit'], self.scanInfo['endInternalLimit'], self.scanInfo['endEnergy']))
+            print("Ranges: [ %.1f :: %.1f :: eV :: %.1f :: %.1f ]" % (self.scanInfo['startEnergy'], self.scanInfo['startInternalLimit'], self.scanInfo['endInternalLimit'], self.scanInfo['endEnergy']))
         except NameError:
             logging.getLogger("user_level_log").error('Missing necessary parameters in lnls-energy_scan.xml...')
             self.scanCommandFailed()
@@ -298,25 +311,41 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
 
         # Start procedure to take snapshots...
         try:
-            self.camera_hwobj.take_snapshots(image_count=int(self.scanInfo['imgCount']), snapshotFilePath=self.scanInfo['snapshotDir'], snapshotFilePrefix=self.scanInfo['prefix'], collectStart=self.scanInfo['startEnergy']/1000, collectEnd=self.scanInfo['endEnergy']/1000, motorHwobj=self.energy_hwobj)
+            self.camera_hwobj.take_snapshots(image_count=int(self.scanInfo['imgCount']), snapshotFilePath=self.scanInfo['snapshotDir'], snapshotFilePrefix=self.scanInfo['prefix'], logFilePath=None, runNumber=None, collectStart=self.scanInfo['startEnergy']/1000, collectEnd=self.scanInfo['endEnergy']/1000, motorHwobj=self.energy_hwobj, detectorHwobj=None)
         except:
             logging.getLogger("HWR").error("LNLSEnergyScan: Problem to take snapshots!")
 
         # Start procedure to move energy and scan it
         if (self.energy_hwobj):
             # Set start energy in KeV
-            self.energy_hwobj.set_energy(round(float(self.scanInfo['startEnergy']) / 1000, 5))
+            self.energy_hwobj.set_energy_and_wait(round(float(self.scanInfo['startEnergy']) / 1000, 5), set_threshold=False)
+
+            # Open shutter
+            self.open_safety_shutter()
+
+            # Wait it to be opened...
+            tries = 0
+            while (not self.safety_shutter_opened() and tries < DEFAULT_MAXIMUM_TRIES):
+                gevent.sleep(0.1)
+                tries += 1
+
+            if (not self.safety_shutter_opened()):
+                logging.getLogger("user_level_log").error('Timeout when trying to open shutter... Aborting!')
+                self.scanCommandFailed()
+                return
 
             print("Data: %s | %s |" % (str("energy").ljust(8), str("intensity").ljust(12)))
+
+            gevent.sleep(0.1)
 
             while(self.energy_hwobj.get_current_energy() <= (self.scanInfo['endEnergy'] / 1000)):
                 # Configure and command scaler to count for specified time
                 if (self.scaler):
                     self.scaler.setCountTime(self.scanInfo['exposureTime'])
 
-                    #intensity = round(float(self.scaler.getIntensityCheck()), 5)   #REAL
-                    self.scaler.startCount()    # Simulated
-                    intensity = self.scaler.getValue()  # Simulated
+                    intensity = round(float(self.scaler.getIntensityCheck()), 5)   #REAL
+                    #self.scaler.startCount()               # Simulated
+                    #intensity = self.scaler.getValue()     # Simulated
 
                     # Plot the collected data
                     self.emitNewDataPoint((round(float(self.energy_hwobj.get_current_energy()) * 1000, 2), round(float(intensity),4)))
@@ -334,7 +363,10 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
 
                 newEnergy = round(float(self.energy_hwobj.get_current_energy() + (step / 1000)), 5)
                 # Move to new energy
-                self.energy_hwobj.set_energy(newEnergy)
+                self.energy_hwobj.set_energy_and_wait(newEnergy, set_threshold=False)
+
+            # Close shutter
+            self.close_safety_shutter()
 
             # Announce we finished!
             self.scan_status_update("ready")
@@ -377,6 +409,9 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         if self.camera_hwobj is not None:
             self.camera_hwobj.cancel_snapshot()
 
+        # Close shutter
+        self.close_safety_shutter()
+
         self.store_energy_scan()
         self.emit('energyScanFailed', ())
         self.ready_event.set()
@@ -393,6 +428,9 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
         # Cancel snapshot procedure
         if self.camera_hwobj is not None:
             self.camera_hwobj.cancel_snapshot()
+
+        # Close shutter
+        self.close_safety_shutter()
 
         # Emit a signal to inform user
         self.emit('energyScanFailed', ())
@@ -537,7 +575,7 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
 
         # Moving to Peak
         logging.getLogger("user_level_log").info("Moving to peak of energy: %.3f." % (pk))
-        self.energy_hwobj.set_energy(pk)
+        self.energy_hwobj.set_energy_and_wait(pk, set_threshold=False)
 
         chooch_graph_x, chooch_graph_y1, chooch_graph_y2 = list(zip(*chooch_graph_data))
         chooch_graph_x = list(chooch_graph_x)
@@ -646,3 +684,27 @@ class LNLSEnergyScan(AbstractEnergyScan, HardwareObject):
                     asoc = {'blSampleId':blsampleid, 'energyScanId': energyscanid}
                     self.db_connection_hwobj.associateBLSampleAndEnergyScan(asoc)
 
+
+    def open_safety_shutter(self):
+        logging.getLogger("user_level_log").info("Openning shutter: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
+
+        # Open detector shutter
+        self.energy_hwobj.detector_hwobj.open_shutter()
+
+        # Disable UI controls to operate shutter
+        if (self.shutter_hwobj):
+            self.shutter_hwobj.enableControls(enable=False)
+
+    def safety_shutter_opened(self):
+        return self.energy_hwobj.detector_hwobj.shutter_opened()
+
+    def close_safety_shutter(self):
+        logging.getLogger("user_level_log").info("Closing safety shutter at: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
+
+        # Close detector shutter
+        if self.energy_hwobj.detector_hwobj:
+            self.energy_hwobj.detector_hwobj.close_shutter()
+
+        # Enable UI controls to operate shutter
+        if (self.shutter_hwobj):
+            self.shutter_hwobj.enableControls()

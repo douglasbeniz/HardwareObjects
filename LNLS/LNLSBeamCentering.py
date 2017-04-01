@@ -56,12 +56,22 @@ class LNLSBeamCentering(Equipment):
         self._paramSlit = [[None, None, None], [None, None, None], [None, None, None]]
 
         # If should center each slit
-        # _centerSlit[0]: slit 1
+        # _centerSlit[0]: optical hutch
+        # _centerSlit[1]: slit 1
+        # _centerSlit[2]: slit 2
         self._centerSlit = [False, False, False]
 
         # If should scan all the path allowed by each motor axis
-        # _fullPathSlit[0]: slit 1
+        # _fullPathSlit[0]: optical hutch
+        # _fullPathSlit[1]: slit 1
+        # _fullPathSlit[2]: slit 2
         self._fullPathSlit = [False, False, False]
+
+        # If should use centroid (default)
+        # _centroidSlit[0]: optical hutch
+        # _centroidSlit[1]: slit 1
+        # _centroidSlit[2]: slit 2
+        self._centroidSlit = [True, True, True]
 
     def init(self):
         """
@@ -77,8 +87,8 @@ class LNLSBeamCentering(Equipment):
             logging.getLogger("HWR").error('LNLSBeamCentering - Error getting some default parameters for Pitch, please check!')
 
         try:
-            for slitNum in range(2):
-                self.emit('setDefaultSlitParams', (self.default_hor_distance_slits, self.default_ver_distance_slits, self.default_step_slits, slitNum, ))
+            self.emit('setDefaultSlitParams', (self.default_hor_distance_slit1, self.default_ver_distance_slit1, self.default_step_slit1, 0, ))
+            self.emit('setDefaultSlitParams', (self.default_hor_distance_slit2, self.default_ver_distance_slit2, self.default_step_slit2, 1, ))
         except:
             logging.getLogger("HWR").error('LNLSBeamCentering - Error getting some default parameters for Slits, please check!')
 
@@ -103,8 +113,13 @@ class LNLSBeamCentering(Equipment):
     def setCenterSlit(self, center, slit):
         self._centerSlit[(slit -1)] = center
 
+
     def setFullPathSlit(self, fullPath, slit):
         self._fullPathSlit[(slit -1)] = fullPath
+
+
+    def setCentroidSlit(self, centroid, slit):
+        self._centroidSlit[(slit -1)] = centroid
 
 
     def _waitEndMovingAndUPdate(self, motor_dmov, motor_rbv, counter, counter_factor, signal_pos_changed, signal_int_changed):
@@ -119,7 +134,7 @@ class LNLSBeamCentering(Equipment):
         self.emit(signal_pos_changed, (self.getValue(motor_rbv), ))
         self.emit(signal_int_changed, ('%.3E' % (float(self.getValue(counter)) * counter_factor), ))
 
-    def _moveBaseCheckingPosition(self, motor_rbv, motor_rlv, motor_dmov, counter_val, counter_factor, step, initial_position, max_distance, full_path, signal_set_tab, signal_plot_clear, signal_pos_changed, signal_int_changed, signal_plot):
+    def _moveBaseCheckingPosition(self, motor_rbv, motor_rlv, motor_dmov, counter_val, counter_factor, step, initial_position, max_distance, full_path, centroid, signal_set_tab, signal_plot_clear, signal_pos_changed, signal_int_changed, signal_plot):
         # Initialize internal parameters
         max_intensity = None
         pos_max_intensity = None
@@ -141,12 +156,15 @@ class LNLSBeamCentering(Equipment):
         max_intensity = intensity
         pos_max_intensity = currentRBV
 
+        # Variables to accumulate values if Centroid has been selected
+        accum_position_intensity = 0
+        accum_intensity = 0
+
         # Move until physical limit which block movement at other side
         physicalLimit = False
         reachedLimit = False
 
         while(not reachedLimit):
-
             currentRBV = self.getValue(motor_rbv)
             # Move motor by relative position
             self.setValue(motor_rlv, step)
@@ -174,8 +192,13 @@ class LNLSBeamCentering(Equipment):
             self.emit(signal_pos_changed, (newRBV, ))
             intensity_show = '%.3E' % (float(self.getValue(counter_val)) * counter_factor)
             intensity = float(self.getValue(counter_val)) * counter_factor
+            # Update interface
             self.emit(signal_int_changed, (intensity_show, ))
             self.emit(signal_plot, (newRBV, intensity,))
+
+            # Accumulate values to be used in the case of Centroid
+            accum_position_intensity += float(newRBV) * float(intensity)
+            accum_intensity += float(intensity)
 
             if (intensity > max_intensity):
                 max_intensity = intensity
@@ -184,6 +207,11 @@ class LNLSBeamCentering(Equipment):
             if (reachedMaxDistance or physicalLimit):
                 reachedLimit = True
                 continue
+
+        # In the case of centroid, we need to calculate it
+        if (centroid):
+            # Centroid(P) = Sum(RBV*Intensity)/Sum(Intensity)
+            pos_max_intensity = (accum_position_intensity / (accum_intensity if accum_intensity != 0 else 1))
 
         return (max_intensity, pos_max_intensity, (False if full_path else physicalLimit))
 
@@ -202,7 +230,6 @@ class LNLSBeamCentering(Equipment):
                                 if (not self._fullPathSlit[slit]):
                                     self.setValue(BASE_SLIT[slit][axis][0], (initialPosition - abs(self._paramSlit[slit][axis])))
                                 else:
-                                    #self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8]) + 0.1))
                                     self.setValue(BASE_SLIT[slit][axis][0], (self.getValue(BASE_SLIT[slit][axis][8])))
 
                                 # Wait until movement is done and emit signals to update interface
@@ -218,6 +245,7 @@ class LNLSBeamCentering(Equipment):
                                     initialPosition,
                                     0 if self._paramSlit[slit][axis] is None else abs(self._paramSlit[slit][axis]),
                                     self._fullPathSlit[slit],
+                                    self._centroidSlit[slit],
                                     SET_TAB_SIGN[slit][axis],
                                     CLEAR_SIGN[slit][axis],
                                     POS_CHANGED_SIGN[slit][axis],

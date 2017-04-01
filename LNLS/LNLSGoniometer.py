@@ -39,8 +39,6 @@ from gevent.event import AsyncResult
 
 last_centred_position = [200, 200]
 
-OMEGA_VELO_CENTRING = 1.5
-
 #--------------------------------------------------------------------------------
 #
 class LNLSGoniometer(GenericDiffractometer):
@@ -85,6 +83,7 @@ class LNLSGoniometer(GenericDiffractometer):
         # Parameters from XML configuration
         self.image_width = self.defaultImageWidth
         self.image_height = self.defaultImageHeight
+        self.default_omega_velocity = float(self.defaultOmegaVelocity)
 
         self.equipmentReady()
 
@@ -104,6 +103,9 @@ class LNLSGoniometer(GenericDiffractometer):
         self.motor_goniox_hwobj = self.getObjectByRole("goniox")
         self.motor_sampx_hwobj = self.getObjectByRole("sampx")
         self.motor_sampy_hwobj = self.getObjectByRole("sampy")
+
+        # Set default velocity
+        self.set_omega_default_velocity()
 
         # Zoom
         self.motor_zoom_hwobj = self.getObjectByRole("zoom")
@@ -152,6 +154,9 @@ class LNLSGoniometer(GenericDiffractometer):
         """
         return self.grid_direction
 
+    def get_omega_position(self):
+        return self.motor_omega_hwobj.getPosition()
+
     def move_omega_absolute(self, absolute_position):
         self.motor_omega_hwobj.move(absolute_position)
 
@@ -161,7 +166,7 @@ class LNLSGoniometer(GenericDiffractometer):
         _previous_omega_velo = self.get_omega_velocity()
 
         # Set velocity of omega to move during starting
-        self.set_omega_velocity(OMEGA_VELO_CENTRING)
+        self.set_omega_default_velocity()
 
         # Move to initial angle
         self.motor_omega_hwobj.move(initial_angle, wait=True)
@@ -173,15 +178,25 @@ class LNLSGoniometer(GenericDiffractometer):
     def set_omega_velocity(self, velocity):
         self.motor_omega_hwobj.setVelocity(velocity)
 
+    # Velocity in RPM
+    def set_omega_default_velocity(self):
+        if (self.motor_omega_hwobj and self.default_omega_velocity):
+            self.motor_omega_hwobj.setVelocity(self.default_omega_velocity)
+        else:
+            logging.exception("Could not set default Omega velocity!")
+
     def get_omega_velocity(self):
         return self.motor_omega_hwobj.getVelocity()
+
+    def is_omega_moving(self):
+        return self.motor_omega_hwobj.isMoving()
 
     def manual_centring(self):
         """
         Descript. :
         """
         # Set velocity of omega to move during centring
-        self.set_omega_velocity(OMEGA_VELO_CENTRING)
+        self.set_omega_default_velocity()
 
         # Set scale of pixels per mm according to current zoom
         self.pixels_per_mm_x = self.motor_zoom_hwobj.getPixelsPerMm(0)
@@ -212,29 +227,29 @@ class LNLSGoniometer(GenericDiffractometer):
 
         # Calculate new position of X
         moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
-        print("math.cos(math.radians(omegaPos)): ", math.cos(math.radians(omegaPos)))
-        print("self.beam_position[1]: ", self.beam_position[1])
-        print("float(last_centred_position[1])", float(last_centred_position[1]))
-        print("moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampX)
+        # print("math.cos(math.radians(omegaPos)): ", math.cos(math.radians(omegaPos)))
+        # print("self.beam_position[1]: ", self.beam_position[1])
+        # print("float(last_centred_position[1])", float(last_centred_position[1]))
+        # print("moveSampX = (math.cos(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampX)
         #moveSampX = moveSampX / self.pixels_per_mm_x
         moveSampX = (moveSampX / self.pixels_per_mm_x) * -1
-        print("moveSampX = moveSampX / self.pixels_per_mm_x: ", moveSampX)
+        # print("moveSampX = moveSampX / self.pixels_per_mm_x: ", moveSampX)
         # Move absolute
         moveSampX += sampxPos
-        print("moveSampX += sampxPos: ", moveSampX)
+        # print("moveSampX += sampxPos: ", moveSampX)
 
         # Calculate new position of Y
         moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1])))
-        print("math.sin(math.radians(omegaPos)): ", math.sin(math.radians(omegaPos)))
-        print("self.beam_position[1]: ", self.beam_position[1])
-        print("float(last_centred_position[1])", float(last_centred_position[1]))
-        print("moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampY)
+        # print("math.sin(math.radians(omegaPos)): ", math.sin(math.radians(omegaPos)))
+        # print("self.beam_position[1]: ", self.beam_position[1])
+        # print("float(last_centred_position[1])", float(last_centred_position[1]))
+        # print("moveSampY = (math.sin(math.radians(omegaPos)) * (self.beam_position[1] - float(last_centred_position[1]))): ", moveSampY)
         moveSampY = (moveSampY / self.pixels_per_mm_y) * -1
         #moveSampY = moveSampY / self.pixels_per_mm_y
-        print("moveSampY = moveSampY / self.pixels_per_mm_y: ", moveSampY)
+        # print("moveSampY = moveSampY / self.pixels_per_mm_y: ", moveSampY)
         # Move absolute
         moveSampY += sampyPos
-        print("moveSampY += sampyPos: ", moveSampY)
+        # print("moveSampY += sampyPos: ", moveSampY)
 
         centred_pos_dir = { 'goniox': moveGonioX, 'sampx': moveSampX, 'sampy': moveSampY }
 
@@ -346,7 +361,7 @@ class LNLSGoniometer(GenericDiffractometer):
         try:
             return self.move_to_centred_position(centred_position, wait = wait)
         except:
-            logging.exception("Could not move to centred position")
+            logging.exception("Could not move to centred position!")
 
     def get_positions(self):
         """

@@ -12,6 +12,7 @@ import gevent
 
 from gevent import monkey
 from time import sleep
+from datetime import datetime
 
 # This was necessary because of paramiko.ssh_exception.SSHException when running the procedure of cleanup
 monkey.patch_all()
@@ -53,6 +54,9 @@ class LNLSDetector(Equipment):
         self.hum_treshold = None   
         self.exp_time_limits = None
 
+        self.wait_threshold = 40        # time to wait for camServer to set Pilatus Threshold
+        self.starting_camserver = False
+
         self.distance_motor_hwobj = None
 
         self.chan_temperature = None
@@ -60,6 +64,9 @@ class LNLSDetector(Equipment):
         self.chan_status = None
         self.chan_detector_mode = None
         self.chan_frame_rate = None
+
+        self.ssh_det = None
+        self.ssh_usermx2 = None
 
     def init(self):
         """
@@ -166,7 +173,7 @@ class LNLSDetector(Equipment):
         self.shutter_pilatus.close()
 
     def shutter_opened(self):
-        self.shutter_pilatus.isOpen()
+        return self.shutter_pilatus.isOpen()
 
     def get_exposure_time_limits(self):
         """
@@ -216,14 +223,42 @@ class LNLSDetector(Equipment):
     def get_acquire_period(self):
         return self.detector_pilatus.getAcquirePeriod()
 
+
     def set_threshold(self, threshold, wait=True, force=False):
-        changed = False
+        changed = False 
 
         if (force or (threshold < (self.get_threshold() - TOLERANCE_THRESHOLD)) or (threshold > (self.get_threshold() + TOLERANCE_THRESHOLD))):
+            logging.getLogger("user_level_log").error('Changing Pilatus threshold to %.3f, please, this should take around 1 minute.' % (threshold))
+
+            # Start
+            startToChangeThreshold = datetime.now()
+
             self.detector_pilatus.setThreshold(threshold, wait=wait)
+
+            # End after set via py4syn...
+            endToChangeThreshold = datetime.now()
+            # 
+            deltaTimeThreshold = endToChangeThreshold - startToChangeThreshold
+            deltaTimeThreshold = deltaTimeThreshold.total_seconds()
+
+            remainingTimeToWait = (self.wait_threshold - deltaTimeThreshold)
+            # 
+            if (remainingTimeToWait > 0):
+                if (wait):
+                    self.wait_setting_threshold(remainingTimeToWait)
+                else:
+                    gevent.spawn(self.wait_setting_threshold, remainingTimeToWait)
+
             changed = True
 
         return changed
+
+
+    def wait_setting_threshold(self, timeToWait):
+        gevent.sleep(timeToWait)
+        # Informing user we finished
+        logging.getLogger("user_level_log").info('New Pilatus threshold set to %.3f!' % (self.get_threshold()))
+
 
     def get_threshold(self):
         return self.detector_pilatus.getThreshold()
@@ -280,7 +315,7 @@ class LNLSDetector(Equipment):
     def set_det_2_theta(self, det2theta):
         self.detector_pilatus.setDet2Theta(det2theta)
 
-    def get_det_2_theat(self):
+    def get_det_2_theta(self):
         return self.detector_pilatus.getDet2Theta()
 
     def get_pilatus_server_storage_temp(self):
@@ -292,8 +327,23 @@ class LNLSDetector(Equipment):
     def get_camserver_screenshot_name(self):
         return self.camserverScreenshotName
 
+
+    def get_readout_per_image(self):
+        if (self.readoutPerImage):
+            return float(self.readoutPerImage)
+        else:
+            return 0.0
+
     def is_camserver_connected(self):
         return self.detector_pilatus.isCamserverConnected()
+
+
+    def is_starting_camserver(self):
+        return self.starting_camserver
+
+
+    def is_counting(self):
+        return self.detector_pilatus.isCounting()
 
 
     def cleanup_remote_folder(self, folder):
@@ -303,21 +353,97 @@ class LNLSDetector(Equipment):
             # Send a command to remove entire folder
             stdin, stdout, stderr = ssh.exec_command("rm -rf " + str(folder))
             ssh.close()
+
+            if (self.ssh_det is not None):
+                self.ssh_det.close()
+                self.ssh_det = None
+
+            if (self.ssh_usermx2 is not None):
+                self.ssh_usermx2.close()
+                self.ssh_usermx2 = None
         except:
             error_message = "Error when trying to cleanup temporary folder on pilatus server..."
             logging.getLogger().exception(error_message)
             logging.getLogger("user_level_log").error(error_message)
 
+
+    def change_file_owner(self, fullFileName, owner):
+        try:
+            # Connect to Pilatus server using defined parameters
+            ssh = self.stablishSSHConnection()
+
+            # Send a command to change the owner of folder
+            #stdin, stdout, stderr = ssh.exec_command("sudo chown %s:domain^users %s" % (owner, os.path.split(fullFileName)[0]))
+            # Send a command to change the owner of file
+            stdin, stdout, stderr = self.ssh_det.exec_command("sudo chown %s:domain^users %s" % (owner, fullFileName))
+            ssh.close()
+        except:
+            error_message = "Error when trying to change owner on pilatus server..."
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error(error_message)
+
+
+    def change_file_owner_and_move(self, fullFileNameOrig, fullPathDest, owner):
+        try:
+            # Connect to Pilatus server using defined parameters
+            if (self.ssh_det is None):
+                self.ssh_det = self.stablishSSHConnection()
+
+            # Send a command to change the owner of folder
+            #stdin, stdout, stderr = ssh.exec_command("sudo chown %s:domain^users %s" % (owner, os.path.split(fullFileName)[0]))
+            # Send a command to change the owner of file
+            stdin, stdout, stderr = self.ssh_det.exec_command("sudo chown %s:domain^users %s" % (owner, fullFileNameOrig))
+
+            # Wait ps command to complete
+            #while not stdout.channel.exit_status_ready():
+            #    gevent.sleep(0.01)
+
+            #ssh.close()
+
+            if (self.ssh_usermx2 is None):
+                self.ssh_usermx2 = self.stablishSSHConnection(user="usermx2", password="B@tatinha123")
+
+            stdin, stdout, stderr = self.ssh_usermx2.exec_command("cp %s %s" % (fullFileNameOrig, fullPathDest))
+
+            # Wait ps command to complete
+            #while not stdout.channel.exit_status_ready():
+            #    gevent.sleep(0.01)
+
+            # Check that no error occurred, what means that a 'copy' was done
+            # print("**********************")
+            # print("SSH")
+            # print(fullFileNameOrig)
+            # print(fullPathDest)
+            # print("recv_stderr_ready(): ", stdout.channel.recv_stderr_ready())
+            # print("recv_exit_status(): ", stdout.channel.recv_exit_status())
+            # print("**********************")
+            result = not stdout.channel.recv_stderr_ready()
+            #ssh.close()
+
+            return result
+        except:
+            error_message = "Error when trying to change owner on pilatus server and copy file..."
+            logging.getLogger().exception(error_message)
+            logging.getLogger("user_level_log").error(error_message)
+
+            return False
+
+
     def start_camserver_if_not_connected(self):
-        gevent.spawn(self.process_start_camserver_if_not_connected)
+        if (not self.starting_camserver):
+            gevent.spawn(self.process_start_camserver_if_not_connected)
 
 
     def process_start_camserver_if_not_connected(self):
         camserverIsRunning = True
+        self.starting_camserver = True
 
         try:
             # Check if Pilatus IOC is not connected before to proceed
             if (not self.is_camserver_connected()):
+                error_message =  "CamServer is not running... Trying to start it... Please, wait a while..."
+                logging.getLogger("user_level_log").error(error_message)
+
                 # Connect to Pilatus server using defined parameters
                 ssh = self.stablishSSHConnection()
 
@@ -329,7 +455,7 @@ class LNLSDetector(Equipment):
 
                 # Wait ps command to complete
                 while not stdout.channel.exit_status_ready():
-                    sleep(0.1)
+                    gevent.sleep(0.1)
 
                 # Check if no error occurred, what means that an 'xpra' process was found
                 if (not stdout.channel.recv_exit_status()):
@@ -345,7 +471,7 @@ class LNLSDetector(Equipment):
 
                 # Wait ps command to complete
                 while not stdout.channel.exit_status_ready():
-                    sleep(0.1)
+                    gevent.sleep(0.1)
 
                 # Check that no error occurred, what means that a 'camserver' process was found
                 if (not stdout.channel.recv_exit_status()):
@@ -357,7 +483,7 @@ class LNLSDetector(Equipment):
                         stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep | awk {\'print $2\'} | xargs kill -s 2" % (self.camserverUniqueName))
                         # Wait ps command to complete
                         while not stdout.channel.exit_status_ready():
-                            sleep(0.1)
+                            gevent.sleep(0.1)
 
                         # Check if some error occurred
                         if (stdout.channel.recv_exit_status()):
@@ -380,12 +506,14 @@ class LNLSDetector(Equipment):
                 #stdin, stdout, stderr = ssh.exec_command("dbus-launch xpra --bind-tcp=0.0.0.0:%s --no-daemon --start-child=%s start :%s" % (self.camserverXpraPort, self.camserverCamonlyProgram, self.camserverXpraDisplay))
                 stdin, stdout, stderr = ssh.exec_command("dbus-launch xpra --bind-tcp=0.0.0.0:%s --start-child=%s start :%s" % (self.camserverXpraPort, self.camserverCamonlyProgram, self.camserverXpraDisplay))
 
+                gevent.sleep(1)
+
                 # Check if xpra was started...
                 stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverXpraProgram))
 
                 # Wait ps command to complete
                 while not stdout.channel.exit_status_ready():
-                    sleep(0.1)
+                    gevent.sleep(0.1)
 
                 # Check that an error OCCURRED, what means that a 'xpra' process was NOT found
                 if (stdout.channel.recv_exit_status()):
@@ -400,7 +528,7 @@ class LNLSDetector(Equipment):
                     # Confirm thad Pilatus AreaDetector connected to CamServer...
                     tries = 0
                     while (not self.is_camserver_connected() and (tries < TIMEOUT_CAMSERVER_CONNECTION)):
-                        sleep(1)
+                        gevent.sleep(1)
 
                     if (self.is_camserver_connected()):
                         # Inform user that CamServer has been started!
@@ -412,15 +540,21 @@ class LNLSDetector(Equipment):
                 # Then close the connection
                 ssh.close()
 
-                # (Re)set threshold on CamServer everytime it is (re)started
-                #self.energy_hwobj.setEnergy(self.energy_hwobj.getCurrentEnergy())
-                self.set_threshold(self.get_threshold(), wait=True, force=True)
+                if (camserverIsRunning):
+                    # (Re)set threshold on CamServer everytime it is (re)started
+                    #self.set_threshold(self.get_threshold(), wait=True, force=True)
+                    self.set_threshold(self.get_threshold(), wait=False, force=True)
+
+                # Reset flag to indicate camserver initialization
+                self.starting_camserver = False
         except:
             if ssh:
                 # Stop SSH connection
                 ssh.close()
 
             camserverIsRunning = False
+            # Reset flag to indicate camserver initialization
+            self.starting_camserver = False
 
             error_message = ("Error when trying to start \'%s\' on pilatus server..." % (self.camserverUniqueName))
             logging.getLogger().exception(error_message)
@@ -449,7 +583,7 @@ class LNLSDetector(Equipment):
                 # Take a screenshot...
                 self.takeScreenshotOfXpraRunningProcess(image_path=image_path)
                 # Wait a while and retry the exit command, because more than one terminal could be running
-                sleep(0.1)
+                gevent.sleep(0.1)
                 os.system("xdotool windowfocus --sync %s; xdotool type \'%s\'; xdotool key KP_Enter" % (display, self.camserverExitCommand))
 
                 stopped = True
@@ -495,7 +629,7 @@ class LNLSDetector(Equipment):
 
         # Wait ps command to complete
         while not stdout.channel.exit_status_ready():
-            sleep(0.1)
+            gevent.sleep(0.1)
 
         # Check that no error occurred, what means that a 'xpra'process was found
         if (not stdout.channel.recv_exit_status()):
@@ -504,7 +638,7 @@ class LNLSDetector(Equipment):
 
             # Wait ps command to complete
             while not stdout.channel.exit_status_ready():
-                sleep(0.1)
+                gevent.sleep(0.1)
 
             # Check if any error occurred...
             if (stdout.channel.recv_exit_status()):
@@ -513,7 +647,7 @@ class LNLSDetector(Equipment):
 
                 # Wait ps command to complete
                 while not stdout.channel.exit_status_ready():
-                    sleep(0.1)
+                    gevent.sleep(0.1)
 
                 # Check that no error occurred, what means that a 'xpra' process was found
                 if (not stdout.channel.recv_exit_status()):
@@ -522,7 +656,7 @@ class LNLSDetector(Equipment):
 
                     # Wait ps command to complete
                     while not stdout.channel.exit_status_ready():
-                        sleep(0.1)
+                        gevent.sleep(0.1)
 
                     # Check if some error beam_crystal_position
                     if (stdout.channel.recv_exit_status()):
@@ -556,14 +690,14 @@ class LNLSDetector(Equipment):
 
                     # Wait ps command to complete
                     while not stdout.channel.exit_status_ready():
-                        sleep(0.1)
+                        gevent.sleep(0.1)
 
                     # Check if an error occurred
                     if (stdout.channel.recv_exit_status()):
                         logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (logFilePath, str(diag)))
 
                     # # Wait a while to guarantee the folder is accessible
-                    # sleep(1)
+                    # gevent.sleep(1)
 
                 except OSError as diag:
                     logging.getLogger().error("Snapshot: error trying to create the directory %s (%s)" % (logFilePath, str(diag)))
@@ -573,13 +707,13 @@ class LNLSDetector(Equipment):
 
             # Wait ps command to complete
             while not stdout.channel.exit_status_ready():
-                sleep(0.1)
+                gevent.sleep(0.1)
 
             # Check if an error occurred
             if (stdout.channel.recv_exit_status()):
                 error_message = "Error when trying to take a snapshot of running camserver process..." + stderr.read().decode('ascii')
                 logging.getLogger().exception(error_message)
-                logging.getLogger("user_level_log").error(error_message)
+                #logging.getLogger("user_level_log").error(error_message)
 
             ssh.close()
         except:
@@ -589,7 +723,7 @@ class LNLSDetector(Equipment):
 
             error_message = "Error when trying to take a snapshot of running camserver process..."
             logging.getLogger().exception(error_message)
-            logging.getLogger("user_level_log").error(error_message)
+            #logging.getLogger("user_level_log").error(error_message)
 
 
     def createUniqueFileName(self, name):
@@ -619,13 +753,16 @@ class LNLSDetector(Equipment):
         return newName
 
 
-    def stablishSSHConnection(self):
+    def stablishSSHConnection(self, user=None, password=None):
         # Instantiate a paramiko object
         ssh = paramiko.SSHClient()
         # If server is not in knowm_hosts it will be included
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         # Connect
-        ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword, timeout=10)
+        if (user is None and password is None):
+            ssh.connect(self.pilatusServerIP, username=self.pilatusSshUser, password=self.pilatusSshPassword, timeout=10)
+        else:
+            ssh.connect(self.pilatusServerIP, username=user, password=password, timeout=10)
 
         return ssh
 

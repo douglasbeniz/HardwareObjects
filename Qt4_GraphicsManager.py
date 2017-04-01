@@ -1232,6 +1232,11 @@ class Qt4_GraphicsManager(HardwareObject):
         self.beam_info_dict = self.beam_info_hwobj.get_beam_info()
         self.beam_info_changed(self.beam_info_dict) 
 
+        # LNLS
+        # Refresh connection with Camera IOC
+        self.camera_hwobj.refresh_camera()
+
+
     def select_lines_and_grids(self):
         """Selects all lines and grids that are in the rectangle of
            item selection tool

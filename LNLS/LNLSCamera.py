@@ -14,11 +14,11 @@ from PyQt4 import QtGui, QtCore
 import io
 
 #-----------------------------------------------------------------------------
-CAMERA_DATA      = "epicsCameraSample_data"
-CAMERA_BACK      = "epicsCameraSample_back"
-CAMERA_EN_BACK   = "epicsCameraSample_en_back"
-CAMERA_ACQ_START = "epicsCameraSample_acq_start"
-CAMERA_ACQ_STOP  = "epicsCameraSample_acq_stop"
+CAMERA_DATA          = "epicsCameraSample_data"
+CAMERA_BACK          = "epicsCameraSample_back"
+CAMERA_EN_BACK       = "epicsCameraSample_en_back"
+CAMERA_ACQ_START     = "epicsCameraSample_acq_start"
+CAMERA_ACQ_STOP      = "epicsCameraSample_acq_stop"
 CAMERA_GAIN          = "epicsCameraSample_gain"
 CAMERA_GAIN_RBV      = "epicsCameraSample_gain_rbv"
 CAMERA_AUTO_GAIN     = "epicsCameraSample_auto_gain"
@@ -34,38 +34,35 @@ class LNLSCamera(BaseHardwareObjects.Device):
     def __init__(self,name):
         BaseHardwareObjects.Device.__init__(self,name)
         self.liveState = False
+        self.refreshing = False
 
         self.imagegen = None
+        self.refreshgen = None
 
         self.imgArray = None
         self.qImage = None
         self.qImageHalf = None
         self.qtPixMap = None
 
-        #self.channelCameraData = None
 
     def _init(self):
         self.setIsReady(True)
 
+
     def init(self):
-        #self.channelCameraData = self.getChannelObject(CAMERA_DATA)
-
-        #if (self.channelCameraData is not None):
-        #    print("#################################################################################")
-        #    print("self.channelCameraData is not None")
-        #    print("#################################################################################")
-        #    self.channelCameraData.connectSignal('update', self.getCameraImage)
-
+        # Start camera image acquisition
         self.setLive(True)
 
         # Snapshot
         self.centring_status = {"valid": False}
         self.snapshots_procedure = None
 
+
     def imageGenerator(self, delay):
         while self.liveState:
             self.getCameraImage()
             gevent.sleep(delay)
+
 
     def getCameraImage(self):
         # Get the image from uEye camera IOC
@@ -73,6 +70,7 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         if ((self.imgArray is None) or (len(self.imgArray) != ARRAY_SIZE)):
             logging.getLogger().exception("%s - Error in array lenght!" % (self.__class__.__name__))
+            logging.getLogger("user_level_log").error("Impossible to refresh camera!")
             # Stop camera to be in live mode
             self.liveState = False
             return -1
@@ -94,6 +92,7 @@ class LNLSCamera(BaseHardwareObjects.Device):
             # Clear memory
             self.qImage = None
 
+            # Resize - OBSOLETE
             #self.qImageHalf = self.qImage.scaled(640, 512, QtCore.Qt.KeepAspectRatioByExpanding)
 
             # Crop image, position (x, y) = 0, 144; (w, h) =  640, 512
@@ -103,6 +102,9 @@ class LNLSCamera(BaseHardwareObjects.Device):
             # Clear memory
             self.qImageHalf = None
 
+            if (self.refreshing):
+                logging.getLogger("user_level_log").info("Camera was refreshed!")
+                self.refreshing = False
         except:
             logging.getLogger().exception("%s - Except in scale and rotate!" % (self.__class__.__name__))
             return -1
@@ -112,10 +114,11 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         self.emit("imageReceived", self.qtPixMap)
 
-        # Keep qtPixMap available for snapshot...
+        # Keep qtPixMap available for snapshot... do do NOT set it to 'None'
         #self.qtPixMap = None
         
         return 0
+
 
     def getStaticImage(self):
         qtPixMap = QtGui.QPixmap(self.source, "1")
@@ -157,6 +160,7 @@ class LNLSCamera(BaseHardwareObjects.Device):
         except:
             print("Error setting gain of camera...")
 
+
     def get_gain_auto(self):
         auto = None
 
@@ -167,11 +171,13 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         return auto
 
+
     def set_gain_auto(self, auto):
         try:
             self.setValue(CAMERA_AUTO_GAIN, auto)
         except:
             print("Error setting auto-gain of camera...")
+
 
     def get_exposure_time(self):
         exp = None
@@ -183,36 +189,84 @@ class LNLSCamera(BaseHardwareObjects.Device):
 
         return exp
 
+
     def set_exposure_time(self, exp):
         try:
             self.setValue(CAMERA_ACQ_TIME, exp)
         except:
             print("Error setting exposure time of camera...")
 
+
     def start_camera(self):
-        self.setValue(CAMERA_BACK, 1)
-        self.setValue(CAMERA_EN_BACK, 1)
-        self.setValue(CAMERA_ACQ_STOP, 0)
-        self.setValue(CAMERA_ACQ_START, 1)
+        try:
+            self.setValue(CAMERA_BACK, 1)
+            self.setValue(CAMERA_EN_BACK, 1)
+            self.setValue(CAMERA_ACQ_STOP, 0)
+            self.setValue(CAMERA_ACQ_START, 1)
+        except:
+            pass
+
 
     def stop_camera(self):
-        self.setValue(CAMERA_ACQ_START, 0)
-        self.setValue(CAMERA_ACQ_STOP, 1)
+        try:
+            self.setValue(CAMERA_ACQ_START, 0)
+            self.setValue(CAMERA_ACQ_STOP, 1)
+        except:
+            pass
+
+
+    def refresh_camera_procedure(self):
+        self.refreshing = True
+
+        # Try to reconnect to PVs
+        self.reconnect(CAMERA_DATA)
+        self.reconnect(CAMERA_BACK)
+        self.reconnect(CAMERA_EN_BACK)
+        self.reconnect(CAMERA_ACQ_START)
+        self.reconnect(CAMERA_ACQ_STOP)
+        self.reconnect(CAMERA_GAIN)
+        self.reconnect(CAMERA_GAIN_RBV)
+        self.reconnect(CAMERA_AUTO_GAIN)
+        self.reconnect(CAMERA_AUTO_GAIN_RBV)
+        self.reconnect(CAMERA_FPS_RBV)
+        self.reconnect(CAMERA_ACQ_TIME)
+        self.reconnect(CAMERA_ACQ_TIME_RBV)
+
+        # Try to stop camera image acquisition
+        self.setLive(False)
+        # Wait a while
+        gevent.sleep(0.2)
+        # Set PVs to start
+        self.start_camera()
+        # (Re)start camera image acquisition
+        self.setLive(True)
+
+
+    def refresh_camera(self):
+        logging.getLogger("user_level_log").error("Resetting camera, please, wait a while...")
+
+        # Start a new thread to don't freeze UI
+        self.refreshgen = gevent.spawn(self.refresh_camera_procedure)
+
 
     def setLive(self, live):
-        if live and self.liveState == live:
-            return
-        
-        if live:
-            self.imagegen = gevent.spawn(self.imageGenerator, float(int(self.getProperty("interval"))/1000.0))
-        else:
-            if self.imagegen:
-                self.imagegen.kill()
-            self.stop_camera()
+        try:
+            if live and self.liveState == live:
+                return
+            
+            if live:
+                self.imagegen = gevent.spawn(self.imageGenerator, float(int(self.getProperty("interval"))/1000.0))
+            else:
+                if self.imagegen:
+                    self.imagegen.kill()
+                self.stop_camera()
 
-        self.liveState = live
+            self.liveState = live
 
-        return True
+            return True
+        except:
+            return False
+
 
     def imageType(self):
         return None
@@ -271,7 +325,8 @@ class LNLSCamera(BaseHardwareObjects.Device):
                 self.emit("savaSnapshot", imageFileName)
 
                 # Send a command to detector hardware-object to take snapshot of camserver execution...
-                detectorHwobj.takeScreenshotOfXpraRunningProcess(image_path=logFilePath, run_number=runNumber)
+                if (logFilePath and detectorHwobj):
+                    detectorHwobj.takeScreenshotOfXpraRunningProcess(image_path=logFilePath, run_number=runNumber)
 
                 #centred_images.append((0, str(imageInfo)))
                 #centred_images.reverse() 

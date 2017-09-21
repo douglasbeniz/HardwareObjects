@@ -895,17 +895,27 @@ class GraphicsItemScale(GraphicsItem):
                corner. Horizontal scale is scaled to 50 or 100 microns and
                vertical scale is two times shorter.
     """
-    HOR_LINE_LEN = [500, 200, 100, 50]
+    # LNLS
+    #HOR_LINE_LEN = [500, 200, 100, 50]
+    HOR_LINE_LEN = [2000, 1000, 500, 100]
 
     def __init__(self, parent, position_x = 0, position_y= 0):
         GraphicsItem.__init__(self, parent, position_x = 0, position_y= 0)
         self.__scale_len = 0
         self.__display_grid = None
-        self.__radiation_dose_info = None     
-        
+        self.__radiation_dose_info = None
+
     def paint(self, painter, option, widget):
-        hor_scale_len_pix = self.pixels_per_mm[0] * self.__scale_len / 1000
-        ver_scale_len_pix = self.pixels_per_mm[1] * self.__scale_len / 1000 / 2
+        # LNLS
+        # --------------------------------------
+        # Why a factor of 4?
+        # --------------------------------------
+        #hor_scale_len_pix = self.pixels_per_mm[0] * self.__scale_len / 1000
+        #hor_scale_len_pix = (self.__scale_len / ((1/self.pixels_per_mm[0]) * 1000))
+        hor_scale_len_pix = (self.__scale_len / ((1/self.pixels_per_mm[0]) * 4000))
+        #ver_scale_len_pix = self.pixels_per_mm[1] * self.__scale_len / 1000 / 2
+        #ver_scale_len_pix = (self.__scale_len / ((1/self.pixels_per_mm[1]) * 1000)) / 2
+        ver_scale_len_pix = (self.__scale_len / ((1/self.pixels_per_mm[1]) * 4000)) / 2
 
         if self.__display_grid:
             self.custom_pen.setStyle(QtCore.Qt.DotLine)
@@ -924,11 +934,21 @@ class GraphicsItemScale(GraphicsItem):
         self.custom_pen.setColor(SELECTED_COLOR)
         painter.setPen(self.custom_pen)
 
+        # Horizontal
+        # print("-------------------------------")
+        # print("self.start_coord[1]: ", self.start_coord[1])
+        # print("painter.drawLine - HOR: %f ; %f ; %f ; %f" % (10, self.start_coord[1] - 15, 10 + hor_scale_len_pix, self.start_coord[1] - 15))
+        # print("::hor_scale_len_pix:: ", hor_scale_len_pix)
+        # print("-------------------------------")
+        # print("painter.drawLine - VER: %f ; %f ; %f ; %f" % (10, self.start_coord[1] - 15, 10, self.start_coord[1] - 15 - ver_scale_len_pix))
+        # print("::ver_scale_len_pix:: ", ver_scale_len_pix)
+        # print("-------------------------------")
         painter.drawLine(10, self.start_coord[1] - 15,
                          10 + hor_scale_len_pix, self.start_coord[1] - 15)
         painter.drawText(hor_scale_len_pix - 10,
                          self.start_coord[1] - 20,
                          "%d %s" % (self.__scale_len, "\u00B5"))
+        # Vertical
         painter.drawLine(10, self.start_coord[1] - 15,
                          10, self.start_coord[1] - 15 - ver_scale_len_pix)
         painter.drawText(3, self.start_coord[1] - 20 - ver_scale_len_pix,
@@ -940,7 +960,13 @@ class GraphicsItemScale(GraphicsItem):
     def set_pixels_per_mm(self, pixels_per_mm):
         self.pixels_per_mm = pixels_per_mm
         for line_len in GraphicsItemScale.HOR_LINE_LEN:
-            if self.pixels_per_mm[0] * line_len / 1000 <= 250:
+            # LNLS
+            #if self.pixels_per_mm[0] * line_len / 1000 <= 250:
+            #if ((line_len / ((1/self.pixels_per_mm[0]) * 1000)) / 4) <= 250:
+            # --------------------------------------
+            # Why a factor of 4?
+            # --------------------------------------
+            if (line_len / ((1/self.pixels_per_mm[0]) * 4000)) <= 250:
                 self.__scale_len = line_len
                 break
 
@@ -1116,10 +1142,18 @@ class GraphicsItemMeasureDistance(GraphicsItem):
         self.measure_points[len(self.measure_points) - 1].setX(coord[0])
         self.measure_points[len(self.measure_points) - 1].setY(coord[1])
         if len(self.measure_points) == 2:
+            # LNLS
+            # self.measured_distance = math.sqrt(pow((self.measure_points[0].x() - 
+            #     self.measure_points[1].x()) / self.pixels_per_mm[0], 2) + \
+            #     pow((self.measure_points[0].y() - self.measure_points[1].y()) / \
+            #     self.pixels_per_mm[1], 2)) * 1000
+            # --------------------------------------
+            # Why a factor of 4?
+            # --------------------------------------
             self.measured_distance = math.sqrt(pow((self.measure_points[0].x() - 
                 self.measure_points[1].x()) / self.pixels_per_mm[0], 2) + \
                 pow((self.measure_points[0].y() - self.measure_points[1].y()) / \
-                self.pixels_per_mm[1], 2)) * 1000
+                self.pixels_per_mm[1], 2)) * 4000
             self.scene().update()
 
     def store_coord(self, position_x, position_y):

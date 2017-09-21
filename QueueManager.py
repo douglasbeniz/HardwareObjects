@@ -104,13 +104,15 @@ class QueueManager(HardwareObject, QueueEntryContainer):
         return status
 
     def __execute_task(self):
+        print('CALL EXECUTE TASK')
         self._running = True
         #TODO could more nicer signal name to disable minidiff during any queue entry execution
         self.emit('centringAllowed', (False, ))
         try:
           for qe in self._queue_entry_list:
+            print('FOR LIST LEN = ' +str(len(self._queue_entry_list)))
             try:
-                self.__execute_entry(qe)
+                self.__execute_entry(qe) 
             except (queue_entry.QueueAbortedException, Exception) as ex:
                 try:
                     qe.handle_exception(ex)
@@ -131,7 +133,8 @@ class QueueManager(HardwareObject, QueueEntryContainer):
           self.emit('queue_execution_finished', (None,))
           self.emit('centringAllowed', (True, ))
 
-    def __execute_entry(self, entry): 
+    def __execute_entry(self, entry):
+        print('CALL EXECUTE ENTRY') 
         if not entry.is_enabled() or self._is_stopped:
             return
         
@@ -173,6 +176,7 @@ class QueueManager(HardwareObject, QueueEntryContainer):
             entry.post_execute()
 
         self._current_queue_entries.remove(entry)
+        print('END OF ENTRY')
 
     def stop(self):
         """

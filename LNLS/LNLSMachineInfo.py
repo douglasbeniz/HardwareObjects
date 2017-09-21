@@ -257,6 +257,8 @@ class LNLSMachineInfo(Equipment):
         """
         for intens_range in self.values_dict['intens1']['ranges']:
             self.values_dict['intens1']['value'] = value
+            # LNLS
+            # self.values_dict['intens1']['value'] = 10000 * value / (self.values_dict['current'])
         self.update_values()
 
     def intens_mean_2_changed(self, value):
@@ -267,6 +269,8 @@ class LNLSMachineInfo(Equipment):
         """
         for intens_range in self.values_dict['intens2']['ranges']:
             self.values_dict['intens2']['value'] = value
+            # LNLS
+            # self.values_dict['intens2']['value'] = 100 * value / (self.values_dict['current'] * 6)
         self.update_values()
 
     """

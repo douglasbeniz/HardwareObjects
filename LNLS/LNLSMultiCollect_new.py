@@ -13,7 +13,6 @@ import shutil
 
 from sh import rsync
 
-from epics import PV
 
 MAXIMUM_TRIES_COPY_CBF    = 500     # 500 * 0.01 seg = 5.00 seg (at most) waiting for CBF creation
 MAXIMUM_TRIES_AD_PILATUS  = 120     # 120 * 0.5 = 60 seconds; 1 minute
@@ -568,16 +567,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         collections_analyse_params = []
 
         try:
-            # Workout: wait until detector is available before starting to collect. This avoids losing images.
-            # PS: Making such thing here is ungly. This check must be put in a proper place in the future!
-            print('Waiting for detector to be available...')
-            logging.getLogger("user_level_log").info('Waiting for detector to be available...')
-            acquire_rbv = PV('MX2:cam1:Acquire_RBV').get(timeout=0.5)
-            while acquire_rbv != 0:
-                acquire_rbv = PV('MX2:cam1:Acquire_RBV').get(timeout=0.5)
-            logging.getLogger("user_level_log").info('Detector is available')
-            print('Collection started')
-
             self.emit("collectReady", (False, ))
             self.emit("collectStarted", (owner, 1))
 
@@ -678,15 +667,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         except:
             logging.getLogger('HWR').info("Killed!")
         finally:
-            # Workout: tell the detector the colllection finished. This avoids unnecessary waiting time between collections!
-            # PS: Making such thing here is ungly. This check must be put in a proper place in the future!
-            #PV('MX2:cam1:Acquire').put(timeout=0.5)
-            #print('Collection finished!')
-
             self.emit("collectEnded", owner, not failed, failed_msg if failed else "Data collection successful")
             logging.getLogger('HWR').info("data collection successful in loop")
             self.emit("collectReady", (True, ))
-
 
     @task
     def take_crystal_snapshots(self, number_of_snapshots):

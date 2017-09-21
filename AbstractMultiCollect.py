@@ -899,6 +899,8 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
             self.do_collect(self.owner, self.actual_data_collect_parameters)
 
     def collect(self, owner, data_collect_parameters_list): #, finished_callback=None):
+        import inspect
+        print('CALL COLLECT')
         if self.run_without_loop: 
             self.owner = owner
             self.ready_event.clear()
@@ -907,6 +909,7 @@ class AbstractMultiCollect(object, metaclass=abc.ABCMeta):
             self.ready_event.wait()
             self.ready_event.clear()
         else:
+            print('CALL LOOP')
             self.data_collect_task = self.loop(owner, data_collect_parameters_list, wait = False)
         return self.data_collect_task
 

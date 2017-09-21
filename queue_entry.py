@@ -723,6 +723,7 @@ class DataCollectionQueueEntry(BaseQueueEntry):
         self.__dict__.update(d)
 
     def execute(self):
+        print('EXECUTE')
         BaseQueueEntry.execute(self)
         data_collection = self.get_data_model()
 
@@ -792,6 +793,7 @@ class DataCollectionQueueEntry(BaseQueueEntry):
         self.get_view().set_checkable(False)
 
     def collect_dc(self, dc, list_item):
+        print('COLLECT DC')
         log = logging.getLogger("user_level_log")
 
         if self.collect_hwobj:

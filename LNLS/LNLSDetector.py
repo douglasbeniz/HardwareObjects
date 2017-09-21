@@ -463,36 +463,9 @@ class LNLSDetector(Equipment):
                     self.stop_camserver()
 
                 # --------------------------------------------------------------
-                # If trying of stop 'camserver' (self.camserverUniqueName) through 'xpra' failed, then kill the processes, if still any
+                # Force any remaining CamServer instance, if any...
                 # --------------------------------------------------------------
-                # No 'xpra' process found, or it was not able to send 'exit' command to camserver.
-                # Check if no 'camserver' is still running...
-                stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverUniqueName))
-
-                # Wait ps command to complete
-                while not stdout.channel.exit_status_ready():
-                    gevent.sleep(0.1)
-
-                # Check that no error occurred, what means that a 'camserver' process was found
-                if (not stdout.channel.recv_exit_status()):
-                    # Parse returned processes
-                    process_list = stdout.read().decode('ascii').split('\n')
-
-                    # If exist any processing 'camserver', force stopping all of them using 'kill'
-                    if (len(process_list) > 1):
-                        stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep | awk {\'print $2\'} | xargs kill -s 2" % (self.camserverUniqueName))
-                        # Wait ps command to complete
-                        while not stdout.channel.exit_status_ready():
-                            gevent.sleep(0.1)
-
-                        # Check if some error occurred
-                        if (stdout.channel.recv_exit_status()):
-                            error_message = "Error when trying to kill \'%s\' processes! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
-                            logging.getLogger().exception(error_message)
-                            logging.getLogger("user_level_log").error(error_message)
-                else:
-                    error_message = "No existing \'%s\' process running! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
-                    logging.getLogger().exception(error_message)
+                self.force_stop_camserver(ssh)
 
                 # --------------------------------------------------------------
                 # Stop previous running 'xpra' (self.camserverXpraProgram), if any
@@ -566,6 +539,48 @@ class LNLSDetector(Equipment):
         # Return if successfully started, it was already running, camserver
         return (camserverIsRunning and self.is_camserver_connected())
 
+    def force_stop_camserver(self, ssh):
+        stopped = True
+
+        try:
+            # --------------------------------------------------------------
+            # If trying of stop 'camserver' (self.camserverUniqueName) through 'xpra' failed, then kill the processes, if still any
+            # --------------------------------------------------------------
+            # No 'xpra' process found, or it was not able to send 'exit' command to camserver.
+            # Check if no 'camserver' is still running...
+            stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep" % (self.camserverUniqueName))
+
+            # Wait ps command to complete
+            while not stdout.channel.exit_status_ready():
+                gevent.sleep(0.1)
+
+            # Check that no error occurred, what means that a 'camserver' process was found
+            if (not stdout.channel.recv_exit_status()):
+                # Parse returned processes
+                process_list = stdout.read().decode('ascii').split('\n')
+
+                # If exist any processing 'camserver', force stopping all of them using 'kill'
+                if (len(process_list) > 1):
+                    stdin, stdout, stderr = ssh.exec_command("ps -ef | grep %s | grep -v grep | awk {\'print $2\'} | xargs kill -s 2" % (self.camserverUniqueName))
+                    # Wait ps command to complete
+                    while not stdout.channel.exit_status_ready():
+                        gevent.sleep(0.1)
+
+                    # Check if some error occurred
+                    if (stdout.channel.recv_exit_status()):
+                        stopped = False
+                        error_message = "Error when trying to kill \'%s\' processes! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
+                        logging.getLogger().exception(error_message)
+                        logging.getLogger("user_level_log").error(error_message)
+            else:
+                error_message = "No existing \'%s\' process running! %s" % (self.camserverUniqueName, stderr.read().decode('ascii'))
+                logging.getLogger().exception(error_message)
+        except:
+            logging.getLogger().exception("Exception when forcing camserver to stop!")
+            stopped = False
+
+        return stopped
+
     def stop_camserver(self, image_path="."):
         stopped = False
 
@@ -575,6 +590,9 @@ class LNLSDetector(Equipment):
             # Using Wmctrl command to get display where camserver is running locally
             display = subprocess.check_output("wmctrl -lp | grep \'%s\' | awk \'{print $1}\'" % (self.camserverUniqueName), shell=True)
             display = display.decode('ascii').split('\n')[0]
+
+            # Connect to Pilatus server using defined parameters
+            ssh = self.stablishSSHConnection()
 
             # Check that a display was found...
             if (display):
@@ -587,6 +605,11 @@ class LNLSDetector(Equipment):
                 os.system("xdotool windowfocus --sync %s; xdotool type \'%s\'; xdotool key KP_Enter" % (display, self.camserverExitCommand))
 
                 stopped = True
+            else:
+                # --------------------------------------------------------------
+                # Force any remaining CamServer instance, if any...
+                # --------------------------------------------------------------
+                stopped = self.force_stop_camserver(ssh)
 
             # Send Ctrl+C to Xpra and detach from remote display
             pexpt_xpra.send("\003")
@@ -596,8 +619,6 @@ class LNLSDetector(Equipment):
             # --------------------------------------------------------------
             # Try to stop xpra running on Pilatus server
             # --------------------------------------------------------------
-            # Connect to Pilatus server using defined parameters
-            ssh = self.stablishSSHConnection()
             # Call a procedure to stop xpra...
             self.stopXpra(ssh=ssh)
             # Then close the connection

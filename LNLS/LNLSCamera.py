@@ -322,7 +322,7 @@ class LNLSCamera(BaseHardwareObjects.Device):
                 #imageInfo = self.takeSnapshot(imageFileName)
 
                 # This way all shapes will be also saved...
-                self.emit("savaSnapshot", imageFileName)
+                self.emit("saveSnapshot", imageFileName)
 
                 # Send a command to detector hardware-object to take snapshot of camserver execution...
                 if (logFilePath and detectorHwobj):

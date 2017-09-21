@@ -307,7 +307,8 @@ class LNLSSession(HardwareObject):
         # -----------------------------------------------------------------
         # When a session is started, we check if CamServer is running, trying to start it otherwise...
         # -----------------------------------------------------------------
-        self.detector_hwobj.start_camserver_if_not_connected()
+        if (self.detector_hwobj):
+            self.detector_hwobj.start_camserver_if_not_connected()
 
     def get_session_start_date(self):
         """
@@ -323,9 +324,18 @@ class LNLSSession(HardwareObject):
         """
         self.user_group = str(group_name)
 
+
     def get_group_name(self):
         """
         :returns: Name of user group
         :rtype: str
         """
         return self.user_group
+
+
+    def stop_camserver(self):
+        # -----------------------------------------------------------------
+        # When a session is stoped, we check if CamServer is running, trying to stop it...
+        # -----------------------------------------------------------------
+        if (self.detector_hwobj):
+            self.detector_hwobj.stop_camserver()

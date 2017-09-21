@@ -13,11 +13,9 @@ import shutil
 
 from sh import rsync
 
-from epics import PV
 
 MAXIMUM_TRIES_COPY_CBF    = 500     # 500 * 0.01 seg = 5.00 seg (at most) waiting for CBF creation
-MAXIMUM_TRIES_AD_PILATUS  = 120     # 120 * 0.5 = 60 seconds; 1 minute
-MAXIMUM_TRIES_CLOSE_SHUTTER  = 200     # 200 * 0,2 = 40 seconds
+MAXIMUM_TRIES_AD_PILATUS  = 180     # 180 seconds; 3 minutes
 
 class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def __init__(self, name):
@@ -114,7 +112,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # First of all, check if CamServer is running, otherwise try to start it
         # ----------------------------------------------------------------------
         if (not self.detector_hwobj.is_camserver_connected()):
-            error_message =  "CamServer is not running... Trying to start it... Please, wait a while (at most 1 minute)..."
+            error_message =  "CamServer is not running... Trying to start it... Please, wait a while (at most 2 minutes)..."
             logging.getLogger("user_level_log").error(error_message)
 
             # Start a process to initialize CanServer
@@ -155,14 +153,14 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         data_collect_parameters["archive_dir"] = archive_directory
 
         if archive_directory:
-            jpeg_filename="%s.jpeg" % os.path.splitext(image_file_template)[0]
-            thumb_filename="%s.thumb.jpeg" % os.path.splitext(image_file_template)[0]
-            jpeg_file_template = os.path.join(archive_directory, jpeg_filename)
-            jpeg_thumbnail_file_template = os.path.join(archive_directory, thumb_filename)
+          jpeg_filename="%s.jpeg" % os.path.splitext(image_file_template)[0]
+          thumb_filename="%s.thumb.jpeg" % os.path.splitext(image_file_template)[0]
+          jpeg_file_template = os.path.join(archive_directory, jpeg_filename)
+          jpeg_thumbnail_file_template = os.path.join(archive_directory, thumb_filename)
         else:
-            jpeg_file_template = None
-            jpeg_thumbnail_file_template = None
-
+          jpeg_file_template = None
+          jpeg_thumbnail_file_template = None
+         
         # database filling
         if self.bl_control.lims:
             data_collect_parameters["collection_start_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -174,12 +172,12 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             logging.getLogger("user_level_log").info("Storing data collection in LIMS")
             (self.collection_id, detector_id) = \
                                  self.bl_control.lims.store_data_collection(data_collect_parameters, self.bl_config)
-
+              
             data_collect_parameters['collection_id'] = self.collection_id
 
             if detector_id:
                 data_collect_parameters['detector_id'] = detector_id
-
+              
         # Creating the directory for images and processing information
         logging.getLogger("user_level_log").info("Creating directory for images and processing")
         logging.getLogger('HWR').info("Directory: %s; File prefix: %s; Run number: %s" % (file_parameters["directory"], file_parameters["prefix"], str(file_parameters["run_number"])))
@@ -394,19 +392,27 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         # 0:software binned, 1:unbinned, 2:hw binned
         self.set_detector_mode(data_collect_parameters["detector_mode"])
 
-        # Using data-collection
+        # ------------------------------------------------------------------
+        # LNLS
+        # ------------------------------------------------------------------
+        # Start trigger by openning the shutter and start another thread 
+        # to take care of shutter clossing....
+        # ------------------------------------------------------------------
+        self._shutter_control_gen = gevent.spawn(self.do_shutter_control)
+        # ------------------------------------------------------------------
+
         with cleanup(self.data_collection_cleanup):
-            # Control of shutter
+            # ------------------------------------------------------------------
+            # LNLS - Just to guarantee...
+            # ------------------------------------------------------------------
+            tries = 0
+            while(self.detector_hwobj.is_counting() and tries < MAXIMUM_TRIES_AD_PILATUS):
+                gevent.sleep(0.5)
+                tries += 1
+            # ------------------------------------------------------------------
+
             if not self.safety_shutter_opened():
                 logging.getLogger("user_level_log").info("Opening safety shutter")
-                # ------------------------------------------------------------------
-                # LNLS
-                # ------------------------------------------------------------------
-                # Start trigger by openning the shutter and start another thread 
-                # to take care of shutter clossing and Pilatus IOC to prepare for receive trigger...
-                # ------------------------------------------------------------------
-                self._shutter_control_gen = gevent.spawn(self.do_shutter_control)
-                # ------------------------------------------------------------------
                 self.open_safety_shutter(moveOmega=self._total_angle)
 
             logging.getLogger("user_level_log").info("Preparing intensity monitors")
@@ -568,16 +574,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         collections_analyse_params = []
 
         try:
-            # Workout: wait until detector is available before starting to collect. This avoids losing images.
-            # PS: Making such thing here is ungly. This check must be put in a proper place in the future!
-            print('Waiting for detector to be available...')
-            logging.getLogger("user_level_log").info('Waiting for detector to be available...')
-            acquire_rbv = PV('MX2:cam1:Acquire_RBV').get(timeout=0.5)
-            while acquire_rbv != 0:
-                acquire_rbv = PV('MX2:cam1:Acquire_RBV').get(timeout=0.5)
-            logging.getLogger("user_level_log").info('Detector is available')
-            print('Collection started')
-
             self.emit("collectReady", (False, ))
             self.emit("collectStarted", (owner, 1))
 
@@ -678,15 +674,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         except:
             logging.getLogger('HWR').info("Killed!")
         finally:
-            # Workout: tell the detector the colllection finished. This avoids unnecessary waiting time between collections!
-            # PS: Making such thing here is ungly. This check must be put in a proper place in the future!
-            #PV('MX2:cam1:Acquire').put(timeout=0.5)
-            #print('Collection finished!')
-
             self.emit("collectEnded", owner, not failed, failed_msg if failed else "Data collection successful")
             logging.getLogger('HWR').info("data collection successful in loop")
             self.emit("collectReady", (True, ))
-
 
     @task
     def take_crystal_snapshots(self, number_of_snapshots):
@@ -832,12 +822,8 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
 
     @task
     def close_safety_shutter(self, restoreOmegaPosition=False):
-        # gevent.sleep(0.2)
+        gevent.sleep(0.2)
 
-        # shutterClosed = False
-        # tries = 0
-
-        # while (not shutterClosed and tries < MAXIMUM_TRIES_CLOSE_SHUTTER):
         if (self.safety_shutter_opened() or (self.diffractometer_hwobj.get_omega_position() != self._initial_angle and not self.diffractometer_hwobj.is_omega_moving())):
             logging.getLogger("user_level_log").info("Closing safety shutter at: %s" %  time.strftime("%d/%m/%Y %H:%M:%S"))
 
@@ -845,7 +831,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
                 # Close detector shutter
                 if self.detector_hwobj:
                     self.detector_hwobj.close_shutter()
-                    # shutterClosed = True
 
                 # Enable UI controls to operate shutter
                 if (self.shutter_hwobj):
@@ -861,11 +846,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             except:
                 logging.getLogger("HWR").exception("Could not close safety shutter!")
                 logging.getLogger("user_level_log").error("Could not close safety shutter!")
-            # else:
-            #     print("Still not closed....")
-
-            # tries += 1
-
 
     @task
     def prepare_intensity_monitors(self):
@@ -886,7 +866,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def start_acquisition(self, exptime, npass, first_frame):
         # Check if Pilatus is not still collecting...
         if (self.detector_hwobj.is_counting()):
-            logging.getLogger("user_level_log").info("Area detector of Pilatus inform that it is still in operation.  Waiting at most 1 minute...")
+            logging.getLogger("user_level_log").info("Area detector of Pilatus inform that it is still in operation.  Waiting at most 2 minutes...")
 
         tries = 0
         while(self.detector_hwobj.is_counting() and tries < MAXIMUM_TRIES_AD_PILATUS):
@@ -897,6 +877,7 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         if (self.detector_hwobj.is_counting()):
             logging.getLogger("user_level_log").info("Forcing previous Pilatus acquisition to stop...")
             self.force_pilatus_stop()
+            gevent.sleep(2)
 
         # Send command to start acquisition (wait trigger)
         self.detector_hwobj.acquire()
@@ -906,31 +887,23 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
 
         return
 
-
     def do_shutter_control(self):
-        print("start stop_shutter_control")
         self.start_acquisition(exptime=None, npass=None, first_frame=None)
-        print("self._total_time_readout: ", self._total_time_readout)
         self.do_oscillation(start=None, end=None, exptime=self._total_time_readout, npass=None)
-        print("calling stop_acquisition")
         self.stop_acquisition()
 
+    def write_image(self, last_frame):
+        self.actual_frame_num += 1
+        return
+
+    def last_image_saved(self):
+        return self.actual_frame_num
 
     def stop_acquisition(self):
         # Close shutter and move Omega to initial position
         self.close_safety_shutter(restoreOmegaPosition=True)
 
         return
-
-
-    def write_image(self, last_frame):
-        self.actual_frame_num += 1
-        return
-
-
-    def last_image_saved(self):
-        return self.actual_frame_num
-
 
     def stop_shutter_control(self):
         # If exist a thread to take care of shutter, kill it
@@ -939,7 +912,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             self._shutter_control_gen = None
 
         return
-
 
     def force_pilatus_stop(self):
         # Try to stop pilatus (CamServer)
@@ -951,11 +923,9 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
             self.detector_hwobj.acquire()
             gevent.sleep(2)
             self.detector_hwobj.stop()
-            gevent.sleep(2)
         except:
             logging.getLogger("user_level_log").error("Error when trying to stop Pilatus acquisition...")
             pass
-
 
     def stop_procedure(self):
         # If exist a thread to take care of shutter, kill it
@@ -1009,7 +979,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
     def reset_detector(self):
         return
 
-
     def prepare_input_files(self, files_directory, prefix, run_number, process_directory):
         self.actual_frame_num = 0
         i = 1
@@ -1033,7 +1002,6 @@ class LNLSMultiCollect(AbstractMultiCollect, HardwareObject):
         self.raw_hkl2000_dir = os.path.join(files_directory, "process", hkl2000_dirname)
 
         return xds_directory, mosflm_directory, hkl2000_directory
-
 
     @task
     def write_input_files(self, collection_id):

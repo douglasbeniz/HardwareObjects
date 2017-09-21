@@ -208,7 +208,7 @@ class Qt4_GraphicsManager(HardwareObject):
                          "imageReceived", 
                          self.camera_image_received)
             self.connect(self.camera_hwobj, 
-                         "savaSnapshot", 
+                         "saveSnapshot", 
                          self.save_scene_snapshot)
             self.camera_hwobj.start_camera()
         else:         
